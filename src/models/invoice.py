@@ -1,0 +1,125 @@
+"""UserInvoice domain model."""
+from datetime import datetime
+from decimal import Decimal
+import uuid
+from sqlalchemy.dialects.postgresql import UUID
+from src.extensions import db
+from src.models.base import BaseModel
+from src.models.enums import InvoiceStatus
+
+
+class UserInvoice(BaseModel):
+    """
+    User invoice model.
+
+    Tracks payment records for subscriptions.
+    """
+
+    __tablename__ = "user_invoice"
+
+    user_id = db.Column(
+        UUID(as_uuid=True),
+        db.ForeignKey("user.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    tarif_plan_id = db.Column(
+        UUID(as_uuid=True),
+        db.ForeignKey("tarif_plan.id"),
+        nullable=False,
+    )
+    subscription_id = db.Column(
+        UUID(as_uuid=True),
+        db.ForeignKey("subscription.id"),
+        nullable=True,
+    )
+    invoice_number = db.Column(
+        db.String(50),
+        unique=True,
+        nullable=False,
+        index=True,
+    )
+    amount = db.Column(db.Numeric(10, 2), nullable=False)
+    currency = db.Column(db.String(3), nullable=False, default="EUR")
+    status = db.Column(
+        db.Enum(InvoiceStatus),
+        nullable=False,
+        default=InvoiceStatus.PENDING,
+        index=True,
+    )
+    payment_method = db.Column(db.String(50))  # "stripe", "paypal", etc.
+    payment_ref = db.Column(db.String(255))  # External payment reference
+    invoiced_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+    )
+    paid_at = db.Column(db.DateTime)
+    expires_at = db.Column(db.DateTime)
+
+    @property
+    def is_payable(self) -> bool:
+        """Check if invoice can still be paid."""
+        if self.status not in [InvoiceStatus.PENDING]:
+            return False
+        if self.expires_at and self.expires_at < datetime.utcnow():
+            return False
+        return True
+
+    def mark_paid(
+        self,
+        payment_ref: str,
+        payment_method: str,
+    ) -> None:
+        """
+        Mark invoice as paid.
+
+        Args:
+            payment_ref: External payment reference ID.
+            payment_method: Payment provider used.
+        """
+        self.status = InvoiceStatus.PAID
+        self.payment_ref = payment_ref
+        self.payment_method = payment_method
+        self.paid_at = datetime.utcnow()
+
+    def mark_failed(self) -> None:
+        """Mark invoice payment as failed."""
+        self.status = InvoiceStatus.FAILED
+
+    def mark_cancelled(self) -> None:
+        """Mark invoice as cancelled."""
+        self.status = InvoiceStatus.CANCELLED
+
+    def mark_refunded(self) -> None:
+        """Mark invoice as refunded."""
+        self.status = InvoiceStatus.REFUNDED
+
+    @staticmethod
+    def generate_invoice_number() -> str:
+        """Generate unique invoice number."""
+        timestamp = datetime.utcnow().strftime("%Y%m%d%H%M%S")
+        unique = uuid.uuid4().hex[:6].upper()
+        return f"INV-{timestamp}-{unique}"
+
+    def to_dict(self) -> dict:
+        """Convert to dictionary."""
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "tarif_plan_id": self.tarif_plan_id,
+            "subscription_id": self.subscription_id,
+            "invoice_number": self.invoice_number,
+            "amount": str(self.amount),
+            "currency": self.currency,
+            "status": self.status.value,
+            "payment_method": self.payment_method,
+            "payment_ref": self.payment_ref,
+            "is_payable": self.is_payable,
+            "invoiced_at": self.invoiced_at.isoformat() if self.invoiced_at else None,
+            "paid_at": self.paid_at.isoformat() if self.paid_at else None,
+            "expires_at": self.expires_at.isoformat() if self.expires_at else None,
+        }
+
+    def __repr__(self) -> str:
+        return f"<UserInvoice(number='{self.invoice_number}', status={self.status.value})>"
