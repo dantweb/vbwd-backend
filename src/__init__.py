@@ -33,16 +33,39 @@ def create_app(config_name=None):
     socketio.init_app(app, async_mode='threading', cors_allowed_origins='*')
 
     # Register blueprints
-    from src.routes.user import user_bp
-    from src.routes.admin import admin_bp
     from src.routes.health import health_bp
-
     app.register_blueprint(health_bp)
-    app.register_blueprint(user_bp, url_prefix='/api/user')
-    app.register_blueprint(admin_bp, url_prefix='/api/admin')
 
-    # Register WebSocket handlers
-    from src.routes.websocket import register_socket_handlers
-    register_socket_handlers(socketio)
+    # Import optional routes if they exist
+    try:
+        from src.routes.user import user_bp
+        app.register_blueprint(user_bp, url_prefix='/api/user')
+    except ImportError:
+        pass
+
+    try:
+        from src.routes.auth import auth_bp
+        app.register_blueprint(auth_bp, url_prefix='/api/auth')
+    except ImportError:
+        pass
+
+    try:
+        from src.routes.subscriptions import subscriptions_bp
+        app.register_blueprint(subscriptions_bp, url_prefix='/api/subscriptions')
+    except ImportError:
+        pass
+
+    try:
+        from src.routes.tarif_plans import tarif_plans_bp
+        app.register_blueprint(tarif_plans_bp, url_prefix='/api/tarif-plans')
+    except ImportError:
+        pass
+
+    # Register WebSocket handlers if they exist
+    try:
+        from src.routes.websocket import register_socket_handlers
+        register_socket_handlers(socketio)
+    except ImportError:
+        pass
 
     return app

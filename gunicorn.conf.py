@@ -9,8 +9,8 @@ max_requests = 1000
 max_requests_jitter = 50
 
 # Logging
-accesslog = '/app/logs/access.log'
-errorlog = '/app/logs/error.log'
+accesslog = '-'  # stdout
+errorlog = '-'   # stderr
 loglevel = os.getenv('LOG_LEVEL', 'info')
 
 # For development with reload

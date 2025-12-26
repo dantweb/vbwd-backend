@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: container/python/Dockerfile
     ports:
-      - "5000:5000"
+      - "5001:5000"
     environment:
       - FLASK_ENV=development
       - DATABASE_URL=postgresql://vbwd:vbwd@postgres:5432/vbwd
