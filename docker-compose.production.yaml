@@ -1,0 +1,41 @@
+version: "3.8"
+
+# Production overrides
+# Usage: docker-compose -f docker-compose.yaml -f docker-compose.production.yaml up -d
+
+services:
+  api:
+    restart: always
+    volumes: []  # No volume mounts in production
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+  postgres:
+    restart: always
+    ports: []  # Don't expose DB port in production
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  redis:
+    restart: always
+    ports: []  # Don't expose Redis port in production
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+
+volumes:
+  redis_data:

@@ -1,5 +1,5 @@
 """Subscription repository implementation."""
-from typing import Optional, List, Union
+from typing import Optional, List, Union, Tuple
 from uuid import UUID
 from datetime import datetime
 from src.repositories.base import BaseRepository
@@ -55,3 +55,50 @@ class SubscriptionRepository(BaseRepository[Subscription]):
             )
             .all()
         )
+
+    def find_all_paginated(
+        self,
+        limit: int = 20,
+        offset: int = 0,
+        status: Optional[str] = None,
+        user_id: Optional[str] = None,
+        plan_id: Optional[str] = None
+    ) -> Tuple[List[Subscription], int]:
+        """
+        Find all subscriptions with pagination and filters.
+
+        Args:
+            limit: Maximum number of results.
+            offset: Number of results to skip.
+            status: Optional status filter.
+            user_id: Optional user_id filter.
+            plan_id: Optional plan_id filter.
+
+        Returns:
+            Tuple of (subscriptions list, total count).
+        """
+        query = self._session.query(Subscription)
+
+        # Apply status filter
+        if status:
+            try:
+                status_enum = SubscriptionStatus(status)
+                query = query.filter(Subscription.status == status_enum)
+            except ValueError:
+                pass
+
+        # Apply user filter
+        if user_id:
+            query = query.filter(Subscription.user_id == user_id)
+
+        # Apply plan filter
+        if plan_id:
+            query = query.filter(Subscription.tarif_plan_id == plan_id)
+
+        # Get total count before pagination
+        total = query.count()
+
+        # Apply pagination
+        subscriptions = query.order_by(Subscription.created_at.desc()).offset(offset).limit(limit).all()
+
+        return subscriptions, total

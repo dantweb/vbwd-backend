@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Welcome, {{ first_name }}!</h2>
+<p>Thank you for joining VBWD. We're excited to have you on board.</p>
+<p>You can now access all the features of your account and start exploring our platform.</p>
+<div class="info-box">
+    <p><strong>Getting Started:</strong></p>
+    <ul>
+        <li>Complete your profile</li>
+        <li>Explore available plans</li>
+        <li>Set up your preferences</li>
+    </ul>
+</div>
+<p><a href="{{ login_url }}" class="button">Go to Dashboard</a></p>
+<p>If you have any questions, our support team is here to help!</p>
+{% endblock %}

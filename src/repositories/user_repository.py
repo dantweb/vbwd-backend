@@ -1,7 +1,8 @@
 """User repository implementation."""
-from typing import Optional, List
+from typing import Optional, List, Tuple
 from src.repositories.base import BaseRepository
 from src.models import User
+from src.models.enums import UserStatus
 
 
 class UserRepository(BaseRepository[User]):
@@ -33,3 +34,44 @@ class UserRepository(BaseRepository[User]):
             .filter(User.email == email)
             .count() > 0
         )
+
+    def find_all_paginated(
+        self,
+        limit: int = 20,
+        offset: int = 0,
+        status: Optional[str] = None,
+        search: Optional[str] = None
+    ) -> Tuple[List[User], int]:
+        """
+        Find all users with pagination and filters.
+
+        Args:
+            limit: Maximum number of results.
+            offset: Number of results to skip.
+            status: Optional status filter.
+            search: Optional email search string.
+
+        Returns:
+            Tuple of (users list, total count).
+        """
+        query = self._session.query(User)
+
+        # Apply status filter
+        if status:
+            try:
+                status_enum = UserStatus(status)
+                query = query.filter(User.status == status_enum)
+            except ValueError:
+                pass
+
+        # Apply search filter
+        if search:
+            query = query.filter(User.email.ilike(f'%{search}%'))
+
+        # Get total count before pagination
+        total = query.count()
+
+        # Apply pagination
+        users = query.order_by(User.created_at.desc()).offset(offset).limit(limit).all()
+
+        return users, total

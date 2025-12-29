@@ -26,6 +26,11 @@ class Subscription(BaseModel):
         db.ForeignKey("tarif_plan.id"),
         nullable=False,
     )
+    pending_plan_id = db.Column(
+        UUID(as_uuid=True),
+        db.ForeignKey("tarif_plan.id"),
+        nullable=True,
+    )
     status = db.Column(
         db.Enum(SubscriptionStatus),
         nullable=False,
@@ -35,6 +40,7 @@ class Subscription(BaseModel):
     started_at = db.Column(db.DateTime)
     expires_at = db.Column(db.DateTime, index=True)
     cancelled_at = db.Column(db.DateTime)
+    paused_at = db.Column(db.DateTime, nullable=True)
 
     # Relationships
     invoices = db.relationship(
@@ -84,6 +90,12 @@ class Subscription(BaseModel):
     def pause(self) -> None:
         """Pause subscription."""
         self.status = SubscriptionStatus.PAUSED
+        self.paused_at = datetime.utcnow()
+
+    def resume(self) -> None:
+        """Resume paused subscription."""
+        self.status = SubscriptionStatus.ACTIVE
+        self.paused_at = None
 
     def to_dict(self) -> dict:
         """Convert to dictionary."""
@@ -91,12 +103,14 @@ class Subscription(BaseModel):
             "id": self.id,
             "user_id": self.user_id,
             "tarif_plan_id": self.tarif_plan_id,
+            "pending_plan_id": self.pending_plan_id,
             "status": self.status.value,
             "is_valid": self.is_valid,
             "days_remaining": self.days_remaining,
             "started_at": self.started_at.isoformat() if self.started_at else None,
             "expires_at": self.expires_at.isoformat() if self.expires_at else None,
             "cancelled_at": self.cancelled_at.isoformat() if self.cancelled_at else None,
+            "paused_at": self.paused_at.isoformat() if self.paused_at else None,
         }
 
     def __repr__(self) -> str:

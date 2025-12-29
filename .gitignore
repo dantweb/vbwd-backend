@@ -80,12 +80,19 @@ ipython_config.py
 
 # Environments
 .env
+.env.local
+.env.production
+.env.*.local
 .venv
 env/
 venv/
 ENV/
 env.bak/
 venv.bak/
+
+# Keep example files (exceptions)
+!.env.example
+!.env.production.example
 
 # IDE
 .idea/

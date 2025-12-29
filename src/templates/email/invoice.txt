@@ -1,0 +1,19 @@
+Invoice {{ invoice_number }}
+
+Hi {{ first_name }},
+
+Please find attached your invoice for the current billing period.
+
+Invoice Details:
+- Invoice Number: {{ invoice_number }}
+- Amount Due: {{ amount }}
+- Due Date: {{ due_date }}
+
+Please ensure payment is made by the due date to avoid any service interruption.
+
+View Invoice: https://vbwd.com/invoices/{{ invoice_number }}
+
+If you have any questions about this invoice, please contact our billing team.
+
+---
+(c) {{ year }} VBWD. All rights reserved.

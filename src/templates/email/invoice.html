@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Invoice {{ invoice_number }}</h2>
+<p>Hi {{ first_name }},</p>
+<p>Please find attached your invoice for the current billing period.</p>
+<div class="info-box">
+    <p><strong>Invoice Details:</strong></p>
+    <ul>
+        <li>Invoice Number: {{ invoice_number }}</li>
+        <li>Amount Due: {{ amount }}</li>
+        <li>Due Date: {{ due_date }}</li>
+    </ul>
+</div>
+<p>Please ensure payment is made by the due date to avoid any service interruption.</p>
+<p><a href="https://vbwd.com/invoices/{{ invoice_number }}" class="button">View Invoice</a></p>
+<p>If you have any questions about this invoice, please contact our billing team.</p>
+{% endblock %}

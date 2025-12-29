@@ -59,6 +59,13 @@ class TarifPlan(BaseModel):
         backref="tarif_plan",
         lazy="dynamic",
         cascade="all, delete-orphan",
+        foreign_keys="[Subscription.tarif_plan_id]",
+    )
+    pending_subscriptions = db.relationship(
+        "Subscription",
+        backref="pending_plan",
+        lazy="dynamic",
+        foreign_keys="[Subscription.pending_plan_id]",
     )
     invoices = db.relationship(
         "UserInvoice",

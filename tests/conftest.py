@@ -21,10 +21,17 @@ def app():
     test_config = {
         "TESTING": True,
         "SQLALCHEMY_DATABASE_URI": get_database_url(),
-        "SQLALCHEMY_TRACK_MODIFICATIONS": False
+        "SQLALCHEMY_TRACK_MODIFICATIONS": False,
+        "RATELIMIT_ENABLED": True,
+        "RATELIMIT_STORAGE_URL": "memory://",  # Use in-memory storage for tests
     }
 
     app = create_app(test_config)
+
+    # Reset rate limiter state between tests
+    from src.extensions import limiter
+    limiter.reset()
+
     yield app
 
 

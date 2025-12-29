@@ -8,7 +8,7 @@ from src.schemas.auth_schemas import (
 )
 from src.services.auth_service import AuthService
 from src.repositories.user_repository import UserRepository
-from src.extensions import db
+from src.extensions import db, limiter
 
 # Create blueprint
 auth_bp = Blueprint('auth', __name__, url_prefix='/api/v1/auth')
@@ -20,6 +20,7 @@ auth_response_schema = AuthResponseSchema()
 
 
 @auth_bp.route('/register', methods=['POST'])
+@limiter.limit("3 per minute")
 def register():
     """Register a new user.
 
@@ -68,6 +69,7 @@ def register():
 
 
 @auth_bp.route('/login', methods=['POST'])
+@limiter.limit("5 per minute")
 def login():
     """Login a user.
 

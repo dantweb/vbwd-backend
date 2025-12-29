@@ -1,4 +1,5 @@
 """User event handlers."""
+from typing import Optional
 from src.events.domain import IEventHandler, DomainEvent, EventResult
 from src.events.user_events import UserCreatedEvent, UserStatusUpdatedEvent, UserDeletedEvent
 
@@ -11,9 +12,15 @@ class UserCreatedHandler(IEventHandler):
     such as sending welcome emails, creating default settings, etc.
     """
 
-    def __init__(self):
-        """Initialize handler."""
+    def __init__(self, email_service=None):
+        """
+        Initialize handler.
+
+        Args:
+            email_service: Optional EmailService for sending welcome emails.
+        """
         self.handled_events = []
+        self._email_service = email_service
 
     def can_handle(self, event: DomainEvent) -> bool:
         """Check if this handler handles user.created events."""
@@ -36,15 +43,21 @@ class UserCreatedHandler(IEventHandler):
             # Track handled events (for testing/auditing)
             self.handled_events.append(event)
 
-            # Here you would:
-            # - Send welcome email
-            # - Create default user settings
-            # - Log audit trail
-            # - Trigger onboarding workflow
+            email_sent = False
+
+            # Send welcome email if email service available
+            if self._email_service and event.email:
+                first_name = getattr(event, 'first_name', None) or 'User'
+                result = self._email_service.send_welcome_email(
+                    to_email=event.email,
+                    first_name=first_name
+                )
+                email_sent = result.success
 
             return EventResult.success_result({
                 "user_id": str(event.user_id),
                 "email": event.email,
+                "email_sent": email_sent,
                 "handled": True
             })
 

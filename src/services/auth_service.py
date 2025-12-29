@@ -186,10 +186,11 @@ class AuthService(IAuthService):
         Returns:
             JWT token string
         """
+        expiration_hours = getattr(self._config, 'JWT_EXPIRATION_HOURS', 24)
         payload = {
             'user_id': str(user_id),
             'email': email,
-            'exp': datetime.utcnow() + timedelta(hours=24),
+            'exp': datetime.utcnow() + timedelta(hours=expiration_hours),
             'iat': datetime.utcnow()
         }
         token = jwt.encode(payload, self._config.SECRET_KEY, algorithm='HS256')

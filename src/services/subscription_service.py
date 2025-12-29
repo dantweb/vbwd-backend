@@ -1,11 +1,56 @@
 """Subscription service implementation."""
 from datetime import datetime, timedelta
+from decimal import Decimal
 from typing import Optional, List
 from uuid import UUID
 from src.repositories.subscription_repository import SubscriptionRepository
 from src.repositories.tarif_plan_repository import TarifPlanRepository
 from src.models.subscription import Subscription
 from src.models.enums import SubscriptionStatus, BillingPeriod
+
+
+class SubscriptionResult:
+    """Result of a subscription operation."""
+
+    def __init__(
+        self,
+        success: bool,
+        subscription: Optional[Subscription] = None,
+        error: Optional[str] = None
+    ):
+        """
+        Initialize subscription result.
+
+        Args:
+            success: Whether the operation succeeded.
+            subscription: The subscription if successful.
+            error: Error message if failed.
+        """
+        self.success = success
+        self.subscription = subscription
+        self.error = error
+
+
+class ProrationResult:
+    """Result of a proration calculation."""
+
+    def __init__(
+        self,
+        credit: Decimal,
+        amount_due: Decimal,
+        days_remaining: int
+    ):
+        """
+        Initialize proration result.
+
+        Args:
+            credit: Credit for unused time.
+            amount_due: Amount due for new plan.
+            days_remaining: Days remaining on current plan.
+        """
+        self.credit = credit
+        self.amount_due = amount_due
+        self.days_remaining = days_remaining
 
 
 class SubscriptionService:
@@ -92,7 +137,7 @@ class SubscriptionService:
 
         return self._subscription_repo.save(subscription)
 
-    def activate_subscription(self, subscription_id: UUID) -> Subscription:
+    def activate_subscription(self, subscription_id: UUID) -> SubscriptionResult:
         """
         Activate subscription after payment.
 
@@ -103,14 +148,11 @@ class SubscriptionService:
             subscription_id: Subscription UUID
 
         Returns:
-            Activated subscription
-
-        Raises:
-            ValueError: If subscription not found
+            SubscriptionResult with activated subscription
         """
         subscription = self._subscription_repo.find_by_id(subscription_id)
         if not subscription:
-            raise ValueError(f"Subscription {subscription_id} not found")
+            return SubscriptionResult(success=False, error="Subscription not found")
 
         # Get plan for duration
         plan = subscription.tarif_plan
@@ -118,10 +160,11 @@ class SubscriptionService:
 
         # Activate using model method
         subscription.activate(duration_days)
+        saved = self._subscription_repo.save(subscription)
 
-        return self._subscription_repo.save(subscription)
+        return SubscriptionResult(success=True, subscription=saved)
 
-    def cancel_subscription(self, subscription_id: UUID) -> Subscription:
+    def cancel_subscription(self, subscription_id: UUID) -> SubscriptionResult:
         """
         Cancel subscription.
 
@@ -129,19 +172,17 @@ class SubscriptionService:
             subscription_id: Subscription UUID
 
         Returns:
-            Cancelled subscription
-
-        Raises:
-            ValueError: If subscription not found
+            SubscriptionResult with cancelled subscription
         """
         subscription = self._subscription_repo.find_by_id(subscription_id)
         if not subscription:
-            raise ValueError(f"Subscription {subscription_id} not found")
+            return SubscriptionResult(success=False, error="Subscription not found")
 
         # Cancel using model method
         subscription.cancel()
+        saved = self._subscription_repo.save(subscription)
 
-        return self._subscription_repo.save(subscription)
+        return SubscriptionResult(success=True, subscription=saved)
 
     def renew_subscription(self, subscription_id: UUID) -> Subscription:
         """
@@ -197,3 +238,173 @@ class SubscriptionService:
             self._subscription_repo.save(subscription)
 
         return expired
+
+    def pause_subscription(self, subscription_id: UUID) -> SubscriptionResult:
+        """
+        Pause an active subscription.
+
+        The subscription will stop being billed and the expiration
+        will be extended when resumed.
+
+        Args:
+            subscription_id: Subscription UUID
+
+        Returns:
+            SubscriptionResult with paused subscription
+        """
+        subscription = self._subscription_repo.find_by_id(subscription_id)
+        if not subscription:
+            return SubscriptionResult(success=False, error="Subscription not found")
+
+        if subscription.status == SubscriptionStatus.PAUSED:
+            return SubscriptionResult(success=False, error="Subscription is already paused")
+
+        if subscription.status != SubscriptionStatus.ACTIVE:
+            return SubscriptionResult(success=False, error="Only active subscriptions can be paused")
+
+        subscription.pause()
+        saved = self._subscription_repo.save(subscription)
+
+        return SubscriptionResult(success=True, subscription=saved)
+
+    def resume_subscription(self, subscription_id: UUID) -> SubscriptionResult:
+        """
+        Resume a paused subscription.
+
+        The expiration date is extended by the duration of the pause.
+
+        Args:
+            subscription_id: Subscription UUID
+
+        Returns:
+            SubscriptionResult with resumed subscription
+        """
+        subscription = self._subscription_repo.find_by_id(subscription_id)
+        if not subscription:
+            return SubscriptionResult(success=False, error="Subscription not found")
+
+        if subscription.status != SubscriptionStatus.PAUSED:
+            return SubscriptionResult(success=False, error="Subscription is not paused")
+
+        # Calculate pause duration and extend expiration
+        if subscription.paused_at and subscription.expires_at:
+            paused_duration = datetime.utcnow() - subscription.paused_at
+            subscription.expires_at = subscription.expires_at + paused_duration
+
+        subscription.resume()
+        saved = self._subscription_repo.save(subscription)
+
+        return SubscriptionResult(success=True, subscription=saved)
+
+    def calculate_proration(
+        self,
+        subscription_id: UUID,
+        new_plan_id: UUID
+    ) -> Optional[ProrationResult]:
+        """
+        Calculate proration for plan change.
+
+        Returns credit for unused time and amount due for new plan.
+
+        Args:
+            subscription_id: Subscription UUID
+            new_plan_id: New plan UUID
+
+        Returns:
+            ProrationResult with credit and amount due, or None if calculation fails
+        """
+        if not self._tarif_plan_repo:
+            return None
+
+        subscription = self._subscription_repo.find_by_id(subscription_id)
+        if not subscription:
+            return None
+
+        current_plan = self._tarif_plan_repo.find_by_id(subscription.tarif_plan_id)
+        new_plan = self._tarif_plan_repo.find_by_id(new_plan_id)
+
+        if not current_plan or not new_plan:
+            return None
+
+        # Calculate days remaining
+        if not subscription.expires_at:
+            return None
+
+        days_remaining = max(0, (subscription.expires_at - datetime.utcnow()).days)
+        total_days = self.PERIOD_DAYS.get(current_plan.billing_period, 30)
+
+        # Credit for unused time
+        daily_rate = current_plan.price / Decimal(total_days)
+        credit = daily_rate * Decimal(days_remaining)
+
+        # Amount due for new plan
+        amount_due = new_plan.price - credit
+
+        return ProrationResult(
+            credit=credit.quantize(Decimal('0.01')),
+            amount_due=max(amount_due, Decimal('0')).quantize(Decimal('0.01')),
+            days_remaining=days_remaining
+        )
+
+    def upgrade_subscription(
+        self,
+        subscription_id: UUID,
+        new_plan_id: UUID
+    ) -> SubscriptionResult:
+        """
+        Upgrade subscription to higher tier plan immediately.
+
+        Args:
+            subscription_id: Subscription UUID
+            new_plan_id: New plan UUID
+
+        Returns:
+            SubscriptionResult with upgraded subscription
+        """
+        subscription = self._subscription_repo.find_by_id(subscription_id)
+        if not subscription:
+            return SubscriptionResult(success=False, error="Subscription not found")
+
+        if str(subscription.tarif_plan_id) == str(new_plan_id):
+            return SubscriptionResult(success=False, error="Already subscribed to this plan")
+
+        if subscription.status != SubscriptionStatus.ACTIVE:
+            return SubscriptionResult(success=False, error="Only active subscriptions can be upgraded")
+
+        # Change plan immediately
+        subscription.tarif_plan_id = new_plan_id
+        subscription.pending_plan_id = None
+        saved = self._subscription_repo.save(subscription)
+
+        return SubscriptionResult(success=True, subscription=saved)
+
+    def downgrade_subscription(
+        self,
+        subscription_id: UUID,
+        new_plan_id: UUID
+    ) -> SubscriptionResult:
+        """
+        Downgrade subscription at next renewal.
+
+        Args:
+            subscription_id: Subscription UUID
+            new_plan_id: New plan UUID
+
+        Returns:
+            SubscriptionResult with subscription having pending_plan_id set
+        """
+        subscription = self._subscription_repo.find_by_id(subscription_id)
+        if not subscription:
+            return SubscriptionResult(success=False, error="Subscription not found")
+
+        if str(subscription.tarif_plan_id) == str(new_plan_id):
+            return SubscriptionResult(success=False, error="Already subscribed to this plan")
+
+        if subscription.status != SubscriptionStatus.ACTIVE:
+            return SubscriptionResult(success=False, error="Only active subscriptions can be downgraded")
+
+        # Set pending plan change (takes effect at renewal)
+        subscription.pending_plan_id = new_plan_id
+        saved = self._subscription_repo.save(subscription)
+
+        return SubscriptionResult(success=True, subscription=saved)

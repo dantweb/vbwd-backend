@@ -1,0 +1,17 @@
+Welcome, {{ first_name }}!
+
+Thank you for joining VBWD. We're excited to have you on board.
+
+You can now access all the features of your account and start exploring our platform.
+
+Getting Started:
+- Complete your profile
+- Explore available plans
+- Set up your preferences
+
+Go to Dashboard: {{ login_url }}
+
+If you have any questions, our support team is here to help!
+
+---
+(c) {{ year }} VBWD. All rights reserved.

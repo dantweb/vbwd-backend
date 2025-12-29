@@ -127,18 +127,21 @@ class TestSubscriptionServiceActivate:
 
         result = subscription_service.activate_subscription(sub_id)
 
-        assert result.status == SubscriptionStatus.ACTIVE
-        assert result.started_at is not None
-        assert result.expires_at is not None
+        assert result.success is True
+        assert result.subscription.status == SubscriptionStatus.ACTIVE
+        assert result.subscription.started_at is not None
+        assert result.subscription.expires_at is not None
         mock_sub_repo.save.assert_called_once()
 
     def test_activate_subscription_raises_if_not_found(self, subscription_service, mock_sub_repo):
-        """activate_subscription should raise error if not found."""
+        """activate_subscription should return error result if not found."""
         sub_id = uuid4()
         mock_sub_repo.find_by_id.return_value = None
 
-        with pytest.raises(ValueError, match="not found"):
-            subscription_service.activate_subscription(sub_id)
+        result = subscription_service.activate_subscription(sub_id)
+
+        assert result.success is False
+        assert "not found" in result.error.lower()
 
 
 class TestSubscriptionServiceGetActive:
@@ -221,17 +224,20 @@ class TestSubscriptionServiceCancel:
 
         result = subscription_service.cancel_subscription(sub_id)
 
-        assert result.status == SubscriptionStatus.CANCELLED
-        assert result.cancelled_at is not None
+        assert result.success is True
+        assert result.subscription.status == SubscriptionStatus.CANCELLED
+        assert result.subscription.cancelled_at is not None
         mock_sub_repo.save.assert_called_once()
 
     def test_cancel_subscription_raises_if_not_found(self, subscription_service, mock_sub_repo):
-        """cancel_subscription should raise error if not found."""
+        """cancel_subscription should return error result if not found."""
         sub_id = uuid4()
         mock_sub_repo.find_by_id.return_value = None
 
-        with pytest.raises(ValueError, match="not found"):
-            subscription_service.cancel_subscription(sub_id)
+        result = subscription_service.cancel_subscription(sub_id)
+
+        assert result.success is False
+        assert "not found" in result.error.lower()
 
 
 class TestSubscriptionServiceGetUserSubscriptions:

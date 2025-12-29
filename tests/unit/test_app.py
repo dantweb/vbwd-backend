@@ -52,6 +52,47 @@ class TestAppFactory:
         assert response.json["error"] == "Not found"
 
 
+class TestContainerWiring:
+    """Test cases for DI container wiring."""
+
+    def test_app_has_container(self, app):
+        """Application should have container attribute."""
+        assert hasattr(app, 'container')
+
+    def test_container_has_db_session_override(self, app, client):
+        """Container should have db_session properly configured."""
+        from src.extensions import db
+
+        # Make a request to trigger before_request hook
+        client.get('/api/v1/health')
+
+        # Now container should be able to provide services
+        with app.app_context():
+            app.container.db_session.override(db.session)
+            auth_service = app.container.auth_service()
+            assert auth_service is not None
+
+    def test_container_provides_working_services(self, app, client):
+        """Container services should work with db session."""
+        from src.extensions import db
+        from src.services.auth_service import AuthService
+        from src.services.user_service import UserService
+        from src.services.subscription_service import SubscriptionService
+
+        with app.app_context():
+            # Override db_session to simulate request context
+            app.container.db_session.override(db.session)
+
+            # Get services from container
+            auth_service = app.container.auth_service()
+            user_service = app.container.user_service()
+            sub_service = app.container.subscription_service()
+
+            assert isinstance(auth_service, AuthService)
+            assert isinstance(user_service, UserService)
+            assert isinstance(sub_service, SubscriptionService)
+
+
 class TestConfig:
     """Test cases for configuration."""
 

@@ -13,6 +13,7 @@ class UserCreatedEvent(DomainEvent):
     user_id: UUID = None
     email: str = None
     role: str = None
+    first_name: Optional[str] = None
 
     def __post_init__(self):
         """Set event name and timestamp."""

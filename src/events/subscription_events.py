@@ -33,8 +33,12 @@ class SubscriptionActivatedEvent(DomainEvent):
     subscription_id: UUID = None
     user_id: UUID = None
     tarif_plan_id: UUID = None
+    plan_id: UUID = None  # Alias for tarif_plan_id
+    plan_name: Optional[str] = None
     started_at: datetime = None
     expires_at: datetime = None
+    user_email: Optional[str] = None
+    first_name: Optional[str] = None
 
     def __post_init__(self):
         """Set event name and timestamp."""
@@ -54,6 +58,9 @@ class SubscriptionCancelledEvent(DomainEvent):
     user_id: UUID = None
     cancelled_by: UUID = None
     reason: Optional[str] = None
+    plan_name: Optional[str] = None
+    user_email: Optional[str] = None
+    first_name: Optional[str] = None
 
     def __post_init__(self):
         """Set event name and timestamp."""
@@ -92,6 +99,9 @@ class PaymentCompletedEvent(DomainEvent):
     transaction_id: str = None
     amount: Decimal = None
     currency: str = None
+    invoice_number: Optional[str] = None
+    user_email: Optional[str] = None
+    first_name: Optional[str] = None
 
     def __post_init__(self):
         """Set event name and timestamp."""
@@ -110,6 +120,10 @@ class PaymentFailedEvent(DomainEvent):
     subscription_id: UUID = None
     user_id: UUID = None
     error_message: str = None
+    plan_name: Optional[str] = None
+    user_email: Optional[str] = None
+    first_name: Optional[str] = None
+    retry_url: Optional[str] = None
 
     def __post_init__(self):
         """Set event name and timestamp."""

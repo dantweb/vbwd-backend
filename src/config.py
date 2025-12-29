@@ -2,6 +2,10 @@
 import os
 from typing import Optional
 
+# Constants - avoid magic numbers
+DEFAULT_JWT_EXPIRATION_HOURS = 24
+DEFAULT_SECRET_KEY = "dev-secret-key-change-in-production"
+
 
 def get_database_url() -> str:
     """Get PostgreSQL connection URL."""
@@ -31,7 +35,7 @@ class Config:
     """Base configuration."""
 
     # Flask
-    SECRET_KEY = os.getenv("FLASK_SECRET_KEY", "dev-secret-key-change-in-production")
+    SECRET_KEY = os.getenv("FLASK_SECRET_KEY", DEFAULT_SECRET_KEY)
 
     # Database
     SQLALCHEMY_DATABASE_URI = get_database_url()
@@ -48,7 +52,8 @@ class Config:
 
     # Security
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", SECRET_KEY)
-    JWT_ACCESS_TOKEN_EXPIRES = 3600  # 1 hour
+    JWT_EXPIRATION_HOURS = int(os.getenv("JWT_EXPIRATION_HOURS", DEFAULT_JWT_EXPIRATION_HOURS))
+    JWT_ACCESS_TOKEN_EXPIRES = JWT_EXPIRATION_HOURS * 3600  # Convert to seconds
 
     # Celery
     CELERY_BROKER_URL = get_redis_url()
@@ -67,6 +72,9 @@ class TestingConfig(Config):
 
     TESTING = True
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"  # In-memory for tests
+
+    # Override engine options for SQLite (doesn't support pool_size, max_overflow)
+    SQLALCHEMY_ENGINE_OPTIONS = {}
 
     # Use separate Redis DB for tests
     REDIS_URL = "redis://redis:6379/1"
@@ -88,8 +96,26 @@ class ProductionConfig(Config):
         self.SECRET_KEY = os.getenv("FLASK_SECRET_KEY")
         self.JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 
+        # Validate FLASK_SECRET_KEY is set
         if not self.SECRET_KEY:
             raise ValueError("FLASK_SECRET_KEY must be set in production")
+
+        # Validate JWT_SECRET_KEY is set
+        if not self.JWT_SECRET_KEY:
+            raise ValueError("JWT_SECRET_KEY must be set in production")
+
+        # Reject insecure default values
+        if self.SECRET_KEY == DEFAULT_SECRET_KEY:
+            raise ValueError(
+                "FLASK_SECRET_KEY is using insecure default value. "
+                "Please set a secure secret key in production."
+            )
+
+        if self.JWT_SECRET_KEY == DEFAULT_SECRET_KEY:
+            raise ValueError(
+                "JWT_SECRET_KEY is using insecure default value. "
+                "Please set a secure secret key in production."
+            )
 
 
 # Configuration dictionary

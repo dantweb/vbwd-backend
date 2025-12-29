@@ -1,6 +1,21 @@
 """Dependency injection container."""
 from dependency_injector import containers, providers
 
+from src.repositories.user_repository import UserRepository
+from src.repositories.user_details_repository import UserDetailsRepository
+from src.repositories.subscription_repository import SubscriptionRepository
+from src.repositories.tarif_plan_repository import TarifPlanRepository
+from src.repositories.invoice_repository import InvoiceRepository
+from src.repositories.currency_repository import CurrencyRepository
+from src.repositories.tax_repository import TaxRepository
+
+from src.services.auth_service import AuthService
+from src.services.user_service import UserService
+from src.services.subscription_service import SubscriptionService
+from src.services.tarif_plan_service import TarifPlanService
+from src.services.currency_service import CurrencyService
+from src.services.tax_service import TaxService
+
 
 class Container(containers.DeclarativeContainer):
     """
@@ -8,38 +23,91 @@ class Container(containers.DeclarativeContainer):
 
     Uses dependency-injector for managing service dependencies
     and lifecycle.
+
+    Usage:
+        container = Container()
+        container.db_session.override(db.session)
+
+        auth_service = container.auth_service()
     """
 
     # Configuration
     config = providers.Configuration()
 
-    # Database (will be added in Sprint 1)
-    # db = providers.Singleton(...)
+    # Database session - must be overridden with actual db.session
+    db_session = providers.Dependency()
 
-    # Redis Client (will be added in Sprint 1)
-    # redis_client = providers.Singleton(
-    #     RedisClient,
-    #     url=config.redis.url
-    # )
+    # ==================
+    # Repositories
+    # ==================
 
-    # Repositories (will be added in Sprint 1)
-    # user_repository = providers.Factory(
-    #     UserRepository,
-    #     session=db.provided.session
-    # )
+    user_repository = providers.Factory(
+        UserRepository,
+        session=db_session
+    )
 
-    # Services (will be added in Sprint 2+)
-    # user_service = providers.Factory(
-    #     UserService,
-    #     user_repository=user_repository
-    # )
+    user_details_repository = providers.Factory(
+        UserDetailsRepository,
+        session=db_session
+    )
 
-    # Plugins (will be added in Sprint 4)
-    # plugin_manager = providers.Singleton(PluginManager)
-    # stripe_plugin = providers.Singleton(
-    #     StripePlugin,
-    #     api_key=config.stripe.api_key
-    # )
+    subscription_repository = providers.Factory(
+        SubscriptionRepository,
+        session=db_session
+    )
 
-    # Event Dispatcher (will be added in Sprint 4)
-    # event_dispatcher = providers.Singleton(EventDispatcher)
+    tarif_plan_repository = providers.Factory(
+        TarifPlanRepository,
+        session=db_session
+    )
+
+    invoice_repository = providers.Factory(
+        InvoiceRepository,
+        session=db_session
+    )
+
+    currency_repository = providers.Factory(
+        CurrencyRepository,
+        session=db_session
+    )
+
+    tax_repository = providers.Factory(
+        TaxRepository,
+        session=db_session
+    )
+
+    # ==================
+    # Services
+    # ==================
+
+    auth_service = providers.Factory(
+        AuthService,
+        user_repository=user_repository
+    )
+
+    user_service = providers.Factory(
+        UserService,
+        user_repository=user_repository,
+        user_details_repository=user_details_repository
+    )
+
+    subscription_service = providers.Factory(
+        SubscriptionService,
+        subscription_repo=subscription_repository,
+        tarif_plan_repo=tarif_plan_repository
+    )
+
+    tarif_plan_service = providers.Factory(
+        TarifPlanService,
+        tarif_plan_repository=tarif_plan_repository
+    )
+
+    currency_service = providers.Factory(
+        CurrencyService,
+        currency_repository=currency_repository
+    )
+
+    tax_service = providers.Factory(
+        TaxService,
+        tax_repository=tax_repository
+    )
