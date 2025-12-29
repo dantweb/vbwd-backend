@@ -80,6 +80,20 @@ class BaseRepository(Generic[T]):
                 "Concurrent modification detected during save"
             )
 
+    def update(self, entity: T) -> T:
+        """
+        Update entity (alias for save).
+
+        Args:
+            entity: Entity to update
+
+        Returns:
+            Updated entity
+        """
+        self._session.commit()
+        self._session.refresh(entity)
+        return entity
+
     def delete(self, id: Union[UUID, str]) -> bool:
         """Delete entity by ID."""
         entity = self.find_by_id(id)

@@ -1,6 +1,50 @@
 """Flask application factory."""
 from flask import Flask, jsonify, make_response
 from typing import Optional, Dict, Any
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+def _register_event_handlers(app: Flask, container) -> None:
+    """
+    Register event handlers with the dispatcher.
+
+    Args:
+        app: Flask application instance
+        container: DI container
+    """
+    from src.events.security_events import PasswordResetRequestEvent, PasswordResetExecuteEvent
+    from src.handlers.password_reset_handler import PasswordResetHandler
+
+    try:
+        dispatcher = container.event_dispatcher()
+
+        # Create a mock email service for now if not configured
+        # In production, this should be properly configured
+        class MockEmailService:
+            def send_template(self, to, template, context):
+                logger.info(f"[MockEmail] Would send '{template}' to {to}")
+                return type('EmailResult', (), {'success': True})()
+
+        email_service = MockEmailService()
+
+        # Create password reset handler
+        password_reset_handler = PasswordResetHandler(
+            password_reset_service=container.password_reset_service(),
+            email_service=email_service,
+            activity_logger=container.activity_logger(),
+            reset_url_base=app.config.get('RESET_URL_BASE', 'http://localhost:5173/reset-password')
+        )
+
+        # Register handlers for security events
+        dispatcher.register("security.password_reset.request", password_reset_handler)
+        dispatcher.register("security.password_reset.execute", password_reset_handler)
+
+        logger.info("Event handlers registered successfully")
+
+    except Exception as e:
+        logger.warning(f"Failed to register event handlers: {e}")
 
 
 def create_app(config: Optional[Dict[str, Any]] = None) -> Flask:
@@ -23,9 +67,33 @@ def create_app(config: Optional[Dict[str, Any]] = None) -> Flask:
         app.config.from_object(get_config())
 
     # Initialize extensions
-    from src.extensions import db, limiter
+    from src.extensions import db, limiter, csrf
     db.init_app(app)
     limiter.init_app(app)
+    csrf.init_app(app)
+
+    # Exempt API routes from CSRF (they use JWT authentication)
+    # CSRF is only needed for browser form submissions, not API calls
+    from src.routes.auth import auth_bp
+    from src.routes.user import user_bp
+    from src.routes.tarif_plans import tarif_plans_bp
+    from src.routes.subscriptions import subscriptions_bp
+    from src.routes.invoices import invoices_bp
+    from src.routes.admin import (
+        admin_users_bp,
+        admin_subs_bp,
+        admin_invoices_bp,
+        admin_plans_bp
+    )
+    csrf.exempt(auth_bp)
+    csrf.exempt(user_bp)
+    csrf.exempt(tarif_plans_bp)
+    csrf.exempt(subscriptions_bp)
+    csrf.exempt(invoices_bp)
+    csrf.exempt(admin_users_bp)
+    csrf.exempt(admin_subs_bp)
+    csrf.exempt(admin_invoices_bp)
+    csrf.exempt(admin_plans_bp)
 
     # Initialize DI container
     from src.container import Container
@@ -40,18 +108,10 @@ def create_app(config: Optional[Dict[str, Any]] = None) -> Flask:
         """Inject db session into container for each request."""
         container.db_session.override(db.session)
 
-    # Register blueprints
-    from src.routes.auth import auth_bp
-    from src.routes.user import user_bp
-    from src.routes.tarif_plans import tarif_plans_bp
-    from src.routes.subscriptions import subscriptions_bp
-    from src.routes.invoices import invoices_bp
-    from src.routes.admin import (
-        admin_users_bp,
-        admin_subs_bp,
-        admin_invoices_bp,
-        admin_plans_bp
-    )
+    # Register event handlers
+    _register_event_handlers(app, container)
+
+    # Register blueprints (already imported above for CSRF exemption)
     app.register_blueprint(auth_bp)
     app.register_blueprint(user_bp)
     app.register_blueprint(tarif_plans_bp, url_prefix="/api/v1/tarif-plans")

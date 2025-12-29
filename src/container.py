@@ -8,6 +8,7 @@ from src.repositories.tarif_plan_repository import TarifPlanRepository
 from src.repositories.invoice_repository import InvoiceRepository
 from src.repositories.currency_repository import CurrencyRepository
 from src.repositories.tax_repository import TaxRepository
+from src.repositories.password_reset_repository import PasswordResetRepository
 
 from src.services.auth_service import AuthService
 from src.services.user_service import UserService
@@ -15,6 +16,11 @@ from src.services.subscription_service import SubscriptionService
 from src.services.tarif_plan_service import TarifPlanService
 from src.services.currency_service import CurrencyService
 from src.services.tax_service import TaxService
+from src.services.password_reset_service import PasswordResetService
+from src.services.activity_logger import ActivityLogger
+
+from src.events.domain import DomainEventDispatcher
+from src.handlers.password_reset_handler import PasswordResetHandler
 
 
 class Container(containers.DeclarativeContainer):
@@ -111,3 +117,32 @@ class Container(containers.DeclarativeContainer):
         TaxService,
         tax_repository=tax_repository
     )
+
+    # ==================
+    # Password Reset
+    # ==================
+
+    password_reset_repository = providers.Factory(
+        PasswordResetRepository,
+        session=db_session
+    )
+
+    activity_logger = providers.Singleton(
+        ActivityLogger
+    )
+
+    password_reset_service = providers.Factory(
+        PasswordResetService,
+        user_repository=user_repository,
+        reset_repository=password_reset_repository
+    )
+
+    # ==================
+    # Event System
+    # ==================
+
+    event_dispatcher = providers.Singleton(
+        DomainEventDispatcher
+    )
+
+    # Note: Handlers are registered in app.py after container is wired

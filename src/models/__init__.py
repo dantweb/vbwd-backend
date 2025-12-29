@@ -8,6 +8,9 @@ from src.models.price import Price
 from src.models.tarif_plan import TarifPlan
 from src.models.subscription import Subscription
 from src.models.invoice import UserInvoice
+from src.models.password_reset_token import PasswordResetToken
+from src.models.role import Role, Permission, role_permissions, user_roles
+from src.models.feature_usage import FeatureUsage
 from src.models.enums import (
     UserStatus,
     UserRole,
@@ -29,6 +32,13 @@ __all__ = [
     "TarifPlan",
     "Subscription",
     "UserInvoice",
+    "PasswordResetToken",
+    "Role",
+    "Permission",
+    "FeatureUsage",
+    # Association tables
+    "role_permissions",
+    "user_roles",
     # Enums
     "UserStatus",
     "UserRole",

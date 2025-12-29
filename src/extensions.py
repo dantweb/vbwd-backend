@@ -2,6 +2,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from flask_wtf.csrf import CSRFProtect
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
 from src.config import DATABASE_CONFIG, get_redis_url
@@ -16,6 +17,10 @@ limiter = Limiter(
     storage_uri=get_redis_url(),
     strategy="fixed-window",  # or "moving-window" for stricter limiting
 )
+
+# CSRF Protection
+# Note: API routes using JWT authentication are exempt (see app.py)
+csrf = CSRFProtect()
 
 
 def create_db_engine():

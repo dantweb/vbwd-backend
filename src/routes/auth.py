@@ -1,5 +1,5 @@
 """Authentication routes."""
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from marshmallow import ValidationError
 from src.schemas.auth_schemas import (
     RegisterRequestSchema,
@@ -9,6 +9,10 @@ from src.schemas.auth_schemas import (
 from src.services.auth_service import AuthService
 from src.repositories.user_repository import UserRepository
 from src.extensions import db, limiter
+from src.events.security_events import (
+    PasswordResetRequestEvent,
+    PasswordResetExecuteEvent,
+)
 
 # Create blueprint
 auth_bp = Blueprint('auth', __name__, url_prefix='/api/v1/auth')
@@ -115,3 +119,100 @@ def login():
         return jsonify(auth_response_schema.dump(result)), 200
     else:
         return jsonify(auth_response_schema.dump(result)), 401
+
+
+@auth_bp.route('/forgot-password', methods=['POST'])
+@limiter.limit("3 per minute")
+def forgot_password():
+    """
+    Request password reset.
+
+    Flow: Route → emit event → Dispatcher → Handler → Service → DB
+
+    ---
+    Request body:
+        {
+            "email": "user@example.com"
+        }
+
+    Returns:
+        200: {
+            "message": "If email exists, reset link sent"
+        }
+        400: {
+            "error": "Email required"
+        }
+    """
+    data = request.get_json() or {}
+    email = data.get('email')
+
+    if not email:
+        return jsonify({'error': 'Email required'}), 400
+
+    # Get dispatcher from container
+    try:
+        dispatcher = current_app.container.event_dispatcher()
+
+        # Emit event - handler will do the work
+        result = dispatcher.emit(
+            PasswordResetRequestEvent(
+                email=email,
+                request_ip=request.remote_addr
+            )
+        )
+
+        # Always return success (don't reveal if email exists)
+        return jsonify(result.data or {'message': 'If email exists, reset link sent'})
+    except Exception:
+        # Even on error, don't reveal information
+        return jsonify({'message': 'If email exists, reset link sent'})
+
+
+@auth_bp.route('/reset-password', methods=['POST'])
+@limiter.limit("5 per minute")
+def reset_password():
+    """
+    Execute password reset with token.
+
+    Flow: Route → emit event → Dispatcher → Handler → Service → DB
+
+    ---
+    Request body:
+        {
+            "token": "reset_token_here",
+            "new_password": "NewSecurePassword123!"
+        }
+
+    Returns:
+        200: {
+            "message": "Password reset successful"
+        }
+        400: {
+            "error": "Error message"
+        }
+    """
+    data = request.get_json() or {}
+    token = data.get('token')
+    new_password = data.get('new_password')
+
+    if not token or not new_password:
+        return jsonify({'error': 'Token and new password required'}), 400
+
+    # Get dispatcher from container
+    try:
+        dispatcher = current_app.container.event_dispatcher()
+
+        # Emit event - handler will do the work
+        result = dispatcher.emit(
+            PasswordResetExecuteEvent(
+                token=token,
+                new_password=new_password,
+                reset_ip=request.remote_addr
+            )
+        )
+
+        if result.success:
+            return jsonify(result.data or {'message': 'Password reset successful'})
+        return jsonify({'error': result.error}), 400
+    except Exception as e:
+        return jsonify({'error': 'Password reset failed'}), 400

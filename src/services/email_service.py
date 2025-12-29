@@ -500,3 +500,47 @@ class EmailService:
         except TemplateNotFoundError as e:
             logger.error(f"Template error: {e}")
             return EmailResult(success=False, error=str(e))
+
+    def send_template(
+        self,
+        to: str,
+        template: str,
+        context: Dict[str, Any],
+        subject: Optional[str] = None
+    ) -> EmailResult:
+        """
+        Send templated email.
+
+        Generic method for sending emails using templates.
+
+        Args:
+            to: Recipient email address.
+            template: Template name (without extension).
+            context: Template context variables.
+            subject: Optional custom subject (defaults based on template).
+
+        Returns:
+            EmailResult with success status.
+        """
+        # Default subjects for known templates
+        default_subjects = {
+            "password_reset": "Reset Your Password",
+            "password_changed": "Your Password Has Been Changed",
+            "welcome": "Welcome to VBWD!",
+            "subscription_activated": "Subscription Activated",
+            "subscription_cancelled": "Subscription Cancelled",
+        }
+
+        try:
+            text_body, html_body = self.render_template(template, context)
+            email_subject = subject or default_subjects.get(template, f"VBWD - {template.replace('_', ' ').title()}")
+
+            return self.send_email(
+                to_email=to,
+                subject=email_subject,
+                body_text=text_body,
+                body_html=html_body
+            )
+        except TemplateNotFoundError as e:
+            logger.error(f"Template error: {e}")
+            return EmailResult(success=False, error=str(e))
