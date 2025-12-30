@@ -79,7 +79,7 @@ class UserService(IUserService):
                 if hasattr(user_details, key):
                     setattr(user_details, key, value)
 
-            return self._user_details_repo.create(user_details)
+            return self._user_details_repo.save(user_details)
 
     def update_user_status(self, user_id: UUID, status: UserStatus) -> Optional[User]:
         """Update user status.

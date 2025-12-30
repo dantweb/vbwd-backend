@@ -136,7 +136,7 @@ class TestDataSeeder:
 
     def _create_test_user(self) -> Optional[User]:
         """
-        Create test user if not exists.
+        Create test user if not exists, or reset password if it does.
 
         Returns:
             Created or existing User, or None on error.
@@ -146,6 +146,9 @@ class TestDataSeeder:
 
         existing = self.session.query(User).filter_by(email=email).first()
         if existing:
+            # Reset password to known state for test consistency
+            existing.password_hash = self._hash_password(password)
+            self.session.flush()
             return existing
 
         user = User(

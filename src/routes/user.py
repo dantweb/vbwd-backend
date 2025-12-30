@@ -9,6 +9,7 @@ from src.schemas.user_schemas import (
     UserProfileSchema
 )
 from src.services.user_service import UserService
+from src.services.auth_service import AuthService
 from src.repositories.user_repository import UserRepository
 from src.repositories.user_details_repository import UserDetailsRepository
 from src.extensions import db
@@ -145,3 +146,49 @@ def update_details():
     details = user_service.update_user_details(user_id, data)
 
     return jsonify(user_details_schema.dump(details)), 200
+
+
+@user_bp.route('/change-password', methods=['POST'])
+@require_auth
+def change_password():
+    """Change current user's password.
+
+    Requires: Bearer token in Authorization header
+
+    Request body:
+        {
+            "currentPassword": "OldPassword123!",
+            "newPassword": "NewPassword123!"
+        }
+
+    Returns:
+        200: {"success": true}
+        400: If validation fails or current password is wrong
+    """
+    user_id = g.user_id
+    data = request.get_json() or {}
+
+    current_password = data.get('currentPassword')
+    new_password = data.get('newPassword')
+
+    if not current_password or not new_password:
+        return jsonify({'error': 'Current password and new password are required'}), 400
+
+    # Initialize services
+    user_repo = UserRepository(db.session)
+    auth_service = AuthService(user_repository=user_repo)
+
+    # Get user
+    user = user_repo.find_by_id(user_id)
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+
+    # Verify current password
+    if not auth_service.verify_password(current_password, user.password_hash):
+        return jsonify({'error': 'Current password is incorrect'}), 400
+
+    # Update password
+    user.password_hash = auth_service.hash_password(new_password)
+    user_repo.save(user)
+
+    return jsonify({'success': True}), 200
