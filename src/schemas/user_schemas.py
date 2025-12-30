@@ -25,12 +25,11 @@ class UserDetailsSchema(Schema):
     first_name = fields.Str(allow_none=True, validate=validate.Length(max=100))
     last_name = fields.Str(allow_none=True, validate=validate.Length(max=100))
     phone = fields.Str(allow_none=True, validate=validate.Length(max=20))
-    address = fields.Str(allow_none=True, validate=validate.Length(max=255))
+    address_line_1 = fields.Str(allow_none=True, validate=validate.Length(max=255))
+    address_line_2 = fields.Str(allow_none=True, validate=validate.Length(max=255))
     city = fields.Str(allow_none=True, validate=validate.Length(max=100))
-    country = fields.Str(allow_none=True, validate=validate.Length(max=100))
     postal_code = fields.Str(allow_none=True, validate=validate.Length(max=20))
-    company = fields.Str(allow_none=True, validate=validate.Length(max=255))
-    vat_number = fields.Str(allow_none=True, validate=validate.Length(max=50))
+    country = fields.Str(allow_none=True, validate=validate.Length(max=2))
     created_at = fields.DateTime(dump_only=True)
     updated_at = fields.DateTime(dump_only=True)
 
@@ -45,12 +44,11 @@ class UserDetailsUpdateSchema(Schema):
     first_name = fields.Str(allow_none=True, validate=validate.Length(max=100))
     last_name = fields.Str(allow_none=True, validate=validate.Length(max=100))
     phone = fields.Str(allow_none=True, validate=validate.Length(max=20))
-    address = fields.Str(allow_none=True, validate=validate.Length(max=255))
+    address_line_1 = fields.Str(allow_none=True, validate=validate.Length(max=255))
+    address_line_2 = fields.Str(allow_none=True, validate=validate.Length(max=255))
     city = fields.Str(allow_none=True, validate=validate.Length(max=100))
-    country = fields.Str(allow_none=True, validate=validate.Length(max=100))
     postal_code = fields.Str(allow_none=True, validate=validate.Length(max=20))
-    company = fields.Str(allow_none=True, validate=validate.Length(max=255))
-    vat_number = fields.Str(allow_none=True, validate=validate.Length(max=50))
+    country = fields.Str(allow_none=True, validate=validate.Length(max=2))
 
     class Meta:
         """Schema metadata."""

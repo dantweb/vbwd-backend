@@ -114,12 +114,11 @@ def update_details():
             "first_name": "John",
             "last_name": "Doe",
             "phone": "+1234567890",
-            "address": "123 Main St",
+            "address_line_1": "123 Main St",
+            "address_line_2": "Apt 4B",
             "city": "New York",
-            "country": "USA",
             "postal_code": "10001",
-            "company": "Acme Inc",
-            "vat_number": "US123456789"
+            "country": "US"
         }
 
     Returns:

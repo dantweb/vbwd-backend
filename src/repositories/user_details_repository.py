@@ -15,7 +15,7 @@ class UserDetailsRepository(BaseRepository[UserDetails]):
         Args:
             session: SQLAlchemy database session
         """
-        super().__init__(UserDetails, session)
+        super().__init__(session=session, model=UserDetails)
 
     def find_by_user_id(self, user_id: UUID) -> Optional[UserDetails]:
         """Find user details by user ID.
