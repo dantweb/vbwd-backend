@@ -100,16 +100,22 @@ def create_app(config: Optional[Dict[str, Any]] = None) -> Flask:
     container = Container()
 
     # Wire container to use Flask-SQLAlchemy session
-    # The session is overridden per-request via before_request hook
+    # Initial override for app startup (event handlers, etc.)
+    # Per-request override happens in before_request hook
     app.container = container
+
+    # Override db_session for app initialization (required for event handlers)
+    with app.app_context():
+        container.db_session.override(db.session)
 
     @app.before_request
     def inject_db_session():
         """Inject db session into container for each request."""
         container.db_session.override(db.session)
 
-    # Register event handlers
-    _register_event_handlers(app, container)
+    # Register event handlers (now db_session is available)
+    with app.app_context():
+        _register_event_handlers(app, container)
 
     # Register blueprints (already imported above for CSRF exemption)
     app.register_blueprint(auth_bp)

@@ -93,6 +93,59 @@ class TestContainerWiring:
             assert isinstance(sub_service, SubscriptionService)
 
 
+class TestEventHandlerRegistration:
+    """Test cases for event handler registration during app startup."""
+
+    def test_event_handlers_register_without_dependency_error(self, caplog):
+        """Event handlers should register without db_session dependency errors.
+
+        This test verifies that the Container.db_session dependency is properly
+        configured before event handlers are registered during app creation.
+        """
+        import logging
+        from src.app import create_app
+        from src.config import get_database_url
+
+        caplog.set_level(logging.WARNING)
+
+        # Create app - this should not produce dependency errors
+        app = create_app({
+            "TESTING": True,
+            "SQLALCHEMY_DATABASE_URI": get_database_url(),
+            "SQLALCHEMY_TRACK_MODIFICATIONS": False,
+            "RATELIMIT_ENABLED": False,
+        })
+
+        # Check that no dependency errors were logged
+        dependency_errors = [
+            record for record in caplog.records
+            if 'Dependency' in record.message and 'not defined' in record.message
+        ]
+
+        assert len(dependency_errors) == 0, (
+            f"Expected no dependency errors, but found: "
+            f"{[r.message for r in dependency_errors]}"
+        )
+
+    def test_event_dispatcher_has_handlers_registered(self):
+        """Event dispatcher should have password reset handlers registered."""
+        from src.app import create_app
+        from src.config import get_database_url
+
+        app = create_app({
+            "TESTING": True,
+            "SQLALCHEMY_DATABASE_URI": get_database_url(),
+            "SQLALCHEMY_TRACK_MODIFICATIONS": False,
+            "RATELIMIT_ENABLED": False,
+        })
+
+        dispatcher = app.container.event_dispatcher()
+
+        # Check that handlers are registered for security events
+        assert "security.password_reset.request" in dispatcher._handlers
+        assert "security.password_reset.execute" in dispatcher._handlers
+
+
 class TestConfig:
     """Test cases for configuration."""
 
