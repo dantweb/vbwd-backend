@@ -1,4 +1,4 @@
-.PHONY: up down build test test-unit test-coverage logs shell clean
+.PHONY: up down build test test-unit test-integration test-integration-keep-data test-coverage seed-test-data cleanup-test-data logs shell clean lint pre-commit pre-commit-quick
 
 # Start all services
 up:
@@ -16,7 +16,7 @@ down:
 build:
 	docker-compose build
 
-# Run all tests
+# Run all tests (unit tests with SQLite)
 test:
 	docker-compose run --rm test pytest -v
 
@@ -24,9 +24,29 @@ test:
 test-unit:
 	docker-compose run --rm test pytest tests/unit/ -v
 
+# Run integration tests with real PostgreSQL and HTTP requests
+# Requires: services running (make up)
+test-integration:
+	docker-compose --profile test-integration run --rm test-integration pytest tests/integration/test_api_endpoints.py -v
+
+# Run integration tests and keep test data for debugging
+test-integration-keep-data:
+	TEST_DATA_CLEANUP=false docker-compose --profile test-integration run --rm test-integration pytest tests/integration/test_api_endpoints.py -v
+
+# Seed test data manually (requires TEST_DATA_SEED=true)
+seed-test-data:
+	TEST_DATA_SEED=true docker-compose exec api flask seed-test-data
+
+# Cleanup test data manually (requires TEST_DATA_CLEANUP=true)
+cleanup-test-data:
+	TEST_DATA_CLEANUP=true docker-compose exec api flask cleanup-test-data
+
 # Run tests with coverage
 test-coverage:
 	docker-compose run --rm test pytest --cov=src --cov-report=term-missing
+
+# Run all tests (unit + integration)
+test-all: test test-integration
 
 # View logs
 logs:
@@ -42,3 +62,15 @@ clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
 	find . -type d -name ".pytest_cache" -exec rm -rf {} + 2>/dev/null || true
 	find . -type f -name "*.pyc" -delete 2>/dev/null || true
+
+# Static code analysis only (black, flake8, mypy)
+lint:
+	./bin/pre-commit-check.sh --lint
+
+# Full pre-commit check (lint + unit + integration)
+pre-commit:
+	./bin/pre-commit-check.sh
+
+# Quick pre-commit check (lint + unit, skip integration)
+pre-commit-quick:
+	./bin/pre-commit-check.sh --quick

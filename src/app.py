@@ -181,4 +181,9 @@ def create_app(config: Optional[Dict[str, Any]] = None) -> Flask:
             response.headers['Retry-After'] = '60'
         return response
 
+    # Register CLI commands
+    from src.cli.test_data import seed_test_data_command, cleanup_test_data_command
+    app.cli.add_command(seed_test_data_command)
+    app.cli.add_command(cleanup_test_data_command)
+
     return app
