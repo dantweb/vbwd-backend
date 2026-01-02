@@ -59,6 +59,9 @@ def create_app(config: Optional[Dict[str, Any]] = None) -> Flask:
     """
     app = Flask(__name__)
 
+    # Disable strict slashes to prevent redirects that break nginx proxy
+    app.url_map.strict_slashes = False
+
     # Load configuration
     if config:
         app.config.update(config)
