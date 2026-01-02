@@ -6,12 +6,22 @@ from uuid import UUID
 
 
 @dataclass
+class UserData:
+    """User data returned in auth responses."""
+    id: str
+    email: str
+    name: Optional[str] = None
+    roles: Optional[list] = None
+
+
+@dataclass
 class AuthResult:
     """Result of authentication operation."""
     success: bool
     user_id: Optional[UUID] = None
     token: Optional[str] = None
     error: Optional[str] = None
+    user: Optional[UserData] = None
 
 
 class IAuthService(ABC):

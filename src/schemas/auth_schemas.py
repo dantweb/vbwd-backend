@@ -69,6 +69,15 @@ class LoginRequestSchema(Schema):
     )
 
 
+class UserDataSchema(Schema):
+    """Schema for user data in auth response."""
+
+    id = fields.Str(required=True)
+    email = fields.Email(required=True)
+    name = fields.Str(allow_none=True)
+    roles = fields.List(fields.Str(), allow_none=True)
+
+
 class AuthResponseSchema(Schema):
     """Schema for authentication response."""
 
@@ -76,3 +85,4 @@ class AuthResponseSchema(Schema):
     token = fields.Str(allow_none=True)
     user_id = fields.UUID(allow_none=True)
     error = fields.Str(allow_none=True)
+    user = fields.Nested(UserDataSchema, allow_none=True)

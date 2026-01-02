@@ -5,7 +5,7 @@ import jwt
 from datetime import datetime, timedelta
 from typing import Optional
 from uuid import UUID
-from src.interfaces.auth import IAuthService, AuthResult
+from src.interfaces.auth import IAuthService, AuthResult, UserData
 from src.repositories.user_repository import UserRepository
 from src.models.user import User
 from src.models.enums import UserStatus, UserRole
@@ -113,10 +113,19 @@ class AuthService(IAuthService):
         # Generate token
         token = self._generate_token(user.id, user.email)
 
+        # Build user data for response
+        user_data = UserData(
+            id=str(user.id),
+            email=user.email,
+            name=user.email.split('@')[0],  # Use email prefix as name if no name field
+            roles=[user.role.value] if user.role else ['user']
+        )
+
         return AuthResult(
             success=True,
             user_id=user.id,
-            token=token
+            token=token,
+            user=user_data
         )
 
     def verify_token(self, token: str) -> Optional[UUID]:
