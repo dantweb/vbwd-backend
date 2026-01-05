@@ -14,7 +14,7 @@ class CurrencyRepository(BaseRepository[Currency]):
         Args:
             session: SQLAlchemy database session
         """
-        super().__init__(Currency, session)
+        super().__init__(session, Currency)
 
     def find_by_code(self, code: str) -> Optional[Currency]:
         """Find currency by ISO code.

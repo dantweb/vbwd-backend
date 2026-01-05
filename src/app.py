@@ -82,6 +82,7 @@ def create_app(config: Optional[Dict[str, Any]] = None) -> Flask:
     from src.routes.tarif_plans import tarif_plans_bp
     from src.routes.subscriptions import subscriptions_bp
     from src.routes.invoices import invoices_bp
+    from src.routes.events import events_bp
     from src.routes.admin import (
         admin_users_bp,
         admin_subs_bp,
@@ -93,6 +94,7 @@ def create_app(config: Optional[Dict[str, Any]] = None) -> Flask:
     csrf.exempt(tarif_plans_bp)
     csrf.exempt(subscriptions_bp)
     csrf.exempt(invoices_bp)
+    csrf.exempt(events_bp)
     csrf.exempt(admin_users_bp)
     csrf.exempt(admin_subs_bp)
     csrf.exempt(admin_invoices_bp)
@@ -126,6 +128,7 @@ def create_app(config: Optional[Dict[str, Any]] = None) -> Flask:
     app.register_blueprint(tarif_plans_bp, url_prefix="/api/v1/tarif-plans")
     app.register_blueprint(subscriptions_bp, url_prefix="/api/v1/user/subscriptions")
     app.register_blueprint(invoices_bp)
+    app.register_blueprint(events_bp)
     app.register_blueprint(admin_users_bp)
     app.register_blueprint(admin_subs_bp)
     app.register_blueprint(admin_invoices_bp)

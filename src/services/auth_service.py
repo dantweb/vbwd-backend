@@ -67,7 +67,7 @@ class AuthService(IAuthService):
         new_user.status = UserStatus.ACTIVE
         new_user.role = UserRole.USER
 
-        created_user = self._user_repo.create(new_user)
+        created_user = self._user_repo.save(new_user)
 
         # Generate token
         token = self._generate_token(created_user.id, created_user.email)

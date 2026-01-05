@@ -1,13 +1,158 @@
 """Admin subscription management routes."""
-from flask import Blueprint, jsonify, request
-from datetime import timedelta
+from flask import Blueprint, jsonify, request, current_app
+from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
 from src.middleware.auth import require_auth, require_admin
 from src.repositories.subscription_repository import SubscriptionRepository
+from src.repositories.user_repository import UserRepository
+from src.repositories.tarif_plan_repository import TarifPlanRepository
 from src.services.subscription_service import SubscriptionService
 from src.extensions import db
-from src.models.enums import SubscriptionStatus
+from src.models.subscription import Subscription
+from src.models.invoice import UserInvoice
+from src.models.enums import SubscriptionStatus, InvoiceStatus, BillingPeriod
 
 admin_subs_bp = Blueprint('admin_subscriptions', __name__, url_prefix='/api/v1/admin/subscriptions')
+
+
+def _get_billing_months(billing_period: BillingPeriod) -> int:
+    """Convert billing period to months."""
+    period_map = {
+        BillingPeriod.MONTHLY: 1,
+        BillingPeriod.QUARTERLY: 3,
+        BillingPeriod.YEARLY: 12,
+        BillingPeriod.WEEKLY: 1,  # Treat as 1 month minimum
+        BillingPeriod.ONE_TIME: 1200,  # ~100 years for lifetime
+    }
+    return period_map.get(billing_period, 1)
+
+
+@admin_subs_bp.route('/', methods=['POST'])
+@require_auth
+@require_admin
+def create_subscription():
+    """
+    Create subscription for user with auto-generated invoice.
+
+    Body:
+        - user_id: str (required, UUID)
+        - tarif_plan_id: str (required, UUID)
+        - started_at: str (required, ISO datetime)
+        - billing_period_months: int (optional, override plan's billing period)
+
+    Returns:
+        201: Created subscription with invoice
+        400: Validation error
+        404: User or plan not found
+        409: User already has active subscription
+    """
+    data = request.get_json() or {}
+
+    # Validate required fields
+    if not data.get('user_id'):
+        return jsonify({'error': 'user_id is required'}), 400
+    if not data.get('tarif_plan_id'):
+        return jsonify({'error': 'tarif_plan_id is required'}), 400
+    if not data.get('started_at'):
+        return jsonify({'error': 'started_at is required'}), 400
+
+    # Parse started_at
+    try:
+        started_at = datetime.fromisoformat(data['started_at'].replace('Z', '+00:00'))
+        # Convert to naive UTC datetime
+        if started_at.tzinfo:
+            started_at = started_at.replace(tzinfo=None)
+    except (ValueError, AttributeError):
+        return jsonify({'error': 'Invalid started_at format. Use ISO 8601.'}), 400
+
+    user_repo = UserRepository(db.session)
+    plan_repo = TarifPlanRepository(db.session)
+    sub_repo = SubscriptionRepository(db.session)
+
+    # Validate user exists
+    user = user_repo.find_by_id(data['user_id'])
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+
+    # Validate plan exists
+    plan = plan_repo.find_by_id(data['tarif_plan_id'])
+    if not plan:
+        return jsonify({'error': 'Plan not found'}), 404
+
+    # Check for existing active subscription
+    existing = sub_repo.find_active_by_user(data['user_id'])
+    if existing:
+        return jsonify({'error': 'User already has an active subscription'}), 409
+
+    # Calculate expiration
+    billing_months = data.get('billing_period_months') or _get_billing_months(plan.billing_period)
+    expires_at = started_at + relativedelta(months=billing_months)
+
+    # Determine initial status
+    now = datetime.utcnow()
+    status = SubscriptionStatus.ACTIVE if started_at <= now else SubscriptionStatus.PENDING
+
+    # Create subscription
+    subscription = Subscription()
+    subscription.user_id = user.id
+    subscription.tarif_plan_id = plan.id
+    subscription.status = status
+    subscription.started_at = started_at
+    subscription.expires_at = expires_at
+
+    db.session.add(subscription)
+    db.session.flush()  # Get subscription.id without committing
+
+    # Create invoice
+    invoice = UserInvoice()
+    invoice.user_id = user.id
+    invoice.tarif_plan_id = plan.id
+    invoice.subscription_id = subscription.id
+    invoice.invoice_number = UserInvoice.generate_invoice_number()
+    invoice.amount = plan.price or plan.price_float or 0
+    invoice.currency = plan.currency or 'EUR'
+    invoice.status = InvoiceStatus.PENDING
+    invoice.invoiced_at = datetime.utcnow()
+    invoice.expires_at = datetime.utcnow() + timedelta(days=30)
+
+    db.session.add(invoice)
+    db.session.commit()
+
+    # Dispatch events
+    try:
+        dispatcher = current_app.container.event_dispatcher()
+        dispatcher.emit('subscription:created', {
+            'subscription_id': str(subscription.id),
+            'user_id': str(user.id),
+            'plan_id': str(plan.id),
+            'status': status.value,
+        })
+        dispatcher.emit('invoice:created', {
+            'invoice_id': str(invoice.id),
+            'user_id': str(user.id),
+            'subscription_id': str(subscription.id),
+            'amount': str(invoice.amount),
+            'currency': invoice.currency,
+        })
+    except Exception:
+        pass  # Don't fail if event dispatcher not configured
+
+    return jsonify({
+        'id': str(subscription.id),
+        'user_id': str(subscription.user_id),
+        'tarif_plan_id': str(subscription.tarif_plan_id),
+        'status': subscription.status.value,
+        'started_at': subscription.started_at.isoformat() if subscription.started_at else None,
+        'expires_at': subscription.expires_at.isoformat() if subscription.expires_at else None,
+        'created_at': subscription.created_at.isoformat() if subscription.created_at else None,
+        'invoice': {
+            'id': str(invoice.id),
+            'invoice_number': invoice.invoice_number,
+            'amount': str(invoice.amount),
+            'currency': invoice.currency,
+            'status': invoice.status.value,
+        }
+    }), 201
 
 
 @admin_subs_bp.route('/', methods=['GET'])
