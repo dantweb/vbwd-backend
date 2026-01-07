@@ -13,7 +13,7 @@ db = SQLAlchemy()
 # Rate limiter - uses Redis for distributed rate limiting
 limiter = Limiter(
     key_func=get_remote_address,
-    default_limits=["200 per day", "50 per hour"],
+    default_limits=["10000 per day", "2000 per hour"],
     storage_uri=get_redis_url(),
     strategy="fixed-window",  # or "moving-window" for stricter limiting
 )

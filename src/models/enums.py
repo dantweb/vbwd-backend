@@ -21,6 +21,7 @@ class SubscriptionStatus(enum.Enum):
     """Subscription status."""
     PENDING = "pending"
     ACTIVE = "active"
+    TRIALING = "trialing"
     PAUSED = "paused"
     CANCELLED = "cancelled"
     EXPIRED = "expired"

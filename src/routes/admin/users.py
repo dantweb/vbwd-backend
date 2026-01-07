@@ -192,8 +192,10 @@ def update_user(user_id):
         user_id: UUID of the user
 
     Body:
-        - status: str (optional)
+        - status: str (optional, 'active', 'suspended', etc.)
+        - is_active: bool (optional, alternative to status)
         - role: str (optional)
+        - name: str (optional, full name to split into first/last)
 
     Returns:
         200: Updated user
@@ -207,6 +209,11 @@ def update_user(user_id):
 
     data = request.get_json() or {}
 
+    # Handle is_active -> status conversion (frontend sends is_active)
+    if 'is_active' in data:
+        user.status = UserStatus.ACTIVE if data['is_active'] else UserStatus.SUSPENDED
+
+    # Handle legacy status field
     if 'status' in data:
         try:
             user.status = UserStatus(data['status'])
@@ -214,16 +221,76 @@ def update_user(user_id):
             return jsonify({'error': f"Invalid status: {data['status']}"}), 400
 
     if 'role' in data:
-        from src.models.enums import UserRole
         try:
             user.role = UserRole(data['role'])
         except ValueError:
             return jsonify({'error': f"Invalid role: {data['role']}"}), 400
 
+    # Handle name -> UserDetails (frontend sends combined name)
+    if 'name' in data and data['name']:
+        parts = data['name'].strip().split(' ', 1)
+        first_name = parts[0]
+        last_name = parts[1] if len(parts) > 1 else ''
+
+        if user.details:
+            user.details.first_name = first_name
+            user.details.last_name = last_name
+        else:
+            user_details = UserDetails()
+            user_details.user_id = user.id
+            user_details.first_name = first_name
+            user_details.last_name = last_name
+            db.session.add(user_details)
+
     saved_user = user_repo.save(user)
 
     return jsonify({
         'user': saved_user.to_dict()
+    }), 200
+
+
+@admin_users_bp.route('/<user_id>/roles', methods=['PUT'])
+@require_auth
+@require_admin
+def update_user_roles(user_id):
+    """
+    Update user roles.
+
+    Args:
+        user_id: UUID of the user
+
+    Body:
+        - roles: list of strings (required)
+
+    Returns:
+        200: Updated user
+        400: Validation error
+        404: User not found
+    """
+    user_repo = UserRepository(db.session)
+    user = user_repo.find_by_id(user_id)
+
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+
+    data = request.get_json() or {}
+    roles = data.get('roles', [])
+
+    if not roles:
+        return jsonify({'error': 'At least one role is required'}), 400
+
+    # For now, use the first role (single-role model)
+    # TODO: Implement multi-role support in User model
+    try:
+        user.role = UserRole(roles[0])
+    except ValueError:
+        return jsonify({'error': f"Invalid role: {roles[0]}"}), 400
+
+    saved_user = user_repo.save(user)
+
+    return jsonify({
+        'user': saved_user.to_dict(),
+        'message': 'Roles updated'
     }), 200
 
 

@@ -87,7 +87,8 @@ def create_app(config: Optional[Dict[str, Any]] = None) -> Flask:
         admin_users_bp,
         admin_subs_bp,
         admin_invoices_bp,
-        admin_plans_bp
+        admin_plans_bp,
+        admin_analytics_bp
     )
     csrf.exempt(auth_bp)
     csrf.exempt(user_bp)
@@ -99,6 +100,7 @@ def create_app(config: Optional[Dict[str, Any]] = None) -> Flask:
     csrf.exempt(admin_subs_bp)
     csrf.exempt(admin_invoices_bp)
     csrf.exempt(admin_plans_bp)
+    csrf.exempt(admin_analytics_bp)
 
     # Initialize DI container
     from src.container import Container
@@ -133,6 +135,7 @@ def create_app(config: Optional[Dict[str, Any]] = None) -> Flask:
     app.register_blueprint(admin_subs_bp)
     app.register_blueprint(admin_invoices_bp)
     app.register_blueprint(admin_plans_bp)
+    app.register_blueprint(admin_analytics_bp)
 
     # Health check endpoint
     @app.route("/api/v1/health")

@@ -36,8 +36,10 @@ def create_subscription():
 
     Body:
         - user_id: str (required, UUID)
-        - tarif_plan_id: str (required, UUID)
-        - started_at: str (required, ISO datetime)
+        - plan_id or tarif_plan_id: str (required, UUID)
+        - started_at: str (optional, ISO datetime, defaults to now)
+        - status: str (optional, 'active' or 'trialing')
+        - trial_days: int (optional, for trialing status)
         - billing_period_months: int (optional, override plan's billing period)
 
     Returns:
@@ -51,19 +53,28 @@ def create_subscription():
     # Validate required fields
     if not data.get('user_id'):
         return jsonify({'error': 'user_id is required'}), 400
-    if not data.get('tarif_plan_id'):
-        return jsonify({'error': 'tarif_plan_id is required'}), 400
-    if not data.get('started_at'):
-        return jsonify({'error': 'started_at is required'}), 400
 
-    # Parse started_at
-    try:
-        started_at = datetime.fromisoformat(data['started_at'].replace('Z', '+00:00'))
-        # Convert to naive UTC datetime
-        if started_at.tzinfo:
-            started_at = started_at.replace(tzinfo=None)
-    except (ValueError, AttributeError):
-        return jsonify({'error': 'Invalid started_at format. Use ISO 8601.'}), 400
+    # Accept both plan_id (frontend) and tarif_plan_id (legacy)
+    plan_id = data.get('plan_id') or data.get('tarif_plan_id')
+    if not plan_id:
+        return jsonify({'error': 'plan_id is required'}), 400
+
+    # Parse started_at or default to now
+    started_at_str = data.get('started_at')
+    if started_at_str:
+        try:
+            started_at = datetime.fromisoformat(started_at_str.replace('Z', '+00:00'))
+            # Convert to naive UTC datetime
+            if started_at.tzinfo:
+                started_at = started_at.replace(tzinfo=None)
+        except (ValueError, AttributeError):
+            return jsonify({'error': 'Invalid started_at format. Use ISO 8601.'}), 400
+    else:
+        started_at = datetime.utcnow()
+
+    # Get optional parameters
+    trial_days = data.get('trial_days')
+    requested_status = data.get('status', 'active')
 
     user_repo = UserRepository(db.session)
     plan_repo = TarifPlanRepository(db.session)
@@ -75,7 +86,7 @@ def create_subscription():
         return jsonify({'error': 'User not found'}), 404
 
     # Validate plan exists
-    plan = plan_repo.find_by_id(data['tarif_plan_id'])
+    plan = plan_repo.find_by_id(plan_id)
     if not plan:
         return jsonify({'error': 'Plan not found'}), 404
 
@@ -84,13 +95,23 @@ def create_subscription():
     if existing:
         return jsonify({'error': 'User already has an active subscription'}), 409
 
-    # Calculate expiration
+    # Calculate expiration based on status
     billing_months = data.get('billing_period_months') or _get_billing_months(plan.billing_period)
-    expires_at = started_at + relativedelta(months=billing_months)
 
-    # Determine initial status
-    now = datetime.utcnow()
-    status = SubscriptionStatus.ACTIVE if started_at <= now else SubscriptionStatus.PENDING
+    # Handle trialing status with trial_days
+    if requested_status == 'trialing' and trial_days:
+        expires_at = started_at + timedelta(days=int(trial_days))
+        status = SubscriptionStatus.TRIALING
+    else:
+        expires_at = started_at + relativedelta(months=billing_months)
+        now = datetime.utcnow()
+        status = SubscriptionStatus.ACTIVE if started_at <= now else SubscriptionStatus.PENDING
+
+    # Override status if explicitly requested
+    if requested_status == 'trialing':
+        status = SubscriptionStatus.TRIALING
+    elif requested_status == 'active':
+        status = SubscriptionStatus.ACTIVE
 
     # Create subscription
     subscription = Subscription()
@@ -103,19 +124,21 @@ def create_subscription():
     db.session.add(subscription)
     db.session.flush()  # Get subscription.id without committing
 
-    # Create invoice
-    invoice = UserInvoice()
-    invoice.user_id = user.id
-    invoice.tarif_plan_id = plan.id
-    invoice.subscription_id = subscription.id
-    invoice.invoice_number = UserInvoice.generate_invoice_number()
-    invoice.amount = plan.price or plan.price_float or 0
-    invoice.currency = plan.currency or 'EUR'
-    invoice.status = InvoiceStatus.PENDING
-    invoice.invoiced_at = datetime.utcnow()
-    invoice.expires_at = datetime.utcnow() + timedelta(days=30)
+    # Create invoice (skip for trialing subscriptions)
+    invoice = None
+    if status != SubscriptionStatus.TRIALING:
+        invoice = UserInvoice()
+        invoice.user_id = user.id
+        invoice.tarif_plan_id = plan.id
+        invoice.subscription_id = subscription.id
+        invoice.invoice_number = UserInvoice.generate_invoice_number()
+        invoice.amount = plan.price or plan.price_float or 0
+        invoice.currency = plan.currency or 'EUR'
+        invoice.status = InvoiceStatus.PENDING
+        invoice.invoiced_at = datetime.utcnow()
+        invoice.expires_at = datetime.utcnow() + timedelta(days=30)
+        db.session.add(invoice)
 
-    db.session.add(invoice)
     db.session.commit()
 
     # Dispatch events
@@ -127,17 +150,19 @@ def create_subscription():
             'plan_id': str(plan.id),
             'status': status.value,
         })
-        dispatcher.emit('invoice:created', {
-            'invoice_id': str(invoice.id),
-            'user_id': str(user.id),
-            'subscription_id': str(subscription.id),
-            'amount': str(invoice.amount),
-            'currency': invoice.currency,
-        })
+        if invoice:
+            dispatcher.emit('invoice:created', {
+                'invoice_id': str(invoice.id),
+                'user_id': str(user.id),
+                'subscription_id': str(subscription.id),
+                'amount': str(invoice.amount),
+                'currency': invoice.currency,
+            })
     except Exception:
         pass  # Don't fail if event dispatcher not configured
 
-    return jsonify({
+    # Build response
+    response = {
         'id': str(subscription.id),
         'user_id': str(subscription.user_id),
         'tarif_plan_id': str(subscription.tarif_plan_id),
@@ -145,14 +170,18 @@ def create_subscription():
         'started_at': subscription.started_at.isoformat() if subscription.started_at else None,
         'expires_at': subscription.expires_at.isoformat() if subscription.expires_at else None,
         'created_at': subscription.created_at.isoformat() if subscription.created_at else None,
-        'invoice': {
+    }
+
+    if invoice:
+        response['invoice'] = {
             'id': str(invoice.id),
             'invoice_number': invoice.invoice_number,
             'amount': str(invoice.amount),
             'currency': invoice.currency,
             'status': invoice.status.value,
         }
-    }), 201
+
+    return jsonify(response), 201
 
 
 @admin_subs_bp.route('/', methods=['GET'])
