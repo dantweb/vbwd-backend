@@ -206,8 +206,23 @@ def list_subscriptions():
     status = request.args.get('status')
     user_id = request.args.get('user_id')
     plan_id = request.args.get('plan_id')
+    plan_name = request.args.get('plan')  # Frontend sends plan name
+
+    # Map American spelling to British for status
+    if status == 'canceled':
+        status = 'cancelled'
 
     sub_repo = SubscriptionRepository(db.session)
+    user_repo = UserRepository(db.session)
+    plan_repo = TarifPlanRepository(db.session)
+
+    # If plan name is provided, find the plan_id
+    if plan_name and not plan_id:
+        plans = plan_repo.find_all()
+        for plan in plans:
+            if plan.name == plan_name:
+                plan_id = str(plan.id)
+                break
 
     subscriptions, total = sub_repo.find_all_paginated(
         limit=limit,
@@ -217,8 +232,22 @@ def list_subscriptions():
         plan_id=plan_id
     )
 
+    # Enrich subscriptions with user and plan info for admin display
+    result = []
+    for sub in subscriptions:
+        sub_dict = sub.to_dict()
+        # Add user email
+        user = user_repo.find_by_id(str(sub.user_id))
+        sub_dict['user_email'] = user.email if user else ''
+        # Add plan name
+        plan = plan_repo.find_by_id(str(sub.tarif_plan_id))
+        sub_dict['plan_name'] = plan.name if plan else ''
+        # Add created_at for sorting
+        sub_dict['created_at'] = sub.created_at.isoformat() if sub.created_at else None
+        result.append(sub_dict)
+
     return jsonify({
-        'subscriptions': [sub.to_dict() for sub in subscriptions],
+        'subscriptions': result,
         'total': total,
         'limit': limit,
         'offset': offset
@@ -230,23 +259,63 @@ def list_subscriptions():
 @require_admin
 def get_subscription(subscription_id):
     """
-    Get subscription detail.
+    Get subscription detail with enriched user, plan, and payment data.
 
     Args:
         subscription_id: UUID of the subscription
 
     Returns:
-        200: Subscription details
+        200: Subscription details with user, plan, payment info
         404: Subscription not found
     """
+    from src.repositories.invoice_repository import InvoiceRepository
+
     sub_repo = SubscriptionRepository(db.session)
+    user_repo = UserRepository(db.session)
+    plan_repo = TarifPlanRepository(db.session)
+    invoice_repo = InvoiceRepository(db.session)
+
     subscription = sub_repo.find_by_id(subscription_id)
 
     if not subscription:
         return jsonify({'error': 'Subscription not found'}), 404
 
+    sub_dict = subscription.to_dict()
+
+    # Enrich with user info
+    user = user_repo.find_by_id(str(subscription.user_id))
+    if user:
+        sub_dict['user_email'] = user.email
+        sub_dict['user_name'] = (user.details.first_name + ' ' + user.details.last_name).strip() if user.details else ''
+
+    # Enrich with plan info
+    plan = plan_repo.find_by_id(str(subscription.tarif_plan_id))
+    if plan:
+        sub_dict['plan_name'] = plan.name
+        sub_dict['plan_description'] = plan.description
+        sub_dict['plan_price'] = str(plan.price) if plan.price else None
+        sub_dict['plan_billing_period'] = plan.billing_period.value if plan.billing_period else None
+
+    # Map to frontend expected fields
+    sub_dict['current_period_start'] = subscription.started_at.isoformat() if subscription.started_at else None
+    sub_dict['current_period_end'] = subscription.expires_at.isoformat() if subscription.expires_at else None
+    sub_dict['created_at'] = subscription.created_at.isoformat() if subscription.created_at else None
+
+    # Get payment history (invoices for this subscription)
+    invoices = invoice_repo.find_by_subscription(str(subscription.id))
+    payment_history = []
+    for inv in invoices:
+        payment_history.append({
+            'id': str(inv.id),
+            'amount': float(inv.amount) if inv.amount else 0,
+            'currency': inv.currency or 'EUR',
+            'status': inv.status.value if inv.status else 'pending',
+            'created_at': inv.created_at.isoformat() if inv.created_at else None
+        })
+    sub_dict['payment_history'] = payment_history
+
     return jsonify({
-        'subscription': subscription.to_dict()
+        'subscription': sub_dict
     }), 200
 
 
@@ -302,7 +371,7 @@ def cancel_subscription(subscription_id):
         404: Subscription not found
     """
     sub_repo = SubscriptionRepository(db.session)
-    sub_service = SubscriptionService(subscription_repository=sub_repo)
+    sub_service = SubscriptionService(subscription_repo=sub_repo)
 
     result = sub_service.cancel_subscription(subscription_id)
 
@@ -332,7 +401,7 @@ def activate_subscription(subscription_id):
         404: Subscription not found
     """
     sub_repo = SubscriptionRepository(db.session)
-    sub_service = SubscriptionService(subscription_repository=sub_repo)
+    sub_service = SubscriptionService(subscription_repo=sub_repo)
 
     result = sub_service.activate_subscription(subscription_id)
 

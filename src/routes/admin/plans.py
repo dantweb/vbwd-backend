@@ -254,3 +254,79 @@ def activate_plan(plan_id):
         'plan': saved_plan.to_dict(),
         'message': 'Plan activated'
     }), 200
+
+
+@admin_plans_bp.route('/<plan_id>/archive', methods=['POST'])
+@require_auth
+@require_admin
+def archive_plan(plan_id):
+    """
+    Archive (deactivate) a tariff plan.
+
+    Args:
+        plan_id: UUID of the plan
+
+    Returns:
+        200: Plan archived
+        404: Plan not found
+    """
+    plan_repo = TarifPlanRepository(db.session)
+    plan = plan_repo.find_by_id(plan_id)
+
+    if not plan:
+        return jsonify({'error': 'Plan not found'}), 404
+
+    plan.is_active = False
+    saved_plan = plan_repo.save(plan)
+
+    return jsonify({
+        'plan': saved_plan.to_dict(),
+        'message': 'Plan archived'
+    }), 200
+
+
+@admin_plans_bp.route('/<plan_id>/copy', methods=['POST'])
+@require_auth
+@require_admin
+def copy_plan(plan_id):
+    """
+    Create a copy of an existing tariff plan.
+
+    Args:
+        plan_id: UUID of the source plan
+
+    Returns:
+        201: New plan created
+        404: Source plan not found
+    """
+    plan_repo = TarifPlanRepository(db.session)
+    source_plan = plan_repo.find_by_id(plan_id)
+
+    if not source_plan:
+        return jsonify({'error': 'Plan not found'}), 404
+
+    # Create a copy with "(copy)" appended to the name
+    # Generate a unique slug for the copy
+    import re
+    from datetime import datetime
+    base_slug = source_plan.slug or re.sub(r'[^a-z0-9]+', '-', source_plan.name.lower()).strip('-')
+    new_slug = f"{base_slug}-copy-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
+
+    new_plan = TarifPlan(
+        name=f"{source_plan.name} (copy)",
+        slug=new_slug,
+        description=source_plan.description,
+        price=source_plan.price,
+        price_float=source_plan.price_float,
+        currency=source_plan.currency,
+        billing_period=source_plan.billing_period,
+        features=source_plan.features,
+        is_active=True  # New copy is active by default
+    )
+
+    saved_plan = plan_repo.save(new_plan)
+
+    return jsonify({
+        'plan': saved_plan.to_dict(),
+        'message': 'Plan copied successfully'
+    }), 201

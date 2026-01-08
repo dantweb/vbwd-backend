@@ -78,11 +78,24 @@ class User(BaseModel):
         Returns:
             Dictionary representation without password_hash.
         """
+        # Build name from details
+        name = None
+        if self.details:
+            name_parts = []
+            if self.details.first_name:
+                name_parts.append(self.details.first_name)
+            if self.details.last_name:
+                name_parts.append(self.details.last_name)
+            name = ' '.join(name_parts) if name_parts else None
+
         return {
-            "id": self.id,
+            "id": str(self.id),
             "email": self.email,
+            "name": name,
             "status": self.status.value,
+            "is_active": self.is_active,
             "role": self.role.value,
+            "roles": [self.role.value],
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
