@@ -64,7 +64,7 @@ class ISDKAdapter(ABC):
         amount: Decimal,
         currency: str,
         metadata: Dict[str, Any],
-        idempotency_key: Optional[str] = None
+        idempotency_key: Optional[str] = None,
     ) -> SDKResponse:
         """Create payment intent/order.
 
@@ -81,9 +81,7 @@ class ISDKAdapter(ABC):
 
     @abstractmethod
     def capture_payment(
-        self,
-        payment_intent_id: str,
-        idempotency_key: Optional[str] = None
+        self, payment_intent_id: str, idempotency_key: Optional[str] = None
     ) -> SDKResponse:
         """Capture authorized payment.
 
@@ -101,7 +99,7 @@ class ISDKAdapter(ABC):
         self,
         payment_intent_id: str,
         amount: Optional[Decimal] = None,
-        idempotency_key: Optional[str] = None
+        idempotency_key: Optional[str] = None,
     ) -> SDKResponse:
         """Refund payment.
 

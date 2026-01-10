@@ -35,6 +35,7 @@ class SubscriptionRepository(BaseRepository[Subscription]):
     def find_expiring_soon(self, days: int = 7) -> List[Subscription]:
         """Find subscriptions expiring within specified days."""
         from datetime import timedelta
+
         threshold = datetime.utcnow() + timedelta(days=days)
         return (
             self._session.query(Subscription)
@@ -62,7 +63,7 @@ class SubscriptionRepository(BaseRepository[Subscription]):
         offset: int = 0,
         status: Optional[str] = None,
         user_id: Optional[str] = None,
-        plan_id: Optional[str] = None
+        plan_id: Optional[str] = None,
     ) -> Tuple[List[Subscription], int]:
         """
         Find all subscriptions with pagination and filters.
@@ -99,6 +100,11 @@ class SubscriptionRepository(BaseRepository[Subscription]):
         total = query.count()
 
         # Apply pagination
-        subscriptions = query.order_by(Subscription.created_at.desc()).offset(offset).limit(limit).all()
+        subscriptions = (
+            query.order_by(Subscription.created_at.desc())
+            .offset(offset)
+            .limit(limit)
+            .all()
+        )
 
         return subscriptions, total

@@ -15,7 +15,7 @@ class WebhookService:
     def __init__(
         self,
         handlers: Optional[Dict[str, IWebhookHandler]] = None,
-        webhook_secrets: Optional[Dict[str, str]] = None
+        webhook_secrets: Optional[Dict[str, str]] = None,
     ):
         """Initialize webhook service.
 
@@ -59,11 +59,7 @@ class WebhookService:
         return self._handlers.get(provider)
 
     def process(
-        self,
-        provider: str,
-        payload: bytes,
-        signature: str,
-        headers: Dict[str, str]
+        self, provider: str, payload: bytes, signature: str, headers: Dict[str, str]
     ) -> WebhookResult:
         """Process incoming webhook.
 
@@ -79,37 +75,27 @@ class WebhookService:
         # Get handler for provider
         handler = self._handlers.get(provider)
         if not handler:
-            return WebhookResult(
-                success=False,
-                error=f"Unknown provider: {provider}"
-            )
+            return WebhookResult(success=False, error=f"Unknown provider: {provider}")
 
         # Get webhook secret
-        secret = self._secrets.get(provider, '')
+        secret = self._secrets.get(provider, "")
 
         # Verify signature
         if not handler.verify_signature(payload, signature, secret):
-            return WebhookResult(
-                success=False,
-                error="Invalid signature"
-            )
+            return WebhookResult(success=False, error="Invalid signature")
 
         # Parse JSON payload
         try:
             data = json.loads(payload)
         except json.JSONDecodeError as e:
-            return WebhookResult(
-                success=False,
-                error=f"Failed to parse JSON: {str(e)}"
-            )
+            return WebhookResult(success=False, error=f"Failed to parse JSON: {str(e)}")
 
         # Parse to normalized event
         try:
             event = handler.parse_event(data)
         except Exception as e:
             return WebhookResult(
-                success=False,
-                error=f"Failed to parse event: {str(e)}"
+                success=False, error=f"Failed to parse event: {str(e)}"
             )
 
         # Process via handler
@@ -117,7 +103,4 @@ class WebhookService:
             result = handler.handle(event)
             return result
         except Exception as e:
-            return WebhookResult(
-                success=False,
-                error=f"Handler error: {str(e)}"
-            )
+            return WebhookResult(success=False, error=f"Handler error: {str(e)}")

@@ -26,7 +26,7 @@ class ActivityLogger:
         self,
         action: str,
         user_id: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> None:
         """
         Log an activity.
@@ -40,7 +40,7 @@ class ActivityLogger:
             "timestamp": datetime.utcnow().isoformat(),
             "action": action,
             "user_id": user_id,
-            "metadata": metadata or {}
+            "metadata": metadata or {},
         }
 
         # Log to standard logger
@@ -67,7 +67,7 @@ class ActivityLogger:
         event_type: str,
         user_id: Optional[str] = None,
         ip_address: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None
+        details: Optional[Dict[str, Any]] = None,
     ) -> None:
         """
         Log a security-related event.
@@ -78,14 +78,6 @@ class ActivityLogger:
             ip_address: IP address of the request
             details: Additional event details
         """
-        metadata = {
-            "ip": ip_address,
-            "event_type": event_type,
-            **(details or {})
-        }
+        metadata = {"ip": ip_address, "event_type": event_type, **(details or {})}
 
-        self.log(
-            action=f"security.{event_type}",
-            user_id=user_id,
-            metadata=metadata
-        )
+        self.log(action=f"security.{event_type}", user_id=user_id, metadata=metadata)

@@ -1,7 +1,9 @@
 """Password reset event handlers."""
-from typing import Optional
 from src.events.domain import IEventHandler, DomainEvent, EventResult
-from src.events.security_events import PasswordResetRequestEvent, PasswordResetExecuteEvent
+from src.events.security_events import (
+    PasswordResetRequestEvent,
+    PasswordResetExecuteEvent,
+)
 from src.services.password_reset_service import PasswordResetService
 from src.services.email_service import EmailService
 
@@ -19,7 +21,7 @@ class PasswordResetHandler(IEventHandler):
         password_reset_service: PasswordResetService,
         email_service: EmailService,
         activity_logger,
-        reset_url_base: str = "https://app.example.com/reset-password"
+        reset_url_base: str = "https://app.example.com/reset-password",
     ):
         """
         Initialize handler with dependencies.
@@ -83,17 +85,19 @@ class PasswordResetHandler(IEventHandler):
                 context={
                     "reset_url": reset_url,
                     "expires_in": "1 hour",
-                }
+                },
             )
 
             self._activity_logger.log(
                 action="password_reset_requested",
                 user_id=result.user_id,
-                metadata={"ip": event.request_ip}
+                metadata={"ip": event.request_ip},
             )
 
         # Always return success (don't reveal if email exists)
-        return EventResult.success_result({"message": "If email exists, reset link sent"})
+        return EventResult.success_result(
+            {"message": "If email exists, reset link sent"}
+        )
 
     def handle_reset_execute(self, event: PasswordResetExecuteEvent) -> EventResult:
         """
@@ -113,15 +117,13 @@ class PasswordResetHandler(IEventHandler):
         if result.success:
             # Send confirmation email
             self._email_service.send_template(
-                to=result.email,
-                template="password_changed",
-                context={}
+                to=result.email, template="password_changed", context={}
             )
 
             self._activity_logger.log(
                 action="password_reset_completed",
                 user_id=result.user_id,
-                metadata={"ip": event.reset_ip}
+                metadata={"ip": event.reset_ip},
             )
 
             return EventResult.success_result({"message": "Password reset successful"})
@@ -132,11 +134,12 @@ class PasswordResetHandler(IEventHandler):
                 metadata={
                     "reason": result.failure_reason,
                     "ip": event.reset_ip,
-                    "token_prefix": event.token[:8] + "..." if len(event.token) > 8 else event.token
-                }
+                    "token_prefix": event.token[:8] + "..."
+                    if len(event.token) > 8
+                    else event.token,
+                },
             )
 
             return EventResult.error_result(
-                error=result.error,
-                error_type=result.failure_reason
+                error=result.error, error_type=result.failure_reason
             )

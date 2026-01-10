@@ -11,6 +11,7 @@ class PasswordResetRequestEvent(DomainEvent):
 
     Flow: Route emits → Handler receives → Handler calls service → Service creates token
     """
+
     name: str = field(default="security.password_reset.request", init=False)
     email: str = ""
     request_ip: Optional[str] = None
@@ -23,6 +24,7 @@ class PasswordResetExecuteEvent(DomainEvent):
 
     Flow: Route emits → Handler receives → Handler calls service → Service resets password
     """
+
     name: str = field(default="security.password_reset.execute", init=False)
     token: str = ""
     new_password: str = ""
@@ -36,6 +38,7 @@ class LoginFailedEvent(DomainEvent):
 
     Used for security monitoring and brute force protection.
     """
+
     name: str = field(default="security.login.failed", init=False)
     email: str = ""
     ip: Optional[str] = None

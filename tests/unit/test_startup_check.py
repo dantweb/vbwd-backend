@@ -1,7 +1,6 @@
 """Tests for startup environment validation."""
 import os
 import pytest
-from unittest.mock import patch
 
 
 class TestValidateEnvironment:
@@ -21,9 +20,9 @@ class TestValidateEnvironment:
         """Returns True when all required vars are present."""
         from src.utils.startup_check import validate_environment
 
-        os.environ['DATABASE_URL'] = 'postgresql://test:test@localhost/test'
-        os.environ['REDIS_URL'] = 'redis://localhost:6379/0'
-        os.environ['FLASK_ENV'] = 'development'
+        os.environ["DATABASE_URL"] = "postgresql://test:test@localhost/test"
+        os.environ["REDIS_URL"] = "redis://localhost:6379/0"
+        os.environ["FLASK_ENV"] = "development"
 
         result = validate_environment()
 
@@ -33,9 +32,9 @@ class TestValidateEnvironment:
         """Returns False when DATABASE_URL is missing."""
         from src.utils.startup_check import validate_environment
 
-        os.environ.pop('DATABASE_URL', None)
-        os.environ['REDIS_URL'] = 'redis://localhost:6379/0'
-        os.environ['FLASK_ENV'] = 'development'
+        os.environ.pop("DATABASE_URL", None)
+        os.environ["REDIS_URL"] = "redis://localhost:6379/0"
+        os.environ["FLASK_ENV"] = "development"
 
         result = validate_environment()
 
@@ -45,9 +44,9 @@ class TestValidateEnvironment:
         """Returns False when REDIS_URL is missing."""
         from src.utils.startup_check import validate_environment
 
-        os.environ['DATABASE_URL'] = 'postgresql://test:test@localhost/test'
-        os.environ.pop('REDIS_URL', None)
-        os.environ['FLASK_ENV'] = 'development'
+        os.environ["DATABASE_URL"] = "postgresql://test:test@localhost/test"
+        os.environ.pop("REDIS_URL", None)
+        os.environ["FLASK_ENV"] = "development"
 
         result = validate_environment()
 
@@ -57,11 +56,11 @@ class TestValidateEnvironment:
         """Production mode requires SECRET_KEY."""
         from src.utils.startup_check import validate_environment
 
-        os.environ['DATABASE_URL'] = 'postgresql://test:test@localhost/test'
-        os.environ['REDIS_URL'] = 'redis://localhost:6379/0'
-        os.environ['FLASK_ENV'] = 'production'
-        os.environ.pop('FLASK_SECRET_KEY', None)
-        os.environ['JWT_SECRET_KEY'] = 'real-secret-key-for-jwt'
+        os.environ["DATABASE_URL"] = "postgresql://test:test@localhost/test"
+        os.environ["REDIS_URL"] = "redis://localhost:6379/0"
+        os.environ["FLASK_ENV"] = "production"
+        os.environ.pop("FLASK_SECRET_KEY", None)
+        os.environ["JWT_SECRET_KEY"] = "real-secret-key-for-jwt"
 
         with pytest.raises(SystemExit):
             validate_environment()
@@ -70,11 +69,11 @@ class TestValidateEnvironment:
         """Production mode requires JWT_SECRET_KEY."""
         from src.utils.startup_check import validate_environment
 
-        os.environ['DATABASE_URL'] = 'postgresql://test:test@localhost/test'
-        os.environ['REDIS_URL'] = 'redis://localhost:6379/0'
-        os.environ['FLASK_ENV'] = 'production'
-        os.environ['FLASK_SECRET_KEY'] = 'real-secret-key-for-flask'
-        os.environ.pop('JWT_SECRET_KEY', None)
+        os.environ["DATABASE_URL"] = "postgresql://test:test@localhost/test"
+        os.environ["REDIS_URL"] = "redis://localhost:6379/0"
+        os.environ["FLASK_ENV"] = "production"
+        os.environ["FLASK_SECRET_KEY"] = "real-secret-key-for-flask"
+        os.environ.pop("JWT_SECRET_KEY", None)
 
         with pytest.raises(SystemExit):
             validate_environment()
@@ -83,11 +82,11 @@ class TestValidateEnvironment:
         """Production mode rejects insecure default SECRET_KEY."""
         from src.utils.startup_check import validate_environment
 
-        os.environ['DATABASE_URL'] = 'postgresql://test:test@localhost/test'
-        os.environ['REDIS_URL'] = 'redis://localhost:6379/0'
-        os.environ['FLASK_ENV'] = 'production'
-        os.environ['FLASK_SECRET_KEY'] = 'dev-secret-key-change-in-production'
-        os.environ['JWT_SECRET_KEY'] = 'real-secret-key-for-jwt'
+        os.environ["DATABASE_URL"] = "postgresql://test:test@localhost/test"
+        os.environ["REDIS_URL"] = "redis://localhost:6379/0"
+        os.environ["FLASK_ENV"] = "production"
+        os.environ["FLASK_SECRET_KEY"] = "dev-secret-key-change-in-production"
+        os.environ["JWT_SECRET_KEY"] = "real-secret-key-for-jwt"
 
         with pytest.raises(SystemExit):
             validate_environment()
@@ -96,11 +95,11 @@ class TestValidateEnvironment:
         """Production mode rejects insecure default JWT_SECRET_KEY."""
         from src.utils.startup_check import validate_environment
 
-        os.environ['DATABASE_URL'] = 'postgresql://test:test@localhost/test'
-        os.environ['REDIS_URL'] = 'redis://localhost:6379/0'
-        os.environ['FLASK_ENV'] = 'production'
-        os.environ['FLASK_SECRET_KEY'] = 'real-secret-key-for-flask'
-        os.environ['JWT_SECRET_KEY'] = 'dev-jwt-secret-change-in-production'
+        os.environ["DATABASE_URL"] = "postgresql://test:test@localhost/test"
+        os.environ["REDIS_URL"] = "redis://localhost:6379/0"
+        os.environ["FLASK_ENV"] = "production"
+        os.environ["FLASK_SECRET_KEY"] = "real-secret-key-for-flask"
+        os.environ["JWT_SECRET_KEY"] = "dev-jwt-secret-change-in-production"
 
         with pytest.raises(SystemExit):
             validate_environment()
@@ -109,11 +108,11 @@ class TestValidateEnvironment:
         """Production mode accepts secure secrets."""
         from src.utils.startup_check import validate_environment
 
-        os.environ['DATABASE_URL'] = 'postgresql://test:test@localhost/test'
-        os.environ['REDIS_URL'] = 'redis://localhost:6379/0'
-        os.environ['FLASK_ENV'] = 'production'
-        os.environ['FLASK_SECRET_KEY'] = 'a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6'
-        os.environ['JWT_SECRET_KEY'] = 'x1y2z3a4b5c6d7e8f9g0h1i2j3k4l5m6'
+        os.environ["DATABASE_URL"] = "postgresql://test:test@localhost/test"
+        os.environ["REDIS_URL"] = "redis://localhost:6379/0"
+        os.environ["FLASK_ENV"] = "production"
+        os.environ["FLASK_SECRET_KEY"] = "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6"
+        os.environ["JWT_SECRET_KEY"] = "x1y2z3a4b5c6d7e8f9g0h1i2j3k4l5m6"
 
         result = validate_environment()
 
@@ -123,11 +122,11 @@ class TestValidateEnvironment:
         """Development mode continues with missing secrets."""
         from src.utils.startup_check import validate_environment
 
-        os.environ['DATABASE_URL'] = 'postgresql://test:test@localhost/test'
-        os.environ['REDIS_URL'] = 'redis://localhost:6379/0'
-        os.environ['FLASK_ENV'] = 'development'
-        os.environ.pop('FLASK_SECRET_KEY', None)
-        os.environ.pop('JWT_SECRET_KEY', None)
+        os.environ["DATABASE_URL"] = "postgresql://test:test@localhost/test"
+        os.environ["REDIS_URL"] = "redis://localhost:6379/0"
+        os.environ["FLASK_ENV"] = "development"
+        os.environ.pop("FLASK_SECRET_KEY", None)
+        os.environ.pop("JWT_SECRET_KEY", None)
 
         # Should not raise in development
         result = validate_environment()
@@ -142,8 +141,8 @@ class TestGetMissingVars:
         """Returns empty list when all vars are present."""
         from src.utils.startup_check import get_missing_vars
 
-        os.environ['DATABASE_URL'] = 'postgresql://test:test@localhost/test'
-        os.environ['REDIS_URL'] = 'redis://localhost:6379/0'
+        os.environ["DATABASE_URL"] = "postgresql://test:test@localhost/test"
+        os.environ["REDIS_URL"] = "redis://localhost:6379/0"
 
         result = get_missing_vars()
 
@@ -153,9 +152,9 @@ class TestGetMissingVars:
         """Returns list of missing variable names."""
         from src.utils.startup_check import get_missing_vars
 
-        os.environ['DATABASE_URL'] = 'postgresql://test:test@localhost/test'
-        os.environ.pop('REDIS_URL', None)
+        os.environ["DATABASE_URL"] = "postgresql://test:test@localhost/test"
+        os.environ.pop("REDIS_URL", None)
 
         result = get_missing_vars()
 
-        assert 'REDIS_URL' in result
+        assert "REDIS_URL" in result

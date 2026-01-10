@@ -11,18 +11,18 @@ from src.events.domain import DomainEvent
 class SubscriptionCreatedEvent(DomainEvent):
     """Event: New subscription was created."""
 
-    subscription_id: UUID = None
-    user_id: UUID = None
-    tarif_plan_id: UUID = None
-    status: str = None
+    subscription_id: Optional[UUID] = None
+    user_id: Optional[UUID] = None
+    tarif_plan_id: Optional[UUID] = None
+    status: Optional[str] = None
 
     def __post_init__(self):
         """Set event name and timestamp."""
         super().__post_init__()
-        self.name = 'subscription.created'
-        if not hasattr(self, 'data'):
+        self.name = "subscription.created"
+        if not hasattr(self, "data"):
             self.data = {}
-        if not hasattr(self, 'propagation_stopped'):
+        if not hasattr(self, "propagation_stopped"):
             self.propagation_stopped = False
 
 
@@ -30,23 +30,23 @@ class SubscriptionCreatedEvent(DomainEvent):
 class SubscriptionActivatedEvent(DomainEvent):
     """Event: Subscription was activated."""
 
-    subscription_id: UUID = None
-    user_id: UUID = None
-    tarif_plan_id: UUID = None
-    plan_id: UUID = None  # Alias for tarif_plan_id
+    subscription_id: Optional[UUID] = None
+    user_id: Optional[UUID] = None
+    tarif_plan_id: Optional[UUID] = None
+    plan_id: Optional[UUID] = None  # Alias for tarif_plan_id
     plan_name: Optional[str] = None
-    started_at: datetime = None
-    expires_at: datetime = None
+    started_at: Optional[datetime] = None
+    expires_at: Optional[datetime] = None
     user_email: Optional[str] = None
     first_name: Optional[str] = None
 
     def __post_init__(self):
         """Set event name and timestamp."""
         super().__post_init__()
-        self.name = 'subscription.activated'
-        if not hasattr(self, 'data'):
+        self.name = "subscription.activated"
+        if not hasattr(self, "data"):
             self.data = {}
-        if not hasattr(self, 'propagation_stopped'):
+        if not hasattr(self, "propagation_stopped"):
             self.propagation_stopped = False
 
 
@@ -54,9 +54,9 @@ class SubscriptionActivatedEvent(DomainEvent):
 class SubscriptionCancelledEvent(DomainEvent):
     """Event: Subscription was cancelled."""
 
-    subscription_id: UUID = None
-    user_id: UUID = None
-    cancelled_by: UUID = None
+    subscription_id: Optional[UUID] = None
+    user_id: Optional[UUID] = None
+    cancelled_by: Optional[UUID] = None
     reason: Optional[str] = None
     plan_name: Optional[str] = None
     user_email: Optional[str] = None
@@ -65,10 +65,10 @@ class SubscriptionCancelledEvent(DomainEvent):
     def __post_init__(self):
         """Set event name and timestamp."""
         super().__post_init__()
-        self.name = 'subscription.cancelled'
-        if not hasattr(self, 'data'):
+        self.name = "subscription.cancelled"
+        if not hasattr(self, "data"):
             self.data = {}
-        if not hasattr(self, 'propagation_stopped'):
+        if not hasattr(self, "propagation_stopped"):
             self.propagation_stopped = False
 
 
@@ -76,17 +76,17 @@ class SubscriptionCancelledEvent(DomainEvent):
 class SubscriptionExpiredEvent(DomainEvent):
     """Event: Subscription expired."""
 
-    subscription_id: UUID = None
-    user_id: UUID = None
-    expired_at: datetime = None
+    subscription_id: Optional[UUID] = None
+    user_id: Optional[UUID] = None
+    expired_at: Optional[datetime] = None
 
     def __post_init__(self):
         """Set event name and timestamp."""
         super().__post_init__()
-        self.name = 'subscription.expired'
-        if not hasattr(self, 'data'):
+        self.name = "subscription.expired"
+        if not hasattr(self, "data"):
             self.data = {}
-        if not hasattr(self, 'propagation_stopped'):
+        if not hasattr(self, "propagation_stopped"):
             self.propagation_stopped = False
 
 
@@ -94,11 +94,11 @@ class SubscriptionExpiredEvent(DomainEvent):
 class PaymentCompletedEvent(DomainEvent):
     """Event: Payment was completed successfully."""
 
-    subscription_id: UUID = None
-    user_id: UUID = None
-    transaction_id: str = None
-    amount: Decimal = None
-    currency: str = None
+    subscription_id: Optional[UUID] = None
+    user_id: Optional[UUID] = None
+    transaction_id: Optional[str] = None
+    amount: Optional[Decimal] = None
+    currency: Optional[str] = None
     invoice_number: Optional[str] = None
     user_email: Optional[str] = None
     first_name: Optional[str] = None
@@ -106,10 +106,10 @@ class PaymentCompletedEvent(DomainEvent):
     def __post_init__(self):
         """Set event name and timestamp."""
         super().__post_init__()
-        self.name = 'payment.completed'
-        if not hasattr(self, 'data'):
+        self.name = "payment.completed"
+        if not hasattr(self, "data"):
             self.data = {}
-        if not hasattr(self, 'propagation_stopped'):
+        if not hasattr(self, "propagation_stopped"):
             self.propagation_stopped = False
 
 
@@ -117,9 +117,9 @@ class PaymentCompletedEvent(DomainEvent):
 class PaymentFailedEvent(DomainEvent):
     """Event: Payment failed."""
 
-    subscription_id: UUID = None
-    user_id: UUID = None
-    error_message: str = None
+    subscription_id: Optional[UUID] = None
+    user_id: Optional[UUID] = None
+    error_message: Optional[str] = None
     plan_name: Optional[str] = None
     user_email: Optional[str] = None
     first_name: Optional[str] = None
@@ -128,8 +128,8 @@ class PaymentFailedEvent(DomainEvent):
     def __post_init__(self):
         """Set event name and timestamp."""
         super().__post_init__()
-        self.name = 'payment.failed'
-        if not hasattr(self, 'data'):
+        self.name = "payment.failed"
+        if not hasattr(self, "data"):
             self.data = {}
-        if not hasattr(self, 'propagation_stopped'):
+        if not hasattr(self, "propagation_stopped"):
             self.propagation_stopped = False

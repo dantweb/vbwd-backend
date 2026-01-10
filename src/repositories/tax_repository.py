@@ -36,10 +36,11 @@ class TaxRepository(BaseRepository[Tax]):
         Returns:
             List of taxes for the country
         """
-        return self._session.query(Tax).filter_by(
-            country_code=country_code.upper(),
-            is_active=True
-        ).all()
+        return (
+            self._session.query(Tax)
+            .filter_by(country_code=country_code.upper(), is_active=True)
+            .all()
+        )
 
     def find_active(self) -> List[Tax]:
         """Find all active taxes.

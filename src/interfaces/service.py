@@ -1,5 +1,5 @@
 """Service interface (Interface Segregation Principle)."""
-from abc import ABC, abstractmethod
+from abc import ABC
 
 
 class IService(ABC):

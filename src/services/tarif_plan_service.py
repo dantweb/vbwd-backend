@@ -94,14 +94,15 @@ class TarifPlanService:
         # Add tax breakdown if country code provided
         if country_code and self._tax_service:
             tax_breakdown = self._tax_service.get_tax_breakdown(
-                Decimal(str(plan.price_float)),
-                country_code
+                Decimal(str(plan.price_float)), country_code
             )
-            result.update({
-                "net_price": tax_breakdown["net_amount"],
-                "tax_amount": tax_breakdown["tax_amount"],
-                "gross_price": tax_breakdown["gross_amount"],
-                "tax_rate": tax_breakdown["tax_rate"],
-            })
+            result.update(
+                {
+                    "net_price": tax_breakdown["net_amount"],
+                    "tax_amount": tax_breakdown["tax_amount"],
+                    "gross_price": tax_breakdown["gross_amount"],
+                    "tax_rate": tax_breakdown["tax_rate"],
+                }
+            )
 
         return result

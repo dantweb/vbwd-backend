@@ -7,10 +7,10 @@ from src.services.tarif_plan_service import TarifPlanService
 from src.services.subscription_service import SubscriptionService
 
 __all__ = [
-    'AuthService',
-    'UserService',
-    'CurrencyService',
-    'TaxService',
-    'TarifPlanService',
-    'SubscriptionService',
+    "AuthService",
+    "UserService",
+    "CurrencyService",
+    "TaxService",
+    "TarifPlanService",
+    "SubscriptionService",
 ]

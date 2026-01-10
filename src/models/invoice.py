@@ -1,6 +1,5 @@
 """UserInvoice domain model."""
 from datetime import datetime
-from decimal import Decimal
 import uuid
 from sqlalchemy.dialects.postgresql import UUID
 from src.extensions import db
@@ -122,4 +121,6 @@ class UserInvoice(BaseModel):
         }
 
     def __repr__(self) -> str:
-        return f"<UserInvoice(number='{self.invoice_number}', status={self.status.value})>"
+        return (
+            f"<UserInvoice(number='{self.invoice_number}', status={self.status.value})>"
+        )

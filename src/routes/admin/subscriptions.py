@@ -12,7 +12,9 @@ from src.models.subscription import Subscription
 from src.models.invoice import UserInvoice
 from src.models.enums import SubscriptionStatus, InvoiceStatus, BillingPeriod
 
-admin_subs_bp = Blueprint('admin_subscriptions', __name__, url_prefix='/api/v1/admin/subscriptions')
+admin_subs_bp = Blueprint(
+    "admin_subscriptions", __name__, url_prefix="/api/v1/admin/subscriptions"
+)
 
 
 def _get_billing_months(billing_period: BillingPeriod) -> int:
@@ -27,7 +29,7 @@ def _get_billing_months(billing_period: BillingPeriod) -> int:
     return period_map.get(billing_period, 1)
 
 
-@admin_subs_bp.route('/', methods=['POST'])
+@admin_subs_bp.route("/", methods=["POST"])
 @require_auth
 @require_admin
 def create_subscription():
@@ -51,66 +53,72 @@ def create_subscription():
     data = request.get_json() or {}
 
     # Validate required fields
-    if not data.get('user_id'):
-        return jsonify({'error': 'user_id is required'}), 400
+    if not data.get("user_id"):
+        return jsonify({"error": "user_id is required"}), 400
 
     # Accept both plan_id (frontend) and tarif_plan_id (legacy)
-    plan_id = data.get('plan_id') or data.get('tarif_plan_id')
+    plan_id = data.get("plan_id") or data.get("tarif_plan_id")
     if not plan_id:
-        return jsonify({'error': 'plan_id is required'}), 400
+        return jsonify({"error": "plan_id is required"}), 400
 
     # Parse started_at or default to now
-    started_at_str = data.get('started_at')
+    started_at_str = data.get("started_at")
     if started_at_str:
         try:
-            started_at = datetime.fromisoformat(started_at_str.replace('Z', '+00:00'))
+            started_at = datetime.fromisoformat(started_at_str.replace("Z", "+00:00"))
             # Convert to naive UTC datetime
             if started_at.tzinfo:
                 started_at = started_at.replace(tzinfo=None)
         except (ValueError, AttributeError):
-            return jsonify({'error': 'Invalid started_at format. Use ISO 8601.'}), 400
+            return jsonify({"error": "Invalid started_at format. Use ISO 8601."}), 400
     else:
         started_at = datetime.utcnow()
 
     # Get optional parameters
-    trial_days = data.get('trial_days')
-    requested_status = data.get('status', 'active')
+    trial_days = data.get("trial_days")
+    requested_status = data.get("status", "active")
 
     user_repo = UserRepository(db.session)
     plan_repo = TarifPlanRepository(db.session)
     sub_repo = SubscriptionRepository(db.session)
 
     # Validate user exists
-    user = user_repo.find_by_id(data['user_id'])
+    user = user_repo.find_by_id(data["user_id"])
     if not user:
-        return jsonify({'error': 'User not found'}), 404
+        return jsonify({"error": "User not found"}), 404
 
     # Validate plan exists
     plan = plan_repo.find_by_id(plan_id)
     if not plan:
-        return jsonify({'error': 'Plan not found'}), 404
+        return jsonify({"error": "Plan not found"}), 404
 
     # Check for existing active subscription
-    existing = sub_repo.find_active_by_user(data['user_id'])
+    existing = sub_repo.find_active_by_user(data["user_id"])
     if existing:
-        return jsonify({'error': 'User already has an active subscription'}), 409
+        return jsonify({"error": "User already has an active subscription"}), 409
 
     # Calculate expiration based on status
-    billing_months = data.get('billing_period_months') or _get_billing_months(plan.billing_period)
+    billing_months = data.get("billing_period_months") or _get_billing_months(
+        plan.billing_period
+    )
 
     # Handle trialing status with trial_days
-    if requested_status == 'trialing' and trial_days:
+    if requested_status == "trialing" and trial_days:
         expires_at = started_at + timedelta(days=int(trial_days))
         status = SubscriptionStatus.TRIALING
     else:
         expires_at = started_at + relativedelta(months=billing_months)
         now = datetime.utcnow()
-        status = SubscriptionStatus.ACTIVE if started_at <= now else SubscriptionStatus.PENDING
+        status = (
+            SubscriptionStatus.ACTIVE
+            if started_at <= now
+            else SubscriptionStatus.PENDING
+        )
 
     # Override status if explicitly requested
-    if requested_status == 'trialing':
+    if requested_status == "trialing":
         status = SubscriptionStatus.TRIALING
-    elif requested_status == 'active':
+    elif requested_status == "active":
         status = SubscriptionStatus.ACTIVE
 
     # Create subscription
@@ -133,7 +141,7 @@ def create_subscription():
         invoice.subscription_id = subscription.id
         invoice.invoice_number = UserInvoice.generate_invoice_number()
         invoice.amount = plan.price or plan.price_float or 0
-        invoice.currency = plan.currency or 'EUR'
+        invoice.currency = plan.currency or "EUR"
         invoice.status = InvoiceStatus.PENDING
         invoice.invoiced_at = datetime.utcnow()
         invoice.expires_at = datetime.utcnow() + timedelta(days=30)
@@ -144,47 +152,59 @@ def create_subscription():
     # Dispatch events
     try:
         dispatcher = current_app.container.event_dispatcher()
-        dispatcher.emit('subscription:created', {
-            'subscription_id': str(subscription.id),
-            'user_id': str(user.id),
-            'plan_id': str(plan.id),
-            'status': status.value,
-        })
+        dispatcher.emit(
+            "subscription:created",
+            {
+                "subscription_id": str(subscription.id),
+                "user_id": str(user.id),
+                "plan_id": str(plan.id),
+                "status": status.value,
+            },
+        )
         if invoice:
-            dispatcher.emit('invoice:created', {
-                'invoice_id': str(invoice.id),
-                'user_id': str(user.id),
-                'subscription_id': str(subscription.id),
-                'amount': str(invoice.amount),
-                'currency': invoice.currency,
-            })
+            dispatcher.emit(
+                "invoice:created",
+                {
+                    "invoice_id": str(invoice.id),
+                    "user_id": str(user.id),
+                    "subscription_id": str(subscription.id),
+                    "amount": str(invoice.amount),
+                    "currency": invoice.currency,
+                },
+            )
     except Exception:
         pass  # Don't fail if event dispatcher not configured
 
     # Build response
     response = {
-        'id': str(subscription.id),
-        'user_id': str(subscription.user_id),
-        'tarif_plan_id': str(subscription.tarif_plan_id),
-        'status': subscription.status.value,
-        'started_at': subscription.started_at.isoformat() if subscription.started_at else None,
-        'expires_at': subscription.expires_at.isoformat() if subscription.expires_at else None,
-        'created_at': subscription.created_at.isoformat() if subscription.created_at else None,
+        "id": str(subscription.id),
+        "user_id": str(subscription.user_id),
+        "tarif_plan_id": str(subscription.tarif_plan_id),
+        "status": subscription.status.value,
+        "started_at": subscription.started_at.isoformat()
+        if subscription.started_at
+        else None,
+        "expires_at": subscription.expires_at.isoformat()
+        if subscription.expires_at
+        else None,
+        "created_at": subscription.created_at.isoformat()
+        if subscription.created_at
+        else None,
     }
 
     if invoice:
-        response['invoice'] = {
-            'id': str(invoice.id),
-            'invoice_number': invoice.invoice_number,
-            'amount': str(invoice.amount),
-            'currency': invoice.currency,
-            'status': invoice.status.value,
+        response["invoice"] = {
+            "id": str(invoice.id),
+            "invoice_number": invoice.invoice_number,
+            "amount": str(invoice.amount),
+            "currency": invoice.currency,
+            "status": invoice.status.value,
         }
 
     return jsonify(response), 201
 
 
-@admin_subs_bp.route('/', methods=['GET'])
+@admin_subs_bp.route("/", methods=["GET"])
 @require_auth
 @require_admin
 def list_subscriptions():
@@ -201,16 +221,16 @@ def list_subscriptions():
     Returns:
         200: List of subscriptions with pagination info
     """
-    limit = min(int(request.args.get('limit', 20)), 100)
-    offset = int(request.args.get('offset', 0))
-    status = request.args.get('status')
-    user_id = request.args.get('user_id')
-    plan_id = request.args.get('plan_id')
-    plan_name = request.args.get('plan')  # Frontend sends plan name
+    limit = min(int(request.args.get("limit", 20)), 100)
+    offset = int(request.args.get("offset", 0))
+    status = request.args.get("status")
+    user_id = request.args.get("user_id")
+    plan_id = request.args.get("plan_id")
+    plan_name = request.args.get("plan")  # Frontend sends plan name
 
     # Map American spelling to British for status
-    if status == 'canceled':
-        status = 'cancelled'
+    if status == "canceled":
+        status = "cancelled"
 
     sub_repo = SubscriptionRepository(db.session)
     user_repo = UserRepository(db.session)
@@ -225,11 +245,7 @@ def list_subscriptions():
                 break
 
     subscriptions, total = sub_repo.find_all_paginated(
-        limit=limit,
-        offset=offset,
-        status=status,
-        user_id=user_id,
-        plan_id=plan_id
+        limit=limit, offset=offset, status=status, user_id=user_id, plan_id=plan_id
     )
 
     # Enrich subscriptions with user and plan info for admin display
@@ -238,23 +254,23 @@ def list_subscriptions():
         sub_dict = sub.to_dict()
         # Add user email
         user = user_repo.find_by_id(str(sub.user_id))
-        sub_dict['user_email'] = user.email if user else ''
+        sub_dict["user_email"] = user.email if user else ""
         # Add plan name
         plan = plan_repo.find_by_id(str(sub.tarif_plan_id))
-        sub_dict['plan_name'] = plan.name if plan else ''
+        sub_dict["plan_name"] = plan.name if plan else ""
         # Add created_at for sorting
-        sub_dict['created_at'] = sub.created_at.isoformat() if sub.created_at else None
+        sub_dict["created_at"] = sub.created_at.isoformat() if sub.created_at else None
         result.append(sub_dict)
 
-    return jsonify({
-        'subscriptions': result,
-        'total': total,
-        'limit': limit,
-        'offset': offset
-    }), 200
+    return (
+        jsonify(
+            {"subscriptions": result, "total": total, "limit": limit, "offset": offset}
+        ),
+        200,
+    )
 
 
-@admin_subs_bp.route('/<subscription_id>', methods=['GET'])
+@admin_subs_bp.route("/<subscription_id>", methods=["GET"])
 @require_auth
 @require_admin
 def get_subscription(subscription_id):
@@ -278,48 +294,60 @@ def get_subscription(subscription_id):
     subscription = sub_repo.find_by_id(subscription_id)
 
     if not subscription:
-        return jsonify({'error': 'Subscription not found'}), 404
+        return jsonify({"error": "Subscription not found"}), 404
 
     sub_dict = subscription.to_dict()
 
     # Enrich with user info
     user = user_repo.find_by_id(str(subscription.user_id))
     if user:
-        sub_dict['user_email'] = user.email
-        sub_dict['user_name'] = (user.details.first_name + ' ' + user.details.last_name).strip() if user.details else ''
+        sub_dict["user_email"] = user.email
+        sub_dict["user_name"] = (
+            (user.details.first_name + " " + user.details.last_name).strip()
+            if user.details
+            else ""
+        )
 
     # Enrich with plan info
     plan = plan_repo.find_by_id(str(subscription.tarif_plan_id))
     if plan:
-        sub_dict['plan_name'] = plan.name
-        sub_dict['plan_description'] = plan.description
-        sub_dict['plan_price'] = str(plan.price) if plan.price else None
-        sub_dict['plan_billing_period'] = plan.billing_period.value if plan.billing_period else None
+        sub_dict["plan_name"] = plan.name
+        sub_dict["plan_description"] = plan.description
+        sub_dict["plan_price"] = str(plan.price) if plan.price else None
+        sub_dict["plan_billing_period"] = (
+            plan.billing_period.value if plan.billing_period else None
+        )
 
     # Map to frontend expected fields
-    sub_dict['current_period_start'] = subscription.started_at.isoformat() if subscription.started_at else None
-    sub_dict['current_period_end'] = subscription.expires_at.isoformat() if subscription.expires_at else None
-    sub_dict['created_at'] = subscription.created_at.isoformat() if subscription.created_at else None
+    sub_dict["current_period_start"] = (
+        subscription.started_at.isoformat() if subscription.started_at else None
+    )
+    sub_dict["current_period_end"] = (
+        subscription.expires_at.isoformat() if subscription.expires_at else None
+    )
+    sub_dict["created_at"] = (
+        subscription.created_at.isoformat() if subscription.created_at else None
+    )
 
     # Get payment history (invoices for this subscription)
     invoices = invoice_repo.find_by_subscription(str(subscription.id))
     payment_history = []
     for inv in invoices:
-        payment_history.append({
-            'id': str(inv.id),
-            'amount': float(inv.amount) if inv.amount else 0,
-            'currency': inv.currency or 'EUR',
-            'status': inv.status.value if inv.status else 'pending',
-            'created_at': inv.created_at.isoformat() if inv.created_at else None
-        })
-    sub_dict['payment_history'] = payment_history
+        payment_history.append(
+            {
+                "id": str(inv.id),
+                "amount": float(inv.amount) if inv.amount else 0,
+                "currency": inv.currency or "EUR",
+                "status": inv.status.value if inv.status else "pending",
+                "created_at": inv.created_at.isoformat() if inv.created_at else None,
+            }
+        )
+    sub_dict["payment_history"] = payment_history
 
-    return jsonify({
-        'subscription': sub_dict
-    }), 200
+    return jsonify({"subscription": sub_dict}), 200
 
 
-@admin_subs_bp.route('/<subscription_id>/extend', methods=['POST'])
+@admin_subs_bp.route("/<subscription_id>/extend", methods=["POST"])
 @require_auth
 @require_admin
 def extend_subscription(subscription_id):
@@ -340,23 +368,28 @@ def extend_subscription(subscription_id):
     subscription = sub_repo.find_by_id(subscription_id)
 
     if not subscription:
-        return jsonify({'error': 'Subscription not found'}), 404
+        return jsonify({"error": "Subscription not found"}), 404
 
     data = request.get_json() or {}
-    days = data.get('days', 30)
+    days = data.get("days", 30)
 
     if subscription.expires_at:
         subscription.expires_at = subscription.expires_at + timedelta(days=days)
 
     saved_sub = sub_repo.save(subscription)
 
-    return jsonify({
-        'subscription': saved_sub.to_dict(),
-        'message': f'Subscription extended by {days} days'
-    }), 200
+    return (
+        jsonify(
+            {
+                "subscription": saved_sub.to_dict(),
+                "message": f"Subscription extended by {days} days",
+            }
+        ),
+        200,
+    )
 
 
-@admin_subs_bp.route('/<subscription_id>/cancel', methods=['POST'])
+@admin_subs_bp.route("/<subscription_id>/cancel", methods=["POST"])
 @require_auth
 @require_admin
 def cancel_subscription(subscription_id):
@@ -377,16 +410,21 @@ def cancel_subscription(subscription_id):
 
     if not result.success:
         if "not found" in result.error.lower():
-            return jsonify({'error': result.error}), 404
-        return jsonify({'error': result.error}), 400
+            return jsonify({"error": result.error}), 404
+        return jsonify({"error": result.error}), 400
 
-    return jsonify({
-        'subscription': result.subscription.to_dict(),
-        'message': 'Subscription cancelled'
-    }), 200
+    return (
+        jsonify(
+            {
+                "subscription": result.subscription.to_dict(),
+                "message": "Subscription cancelled",
+            }
+        ),
+        200,
+    )
 
 
-@admin_subs_bp.route('/<subscription_id>/activate', methods=['POST'])
+@admin_subs_bp.route("/<subscription_id>/activate", methods=["POST"])
 @require_auth
 @require_admin
 def activate_subscription(subscription_id):
@@ -407,16 +445,21 @@ def activate_subscription(subscription_id):
 
     if not result.success:
         if "not found" in result.error.lower():
-            return jsonify({'error': result.error}), 404
-        return jsonify({'error': result.error}), 400
+            return jsonify({"error": result.error}), 404
+        return jsonify({"error": result.error}), 400
 
-    return jsonify({
-        'subscription': result.subscription.to_dict(),
-        'message': 'Subscription activated'
-    }), 200
+    return (
+        jsonify(
+            {
+                "subscription": result.subscription.to_dict(),
+                "message": "Subscription activated",
+            }
+        ),
+        200,
+    )
 
 
-@admin_subs_bp.route('/<subscription_id>/refund', methods=['POST'])
+@admin_subs_bp.route("/<subscription_id>/refund", methods=["POST"])
 @require_auth
 @require_admin
 def refund_subscription(subscription_id):
@@ -438,16 +481,21 @@ def refund_subscription(subscription_id):
     subscription = sub_repo.find_by_id(subscription_id)
 
     if not subscription:
-        return jsonify({'error': 'Subscription not found'}), 404
+        return jsonify({"error": "Subscription not found"}), 404
 
     data = request.get_json() or {}
-    reason = data.get('reason', 'Admin refund')
+    reason = data.get("reason", "Admin refund")
 
     # Cancel the subscription as part of refund
     subscription.status = SubscriptionStatus.CANCELLED
     saved_sub = sub_repo.save(subscription)
 
-    return jsonify({
-        'subscription': saved_sub.to_dict(),
-        'message': f'Refund processed: {reason}'
-    }), 200
+    return (
+        jsonify(
+            {
+                "subscription": saved_sub.to_dict(),
+                "message": f"Refund processed: {reason}",
+            }
+        ),
+        200,
+    )

@@ -17,14 +17,9 @@ class PasswordResetToken(BaseModel):
         UUID(as_uuid=True),
         db.ForeignKey("user.id", ondelete="CASCADE"),
         nullable=False,
-        index=True
+        index=True,
     )
-    token = db.Column(
-        db.String(64),
-        unique=True,
-        nullable=False,
-        index=True
-    )
+    token = db.Column(db.String(64), unique=True, nullable=False, index=True)
     expires_at = db.Column(db.DateTime, nullable=False)
     used_at = db.Column(db.DateTime, nullable=True)
 
@@ -38,6 +33,7 @@ class PasswordResetToken(BaseModel):
     def is_expired(self) -> bool:
         """Check if token has expired."""
         from datetime import datetime
+
         return self.expires_at < datetime.utcnow()
 
     @property

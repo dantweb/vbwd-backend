@@ -188,6 +188,7 @@ class TestEventDispatcherListenerManagement:
 
     def test_remove_nonexistent_listener(self, dispatcher):
         """remove_listener should handle nonexistent listener."""
+
         def listener(event: Event):
             pass
 
@@ -196,6 +197,7 @@ class TestEventDispatcherListenerManagement:
 
     def test_has_listeners(self, dispatcher):
         """has_listeners should return True if listeners exist."""
+
         def listener(event: Event):
             pass
 
@@ -206,6 +208,7 @@ class TestEventDispatcherListenerManagement:
 
     def test_get_listeners(self, dispatcher):
         """get_listeners should return all listeners for event."""
+
         def listener1(event: Event):
             pass
 

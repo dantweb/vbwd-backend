@@ -33,7 +33,7 @@ class BaseSDKAdapter(ISDKAdapter, ABC):
     def __init__(
         self,
         config: SDKConfig,
-        idempotency_service: Optional['IdempotencyService'] = None
+        idempotency_service: Optional["IdempotencyService"] = None,
     ):
         """Initialize base adapter.
 
@@ -45,9 +45,7 @@ class BaseSDKAdapter(ISDKAdapter, ABC):
         self._idempotency = idempotency_service
 
     def _with_idempotency(
-        self,
-        idempotency_key: Optional[str],
-        operation: Callable[[], SDKResponse]
+        self, idempotency_key: Optional[str], operation: Callable[[], SDKResponse]
     ) -> SDKResponse:
         """Execute operation with idempotency support.
 
@@ -69,10 +67,10 @@ class BaseSDKAdapter(ISDKAdapter, ABC):
         cached = self._idempotency.check(idempotency_key)
         if cached:
             return SDKResponse(
-                success=cached.get('success', False),
-                data=cached.get('data', {}),
-                error=cached.get('error'),
-                error_code=cached.get('error_code')
+                success=cached.get("success", False),
+                data=cached.get("data", {}),
+                error=cached.get("error"),
+                error_code=cached.get("error_code"),
             )
 
         # Execute operation
@@ -85,9 +83,7 @@ class BaseSDKAdapter(ISDKAdapter, ABC):
         return response
 
     def _with_retry(
-        self,
-        operation: Callable[[], SDKResponse],
-        max_retries: Optional[int] = None
+        self, operation: Callable[[], SDKResponse], max_retries: Optional[int] = None
     ) -> SDKResponse:
         """Execute operation with automatic retry for transient errors.
 
@@ -113,7 +109,7 @@ class BaseSDKAdapter(ISDKAdapter, ABC):
                 last_error = e
                 if attempt < retries:
                     # Exponential backoff: 0.1s, 0.2s, 0.4s, etc.
-                    time.sleep(0.1 * (2 ** attempt))
+                    time.sleep(0.1 * (2**attempt))
 
         # Re-raise the last error after all retries exhausted
         raise last_error

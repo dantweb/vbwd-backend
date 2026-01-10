@@ -13,34 +13,22 @@ class UserRepository(BaseRepository[User]):
 
     def find_by_email(self, email: str) -> Optional[User]:
         """Find user by email address."""
-        return (
-            self._session.query(User)
-            .filter(User.email == email)
-            .first()
-        )
+        return self._session.query(User).filter(User.email == email).first()
 
     def find_by_status(self, status: str) -> List[User]:
         """Find users by status."""
-        return (
-            self._session.query(User)
-            .filter(User.status == status)
-            .all()
-        )
+        return self._session.query(User).filter(User.status == status).all()
 
     def email_exists(self, email: str) -> bool:
         """Check if email is already registered."""
-        return (
-            self._session.query(User)
-            .filter(User.email == email)
-            .count() > 0
-        )
+        return self._session.query(User).filter(User.email == email).count() > 0
 
     def find_all_paginated(
         self,
         limit: int = 20,
         offset: int = 0,
         status: Optional[str] = None,
-        search: Optional[str] = None
+        search: Optional[str] = None,
     ) -> Tuple[List[User], int]:
         """
         Find all users with pagination and filters.
@@ -66,7 +54,7 @@ class UserRepository(BaseRepository[User]):
 
         # Apply search filter
         if search:
-            query = query.filter(User.email.ilike(f'%{search}%'))
+            query = query.filter(User.email.ilike(f"%{search}%"))
 
         # Get total count before pagination
         total = query.count()

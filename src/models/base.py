@@ -3,12 +3,12 @@ from datetime import datetime
 from uuid import uuid4
 from sqlalchemy import Column, DateTime, Integer, event
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.exc import SQLAlchemyError
 from src.extensions import db
 
 
 class ConcurrentModificationError(Exception):
     """Raised when optimistic locking detects concurrent modification."""
+
     pass
 
 
@@ -41,13 +41,12 @@ class BaseModel(db.Model):
     def to_dict(self) -> dict:
         """Convert model to dictionary."""
         return {
-            column.name: getattr(self, column.name)
-            for column in self.__table__.columns
+            column.name: getattr(self, column.name) for column in self.__table__.columns
         }
 
 
 # Auto-increment version on update
-@event.listens_for(BaseModel, 'before_update', propagate=True)
+@event.listens_for(BaseModel, "before_update", propagate=True)
 def increment_version(mapper, connection, target):
     """Increment version before update."""
     target.version += 1

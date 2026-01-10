@@ -17,9 +17,12 @@ class TestTarifPlanServiceGetActive:
     def tarif_plan_service(self, mock_plan_repo):
         """Create TarifPlanService with mocked dependencies."""
         from src.services.tarif_plan_service import TarifPlanService
+
         return TarifPlanService(tarif_plan_repo=mock_plan_repo)
 
-    def test_get_active_plans_returns_active_only(self, tarif_plan_service, mock_plan_repo):
+    def test_get_active_plans_returns_active_only(
+        self, tarif_plan_service, mock_plan_repo
+    ):
         """get_active_plans should return only active plans."""
         from src.models.tarif_plan import TarifPlan
         from src.models.enums import BillingPeriod
@@ -63,6 +66,7 @@ class TestTarifPlanServiceGetBySlug:
     def tarif_plan_service(self, mock_plan_repo):
         """Create TarifPlanService with mocked dependencies."""
         from src.services.tarif_plan_service import TarifPlanService
+
         return TarifPlanService(tarif_plan_repo=mock_plan_repo)
 
     def test_get_plan_by_slug_returns_plan(self, tarif_plan_service, mock_plan_repo):
@@ -82,7 +86,9 @@ class TestTarifPlanServiceGetBySlug:
         assert result.slug == "pro"
         mock_plan_repo.find_by_slug.assert_called_once_with("pro")
 
-    def test_get_plan_by_slug_returns_none_if_not_found(self, tarif_plan_service, mock_plan_repo):
+    def test_get_plan_by_slug_returns_none_if_not_found(
+        self, tarif_plan_service, mock_plan_repo
+    ):
         """get_plan_by_slug should return None if not found."""
         mock_plan_repo.find_by_slug.return_value = None
 
@@ -103,6 +109,7 @@ class TestTarifPlanServiceGetById:
     def tarif_plan_service(self, mock_plan_repo):
         """Create TarifPlanService with mocked dependencies."""
         from src.services.tarif_plan_service import TarifPlanService
+
         return TarifPlanService(tarif_plan_repo=mock_plan_repo)
 
     def test_get_plan_by_id_returns_plan(self, tarif_plan_service, mock_plan_repo):
@@ -142,16 +149,21 @@ class TestTarifPlanServiceGetWithPricing:
         return Mock()
 
     @pytest.fixture
-    def tarif_plan_service(self, mock_plan_repo, mock_currency_service, mock_tax_service):
+    def tarif_plan_service(
+        self, mock_plan_repo, mock_currency_service, mock_tax_service
+    ):
         """Create TarifPlanService with mocked dependencies."""
         from src.services.tarif_plan_service import TarifPlanService
+
         return TarifPlanService(
             tarif_plan_repo=mock_plan_repo,
             currency_service=mock_currency_service,
-            tax_service=mock_tax_service
+            tax_service=mock_tax_service,
         )
 
-    def test_get_plan_with_pricing_includes_currency(self, tarif_plan_service, mock_currency_service):
+    def test_get_plan_with_pricing_includes_currency(
+        self, tarif_plan_service, mock_currency_service
+    ):
         """get_plan_with_pricing should include currency information."""
         from src.models.tarif_plan import TarifPlan
         from src.models.currency import Currency
@@ -178,7 +190,9 @@ class TestTarifPlanServiceGetWithPricing:
         assert "display_price" in result
         mock_currency_service.get_currency_by_code.assert_called_once_with("USD")
 
-    def test_get_plan_with_pricing_includes_tax_breakdown(self, tarif_plan_service, mock_currency_service, mock_tax_service):
+    def test_get_plan_with_pricing_includes_tax_breakdown(
+        self, tarif_plan_service, mock_currency_service, mock_tax_service
+    ):
         """get_plan_with_pricing should include tax breakdown if country provided."""
         from src.models.tarif_plan import TarifPlan
         from src.models.currency import Currency
@@ -198,16 +212,14 @@ class TestTarifPlanServiceGetWithPricing:
             "tax_amount": Decimal("19.00"),
             "gross_amount": Decimal("119.00"),
             "tax_rate": Decimal("19.0"),
-            "tax_name": "German VAT"
+            "tax_name": "German VAT",
         }
 
         mock_currency_service.get_currency_by_code.return_value = currency
         mock_tax_service.get_tax_breakdown.return_value = tax_breakdown
 
         result = tarif_plan_service.get_plan_with_pricing(
-            plan,
-            currency_code="EUR",
-            country_code="DE"
+            plan, currency_code="EUR", country_code="DE"
         )
 
         assert result["net_price"] == Decimal("100.00")

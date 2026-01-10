@@ -1,18 +1,28 @@
 """Application configuration."""
 import os
-from typing import Optional
+from typing import Optional, Type
 
 # Constants - avoid magic numbers
 DEFAULT_JWT_EXPIRATION_HOURS = 24
 DEFAULT_SECRET_KEY = "dev-secret-key-change-in-production"
 
+# Internationalization
+AVAILABLE_LANGUAGES = [
+    {"code": "en", "name": "English"},
+    {"code": "de", "name": "Deutsch"},
+    {"code": "ru", "name": "Русский"},
+    {"code": "th", "name": "ไทย"},
+    {"code": "zh", "name": "中文"},
+    {"code": "es", "name": "Español"},
+    {"code": "fr", "name": "Français"},
+    {"code": "ja", "name": "日本語"},
+]
+DEFAULT_LANGUAGE = os.getenv("DEFAULT_LANGUAGE", "en")
+
 
 def get_database_url() -> str:
     """Get PostgreSQL connection URL."""
-    return os.getenv(
-        "DATABASE_URL",
-        "postgresql://vbwd:vbwd@postgres:5432/vbwd"
-    )
+    return os.getenv("DATABASE_URL", "postgresql://vbwd:vbwd@postgres:5432/vbwd")
 
 
 def get_redis_url() -> str:
@@ -52,7 +62,9 @@ class Config:
 
     # Security
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", SECRET_KEY)
-    JWT_EXPIRATION_HOURS = int(os.getenv("JWT_EXPIRATION_HOURS", DEFAULT_JWT_EXPIRATION_HOURS))
+    JWT_EXPIRATION_HOURS = int(
+        os.getenv("JWT_EXPIRATION_HOURS", DEFAULT_JWT_EXPIRATION_HOURS)
+    )
     JWT_ACCESS_TOKEN_EXPIRES = JWT_EXPIRATION_HOURS * 3600  # Convert to seconds
 
     # Celery
@@ -127,7 +139,7 @@ config = {
 }
 
 
-def get_config(env: Optional[str] = None) -> Config:
+def get_config(env: Optional[str] = None) -> Type[Config]:
     """
     Get configuration based on environment.
 

@@ -6,6 +6,7 @@ from enum import Enum
 
 class EventPriority(Enum):
     """Event listener priority."""
+
     HIGHEST = 1
     HIGH = 2
     NORMAL = 3
@@ -16,6 +17,7 @@ class EventPriority(Enum):
 @dataclass
 class Event:
     """Base event class."""
+
     name: str = ""
     data: Dict[str, Any] = field(default_factory=dict)
     propagation_stopped: bool = False
@@ -28,6 +30,7 @@ class Event:
 @dataclass
 class EventListener:
     """Event listener registration."""
+
     callback: Callable[[Event], None]
     priority: EventPriority = EventPriority.NORMAL
 
@@ -79,7 +82,8 @@ class EventDispatcher:
             return
 
         self._listeners[event_name] = [
-            listener for listener in self._listeners[event_name]
+            listener
+            for listener in self._listeners[event_name]
             if listener.callback != callback
         ]
 

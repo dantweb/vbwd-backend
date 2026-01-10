@@ -109,7 +109,9 @@ class Subscription(BaseModel):
             "days_remaining": self.days_remaining,
             "started_at": self.started_at.isoformat() if self.started_at else None,
             "expires_at": self.expires_at.isoformat() if self.expires_at else None,
-            "cancelled_at": self.cancelled_at.isoformat() if self.cancelled_at else None,
+            "cancelled_at": self.cancelled_at.isoformat()
+            if self.cancelled_at
+            else None,
             "paused_at": self.paused_at.isoformat() if self.paused_at else None,
         }
 

@@ -53,7 +53,7 @@ class IEventHandler(ABC):
         return HandlerPriority.NORMAL
 
     @abstractmethod
-    def can_handle(self, event: 'EventInterface') -> bool:
+    def can_handle(self, event: "EventInterface") -> bool:
         """
         Check if handler can process this event.
 
@@ -69,7 +69,7 @@ class IEventHandler(ABC):
         pass
 
     @abstractmethod
-    def handle(self, event: 'EventInterface') -> 'EventResult':
+    def handle(self, event: "EventInterface") -> "EventResult":
         """
         Process event and return result.
 

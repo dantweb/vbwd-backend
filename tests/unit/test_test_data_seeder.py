@@ -3,8 +3,7 @@ Unit tests for TestDataSeeder service.
 
 TDD: These tests are written BEFORE the implementation.
 """
-import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, patch
 import os
 
 
@@ -15,7 +14,7 @@ class TestTestDataSeeder:
         """Seeder should skip when TEST_DATA_SEED is false."""
         from src.testing.test_data_seeder import TestDataSeeder
 
-        with patch.dict(os.environ, {'TEST_DATA_SEED': 'false'}, clear=False):
+        with patch.dict(os.environ, {"TEST_DATA_SEED": "false"}, clear=False):
             seeder = TestDataSeeder(db_session=MagicMock())
             result = seeder.seed()
             assert result is False
@@ -25,7 +24,7 @@ class TestTestDataSeeder:
         from src.testing.test_data_seeder import TestDataSeeder
 
         env = os.environ.copy()
-        env.pop('TEST_DATA_SEED', None)
+        env.pop("TEST_DATA_SEED", None)
         with patch.dict(os.environ, env, clear=True):
             seeder = TestDataSeeder(db_session=MagicMock())
             result = seeder.seed()
@@ -39,7 +38,7 @@ class TestTestDataSeeder:
         # Mock query to return None (no existing data)
         mock_session.query.return_value.filter_by.return_value.first.return_value = None
 
-        with patch.dict(os.environ, {'TEST_DATA_SEED': 'true'}, clear=False):
+        with patch.dict(os.environ, {"TEST_DATA_SEED": "true"}, clear=False):
             seeder = TestDataSeeder(db_session=mock_session)
             result = seeder.seed()
             assert result is True
@@ -52,7 +51,7 @@ class TestTestDataSeeder:
         mock_session = MagicMock()
         mock_session.query.return_value.filter_by.return_value.first.return_value = None
 
-        with patch.dict(os.environ, {'TEST_DATA_SEED': 'TRUE'}, clear=False):
+        with patch.dict(os.environ, {"TEST_DATA_SEED": "TRUE"}, clear=False):
             seeder = TestDataSeeder(db_session=mock_session)
             result = seeder.seed()
             assert result is True
@@ -64,11 +63,15 @@ class TestTestDataSeeder:
         mock_session = MagicMock()
         mock_session.query.return_value.filter_by.return_value.first.return_value = None
 
-        with patch.dict(os.environ, {
-            'TEST_DATA_SEED': 'true',
-            'TEST_USER_EMAIL': 'testuser@example.com',
-            'TEST_USER_PASSWORD': 'TestPass123@'
-        }, clear=False):
+        with patch.dict(
+            os.environ,
+            {
+                "TEST_DATA_SEED": "true",
+                "TEST_USER_EMAIL": "testuser@example.com",
+                "TEST_USER_PASSWORD": "TestPass123@",
+            },
+            clear=False,
+        ):
             seeder = TestDataSeeder(db_session=mock_session)
             seeder.seed()
 
@@ -82,7 +85,7 @@ class TestTestDataSeeder:
         mock_session = MagicMock()
         mock_session.query.return_value.filter_by.return_value.first.return_value = None
 
-        env = {'TEST_DATA_SEED': 'true'}
+        env = {"TEST_DATA_SEED": "true"}
         with patch.dict(os.environ, env, clear=False):
             seeder = TestDataSeeder(db_session=mock_session)
             seeder.seed()
@@ -96,11 +99,15 @@ class TestTestDataSeeder:
         mock_session = MagicMock()
         mock_session.query.return_value.filter_by.return_value.first.return_value = None
 
-        with patch.dict(os.environ, {
-            'TEST_DATA_SEED': 'true',
-            'TEST_ADMIN_EMAIL': 'admin@example.com',
-            'TEST_ADMIN_PASSWORD': 'AdminPass123@'
-        }, clear=False):
+        with patch.dict(
+            os.environ,
+            {
+                "TEST_DATA_SEED": "true",
+                "TEST_ADMIN_EMAIL": "admin@example.com",
+                "TEST_ADMIN_PASSWORD": "AdminPass123@",
+            },
+            clear=False,
+        ):
             seeder = TestDataSeeder(db_session=mock_session)
             seeder.seed()
             assert mock_session.add.called
@@ -112,7 +119,7 @@ class TestTestDataSeeder:
         mock_session = MagicMock()
         mock_session.query.return_value.filter_by.return_value.first.return_value = None
 
-        with patch.dict(os.environ, {'TEST_DATA_SEED': 'true'}, clear=False):
+        with patch.dict(os.environ, {"TEST_DATA_SEED": "true"}, clear=False):
             seeder = TestDataSeeder(db_session=mock_session)
             seeder.seed()
             # Should create multiple entities (user, admin, plan, subscription)
@@ -124,7 +131,7 @@ class TestTestDataSeeder:
 
         mock_session = MagicMock()
         existing_user = MagicMock()
-        existing_user.id = 'existing-uuid'
+        existing_user.id = "existing-uuid"
 
         # First call returns existing user, rest return None
         mock_session.query.return_value.filter_by.return_value.first.side_effect = [
@@ -134,7 +141,7 @@ class TestTestDataSeeder:
             None,  # subscription doesn't exist
         ]
 
-        with patch.dict(os.environ, {'TEST_DATA_SEED': 'true'}, clear=False):
+        with patch.dict(os.environ, {"TEST_DATA_SEED": "true"}, clear=False):
             seeder = TestDataSeeder(db_session=mock_session)
             seeder.seed()
             # Should still succeed
@@ -145,7 +152,7 @@ class TestTestDataSeeder:
         from src.testing.test_data_seeder import TestDataSeeder
 
         mock_session = MagicMock()
-        with patch.dict(os.environ, {'TEST_DATA_CLEANUP': 'false'}, clear=False):
+        with patch.dict(os.environ, {"TEST_DATA_CLEANUP": "false"}, clear=False):
             seeder = TestDataSeeder(db_session=mock_session)
             result = seeder.cleanup()
             assert result is False
@@ -157,7 +164,7 @@ class TestTestDataSeeder:
 
         mock_session = MagicMock()
         env = os.environ.copy()
-        env.pop('TEST_DATA_CLEANUP', None)
+        env.pop("TEST_DATA_CLEANUP", None)
         with patch.dict(os.environ, env, clear=True):
             seeder = TestDataSeeder(db_session=mock_session)
             result = seeder.cleanup()
@@ -170,7 +177,7 @@ class TestTestDataSeeder:
         mock_session = MagicMock()
         mock_session.query.return_value.filter.return_value.all.return_value = []
 
-        with patch.dict(os.environ, {'TEST_DATA_CLEANUP': 'true'}, clear=False):
+        with patch.dict(os.environ, {"TEST_DATA_CLEANUP": "true"}, clear=False):
             seeder = TestDataSeeder(db_session=mock_session)
             result = seeder.cleanup()
             assert result is True
@@ -182,10 +189,10 @@ class TestTestDataSeeder:
 
         seeder = TestDataSeeder(db_session=MagicMock())
 
-        with patch.dict(os.environ, {'TEST_DATA_SEED': 'true'}, clear=False):
+        with patch.dict(os.environ, {"TEST_DATA_SEED": "true"}, clear=False):
             assert seeder.should_seed() is True
 
-        with patch.dict(os.environ, {'TEST_DATA_SEED': 'false'}, clear=False):
+        with patch.dict(os.environ, {"TEST_DATA_SEED": "false"}, clear=False):
             assert seeder.should_seed() is False
 
     def test_should_cleanup_returns_bool(self):
@@ -194,10 +201,10 @@ class TestTestDataSeeder:
 
         seeder = TestDataSeeder(db_session=MagicMock())
 
-        with patch.dict(os.environ, {'TEST_DATA_CLEANUP': 'true'}, clear=False):
+        with patch.dict(os.environ, {"TEST_DATA_CLEANUP": "true"}, clear=False):
             assert seeder.should_cleanup() is True
 
-        with patch.dict(os.environ, {'TEST_DATA_CLEANUP': 'false'}, clear=False):
+        with patch.dict(os.environ, {"TEST_DATA_CLEANUP": "false"}, clear=False):
             assert seeder.should_cleanup() is False
 
 
@@ -208,7 +215,7 @@ class TestTestDataSeederMarker:
         """TestDataSeeder should have a TEST_DATA_MARKER constant."""
         from src.testing.test_data_seeder import TestDataSeeder
 
-        assert hasattr(TestDataSeeder, 'TEST_DATA_MARKER')
+        assert hasattr(TestDataSeeder, "TEST_DATA_MARKER")
         assert isinstance(TestDataSeeder.TEST_DATA_MARKER, str)
         assert len(TestDataSeeder.TEST_DATA_MARKER) > 0
 
@@ -219,7 +226,7 @@ class TestTestDataSeederMarker:
         mock_session = MagicMock()
         mock_session.query.return_value.filter_by.return_value.first.return_value = None
 
-        with patch.dict(os.environ, {'TEST_DATA_SEED': 'true'}, clear=False):
+        with patch.dict(os.environ, {"TEST_DATA_SEED": "true"}, clear=False):
             seeder = TestDataSeeder(db_session=mock_session)
             seeder.seed()
 

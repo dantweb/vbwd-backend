@@ -1,17 +1,15 @@
 """Tests for admin analytics routes."""
-import pytest
 from unittest.mock import patch, MagicMock
 from uuid import uuid4
-from decimal import Decimal
 from src.models.enums import UserRole
 
 
 class TestAdminAnalyticsDashboard:
     """Tests for admin analytics dashboard endpoint."""
 
-    @patch('src.routes.admin.analytics.db')
-    @patch('src.middleware.auth.AuthService')
-    @patch('src.middleware.auth.UserRepository')
+    @patch("src.routes.admin.analytics.db")
+    @patch("src.middleware.auth.AuthService")
+    @patch("src.middleware.auth.UserRepository")
     def test_dashboard_returns_metrics(
         self, mock_auth_user_repo_class, mock_auth_class, mock_db, client
     ):
@@ -21,7 +19,7 @@ class TestAdminAnalyticsDashboard:
         # Mock admin user
         mock_admin = MagicMock()
         mock_admin.id = admin_id
-        mock_admin.status.value = 'active'
+        mock_admin.status.value = "active"
         mock_admin.role = UserRole.ADMIN
 
         mock_auth_user_repo = MagicMock()
@@ -43,24 +41,24 @@ class TestAdminAnalyticsDashboard:
         mock_session.query.return_value = mock_query
 
         response = client.get(
-            '/api/v1/admin/analytics/dashboard',
-            headers={'Authorization': 'Bearer valid_token'}
+            "/api/v1/admin/analytics/dashboard",
+            headers={"Authorization": "Bearer valid_token"},
         )
 
         assert response.status_code == 200
         data = response.get_json()
 
         # Verify structure matches frontend expectations
-        assert 'mrr' in data
-        assert 'revenue' in data
-        assert 'user_growth' in data
+        assert "mrr" in data
+        assert "revenue" in data
+        assert "user_growth" in data
 
         # Verify mrr structure
-        assert 'total' in data['mrr']
-        assert isinstance(data['mrr']['total'], (int, float))
+        assert "total" in data["mrr"]
+        assert isinstance(data["mrr"]["total"], (int, float))
 
-    @patch('src.middleware.auth.AuthService')
-    @patch('src.middleware.auth.UserRepository')
+    @patch("src.middleware.auth.AuthService")
+    @patch("src.middleware.auth.UserRepository")
     def test_dashboard_requires_admin(
         self, mock_user_repo_class, mock_auth_class, client
     ):
@@ -69,7 +67,7 @@ class TestAdminAnalyticsDashboard:
 
         mock_user = MagicMock()
         mock_user.id = user_id
-        mock_user.status.value = 'active'
+        mock_user.status.value = "active"
         mock_user.role = UserRole.USER
 
         mock_user_repo = MagicMock()
@@ -81,13 +79,13 @@ class TestAdminAnalyticsDashboard:
         mock_auth_class.return_value = mock_auth
 
         response = client.get(
-            '/api/v1/admin/analytics/dashboard',
-            headers={'Authorization': 'Bearer valid_token'}
+            "/api/v1/admin/analytics/dashboard",
+            headers={"Authorization": "Bearer valid_token"},
         )
 
         assert response.status_code == 403
 
     def test_dashboard_requires_auth(self, client):
         """Unauthenticated request returns 401."""
-        response = client.get('/api/v1/admin/analytics/dashboard')
+        response = client.get("/api/v1/admin/analytics/dashboard")
         assert response.status_code == 401

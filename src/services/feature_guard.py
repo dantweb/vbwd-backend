@@ -1,7 +1,6 @@
 """Feature guard service for tariff-based access control."""
 from typing import Optional, Dict, Tuple, Set
 from uuid import UUID
-from datetime import datetime
 from src.repositories.subscription_repository import SubscriptionRepository
 from src.repositories.feature_usage_repository import FeatureUsageRepository
 
@@ -24,7 +23,7 @@ class FeatureGuard:
     def __init__(
         self,
         subscription_repo: SubscriptionRepository,
-        usage_repo: FeatureUsageRepository
+        usage_repo: FeatureUsageRepository,
     ):
         """
         Initialize feature guard.
@@ -64,10 +63,7 @@ class FeatureGuard:
         return feature_name in plan_features
 
     def check_usage_limit(
-        self,
-        user_id: UUID,
-        feature_name: str,
-        increment: int = 1
+        self, user_id: UUID, feature_name: str, increment: int = 1
     ) -> Tuple[bool, Optional[int]]:
         """
         Check if user is within usage limit for a feature.
@@ -137,7 +133,7 @@ class FeatureGuard:
             result[feature_name] = {
                 "limit": limit,
                 "used": usage,
-                "remaining": max(0, limit - usage)
+                "remaining": max(0, limit - usage),
             }
 
         return result

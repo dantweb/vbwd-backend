@@ -7,18 +7,24 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
 from datetime import datetime
-from jinja2 import Environment, FileSystemLoader, TemplateNotFound as Jinja2TemplateNotFound
+from jinja2 import (
+    Environment,
+    FileSystemLoader,
+    TemplateNotFound as Jinja2TemplateNotFound,
+)
 
 logger = logging.getLogger(__name__)
 
 
 class EmailConfigError(Exception):
     """Raised when email configuration is invalid."""
+
     pass
 
 
 class TemplateNotFoundError(Exception):
     """Raised when email template is not found."""
+
     pass
 
 
@@ -41,7 +47,7 @@ class EmailService:
     """Service for sending emails via SMTP."""
 
     # Email validation pattern
-    EMAIL_REGEX = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+    EMAIL_REGEX = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
 
     def __init__(
         self,
@@ -50,8 +56,8 @@ class EmailService:
         smtp_user: str,
         smtp_password: str,
         from_email: str,
-        from_name: str = 'VBWD',
-        template_dir: str = 'src/templates/email'
+        from_name: str = "VBWD",
+        template_dir: str = "src/templates/email",
     ):
         """
         Initialize email service.
@@ -69,7 +75,9 @@ class EmailService:
             EmailConfigError: If configuration is invalid.
         """
         # Validate required config
-        self._validate_config(smtp_host, smtp_port, smtp_user, smtp_password, from_email)
+        self._validate_config(
+            smtp_host, smtp_port, smtp_user, smtp_password, from_email
+        )
 
         self._smtp_host = smtp_host
         self._smtp_port = smtp_port
@@ -78,14 +86,13 @@ class EmailService:
         self._from_email = from_email
         self._from_name = from_name
 
+        self._template_env: Optional[Environment] = None
         try:
             self._template_env = Environment(
-                loader=FileSystemLoader(template_dir),
-                autoescape=True
+                loader=FileSystemLoader(template_dir), autoescape=True
             )
         except Exception as e:
             logger.warning(f"Could not load template directory: {e}")
-            self._template_env = None
 
     def _validate_config(
         self,
@@ -93,7 +100,7 @@ class EmailService:
         smtp_port: int,
         smtp_user: str,
         smtp_password: str,
-        from_email: str
+        from_email: str,
     ) -> None:
         """Validate SMTP configuration."""
         errors = []
@@ -124,7 +131,7 @@ class EmailService:
         subject: str,
         body_text: str,
         body_html: Optional[str] = None,
-        attachments: Optional[List[Tuple[str, bytes, str]]] = None
+        attachments: Optional[List[Tuple[str, bytes, str]]] = None,
     ) -> EmailResult:
         """
         Send email via SMTP.
@@ -146,21 +153,21 @@ class EmailService:
         try:
             # Create message
             if body_html or attachments:
-                msg = MIMEMultipart('alternative')
+                msg = MIMEMultipart("alternative")
             else:
                 msg = MIMEMultipart()
 
-            msg['From'] = f"{self._from_name} <{self._from_email}>"
-            msg['To'] = to_email
-            msg['Subject'] = subject
+            msg["From"] = f"{self._from_name} <{self._from_email}>"
+            msg["To"] = to_email
+            msg["Subject"] = subject
 
             # Add plain text body
-            text_part = MIMEText(body_text, 'plain', 'utf-8')
+            text_part = MIMEText(body_text, "plain", "utf-8")
             msg.attach(text_part)
 
             # Add HTML body if provided
             if body_html:
-                html_part = MIMEText(body_html, 'html', 'utf-8')
+                html_part = MIMEText(body_html, "html", "utf-8")
                 msg.attach(html_part)
 
             # Add attachments if provided
@@ -168,11 +175,9 @@ class EmailService:
                 for filename, data, mime_type in attachments:
                     attachment = MIMEApplication(data)
                     attachment.add_header(
-                        'Content-Disposition',
-                        'attachment',
-                        filename=filename
+                        "Content-Disposition", "attachment", filename=filename
                     )
-                    attachment.add_header('Content-Type', mime_type)
+                    attachment.add_header("Content-Type", mime_type)
                     msg.attach(attachment)
 
             # Send email
@@ -190,9 +195,7 @@ class EmailService:
             return EmailResult(success=False, error=error_msg)
 
     def render_template(
-        self,
-        template_name: str,
-        context: Dict[str, Any]
+        self, template_name: str, context: Dict[str, Any]
     ) -> Tuple[str, str]:
         """
         Render email template.
@@ -208,7 +211,7 @@ class EmailService:
             TemplateNotFoundError: If template is not found.
         """
         if not self._template_env:
-            raise TemplateNotFoundError(f"Template directory not configured")
+            raise TemplateNotFoundError("Template directory not configured")
 
         try:
             # Try to load text template
@@ -226,11 +229,7 @@ class EmailService:
 
         return text_content, html_content
 
-    def send_welcome_email(
-        self,
-        to_email: str,
-        first_name: str
-    ) -> EmailResult:
+    def send_welcome_email(self, to_email: str, first_name: str) -> EmailResult:
         """
         Send welcome email to new user.
 
@@ -245,7 +244,7 @@ class EmailService:
             context = {
                 "first_name": first_name,
                 "login_url": "https://vbwd.com/login",
-                "year": datetime.now().year
+                "year": datetime.now().year,
             }
             text_body, html_body = self.render_template("welcome", context)
 
@@ -253,18 +252,14 @@ class EmailService:
                 to_email=to_email,
                 subject="Welcome to VBWD!",
                 body_text=text_body,
-                body_html=html_body
+                body_html=html_body,
             )
         except TemplateNotFoundError as e:
             logger.error(f"Template error: {e}")
             return EmailResult(success=False, error=str(e))
 
     def send_subscription_activated(
-        self,
-        to_email: str,
-        first_name: str,
-        plan_name: str,
-        expires_at: datetime
+        self, to_email: str, first_name: str, plan_name: str, expires_at: datetime
     ) -> EmailResult:
         """
         Send subscription activation confirmation.
@@ -283,25 +278,24 @@ class EmailService:
                 "first_name": first_name,
                 "plan_name": plan_name,
                 "expires_at": expires_at.strftime("%Y-%m-%d"),
-                "year": datetime.now().year
+                "year": datetime.now().year,
             }
-            text_body, html_body = self.render_template("subscription_activated", context)
+            text_body, html_body = self.render_template(
+                "subscription_activated", context
+            )
 
             return self.send_email(
                 to_email=to_email,
                 subject=f"Your {plan_name} subscription is now active!",
                 body_text=text_body,
-                body_html=html_body
+                body_html=html_body,
             )
         except TemplateNotFoundError as e:
             logger.error(f"Template error: {e}")
             return EmailResult(success=False, error=str(e))
 
     def send_subscription_cancelled(
-        self,
-        to_email: str,
-        first_name: str,
-        plan_name: str
+        self, to_email: str, first_name: str, plan_name: str
     ) -> EmailResult:
         """
         Send subscription cancellation confirmation.
@@ -318,15 +312,17 @@ class EmailService:
             context = {
                 "first_name": first_name,
                 "plan_name": plan_name,
-                "year": datetime.now().year
+                "year": datetime.now().year,
             }
-            text_body, html_body = self.render_template("subscription_cancelled", context)
+            text_body, html_body = self.render_template(
+                "subscription_cancelled", context
+            )
 
             return self.send_email(
                 to_email=to_email,
                 subject=f"Your {plan_name} subscription has been cancelled",
                 body_text=text_body,
-                body_html=html_body
+                body_html=html_body,
             )
         except TemplateNotFoundError as e:
             logger.error(f"Template error: {e}")
@@ -338,7 +334,7 @@ class EmailService:
         first_name: str,
         invoice_number: str,
         amount: str,
-        pdf_bytes: Optional[bytes] = None
+        pdf_bytes: Optional[bytes] = None,
     ) -> EmailResult:
         """
         Send payment receipt with optional PDF.
@@ -358,7 +354,7 @@ class EmailService:
                 "first_name": first_name,
                 "invoice_number": invoice_number,
                 "amount": amount,
-                "year": datetime.now().year
+                "year": datetime.now().year,
             }
             text_body, html_body = self.render_template("payment_receipt", context)
 
@@ -371,18 +367,14 @@ class EmailService:
                 subject=f"Payment Receipt - {invoice_number}",
                 body_text=text_body,
                 body_html=html_body,
-                attachments=attachments
+                attachments=attachments,
             )
         except TemplateNotFoundError as e:
             logger.error(f"Template error: {e}")
             return EmailResult(success=False, error=str(e))
 
     def send_payment_failed(
-        self,
-        to_email: str,
-        first_name: str,
-        plan_name: str,
-        retry_url: str
+        self, to_email: str, first_name: str, plan_name: str, retry_url: str
     ) -> EmailResult:
         """
         Send payment failure notification.
@@ -401,7 +393,7 @@ class EmailService:
                 "first_name": first_name,
                 "plan_name": plan_name,
                 "retry_url": retry_url,
-                "year": datetime.now().year
+                "year": datetime.now().year,
             }
             text_body, html_body = self.render_template("payment_failed", context)
 
@@ -409,7 +401,7 @@ class EmailService:
                 to_email=to_email,
                 subject="Payment Failed - Action Required",
                 body_text=text_body,
-                body_html=html_body
+                body_html=html_body,
             )
         except TemplateNotFoundError as e:
             logger.error(f"Template error: {e}")
@@ -422,7 +414,7 @@ class EmailService:
         invoice_number: str,
         amount: str,
         due_date: str,
-        pdf_bytes: Optional[bytes] = None
+        pdf_bytes: Optional[bytes] = None,
     ) -> EmailResult:
         """
         Send invoice with optional PDF attachment.
@@ -444,7 +436,7 @@ class EmailService:
                 "invoice_number": invoice_number,
                 "amount": amount,
                 "due_date": due_date,
-                "year": datetime.now().year
+                "year": datetime.now().year,
             }
             text_body, html_body = self.render_template("invoice", context)
 
@@ -457,18 +449,14 @@ class EmailService:
                 subject=f"Invoice {invoice_number}",
                 body_text=text_body,
                 body_html=html_body,
-                attachments=attachments
+                attachments=attachments,
             )
         except TemplateNotFoundError as e:
             logger.error(f"Template error: {e}")
             return EmailResult(success=False, error=str(e))
 
     def send_renewal_reminder(
-        self,
-        to_email: str,
-        first_name: str,
-        plan_name: str,
-        days_until_renewal: int
+        self, to_email: str, first_name: str, plan_name: str, days_until_renewal: int
     ) -> EmailResult:
         """
         Send renewal reminder.
@@ -487,7 +475,7 @@ class EmailService:
                 "first_name": first_name,
                 "plan_name": plan_name,
                 "days_until_renewal": days_until_renewal,
-                "year": datetime.now().year
+                "year": datetime.now().year,
             }
             text_body, html_body = self.render_template("renewal_reminder", context)
 
@@ -495,7 +483,7 @@ class EmailService:
                 to_email=to_email,
                 subject=f"Your {plan_name} subscription renews in {days_until_renewal} days",
                 body_text=text_body,
-                body_html=html_body
+                body_html=html_body,
             )
         except TemplateNotFoundError as e:
             logger.error(f"Template error: {e}")
@@ -506,7 +494,7 @@ class EmailService:
         to: str,
         template: str,
         context: Dict[str, Any],
-        subject: Optional[str] = None
+        subject: Optional[str] = None,
     ) -> EmailResult:
         """
         Send templated email.
@@ -533,13 +521,15 @@ class EmailService:
 
         try:
             text_body, html_body = self.render_template(template, context)
-            email_subject = subject or default_subjects.get(template, f"VBWD - {template.replace('_', ' ').title()}")
+            email_subject = subject or default_subjects.get(
+                template, f"VBWD - {template.replace('_', ' ').title()}"
+            )
 
             return self.send_email(
                 to_email=to,
                 subject=email_subject,
                 body_text=text_body,
-                body_html=html_body
+                body_html=html_body,
             )
         except TemplateNotFoundError as e:
             logger.error(f"Template error: {e}")

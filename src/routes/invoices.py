@@ -6,10 +6,10 @@ from src.repositories.invoice_repository import InvoiceRepository
 from src.extensions import db
 
 # Create blueprint
-invoices_bp = Blueprint('invoices', __name__, url_prefix='/api/v1/user/invoices')
+invoices_bp = Blueprint("invoices", __name__, url_prefix="/api/v1/user/invoices")
 
 
-@invoices_bp.route('/', methods=['GET'])
+@invoices_bp.route("/", methods=["GET"])
 @require_auth
 def get_invoices():
     """
@@ -26,12 +26,10 @@ def get_invoices():
     # Get user's invoices
     invoices = invoice_service.get_user_invoices(str(g.user_id))
 
-    return jsonify({
-        'invoices': [inv.to_dict() for inv in invoices]
-    }), 200
+    return jsonify({"invoices": [inv.to_dict() for inv in invoices]}), 200
 
 
-@invoices_bp.route('/<invoice_id>', methods=['GET'])
+@invoices_bp.route("/<invoice_id>", methods=["GET"])
 @require_auth
 def get_invoice(invoice_id):
     """
@@ -54,12 +52,10 @@ def get_invoice(invoice_id):
     invoice = invoice_service.get_invoice(invoice_id)
 
     if not invoice:
-        return jsonify({'error': 'Invoice not found'}), 404
+        return jsonify({"error": "Invoice not found"}), 404
 
     # Check ownership
     if str(invoice.user_id) != str(g.user_id):
-        return jsonify({'error': 'Access denied'}), 403
+        return jsonify({"error": "Access denied"}), 403
 
-    return jsonify({
-        'invoice': invoice.to_dict()
-    }), 200
+    return jsonify({"invoice": invoice.to_dict()}), 200

@@ -1,5 +1,4 @@
 """User domain model."""
-from sqlalchemy.dialects.postgresql import UUID
 from src.extensions import db
 from src.models.base import BaseModel
 from src.models.enums import UserStatus, UserRole
@@ -86,9 +85,9 @@ class User(BaseModel):
                 name_parts.append(self.details.first_name)
             if self.details.last_name:
                 name_parts.append(self.details.last_name)
-            name = ' '.join(name_parts) if name_parts else None
+            name = " ".join(name_parts) if name_parts else None
 
-        return {
+        result = {
             "id": str(self.id),
             "email": self.email,
             "name": name,
@@ -99,6 +98,12 @@ class User(BaseModel):
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
+
+        # Include details object for balance and other user details
+        if self.details:
+            result["details"] = self.details.to_dict()
+
+        return result
 
     def __repr__(self) -> str:
         return f"<User(id={self.id}, email='{self.email}')>"

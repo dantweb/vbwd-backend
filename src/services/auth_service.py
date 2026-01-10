@@ -36,25 +36,18 @@ class AuthService(IAuthService):
         """
         # Validate email format
         if not self._validate_email(email):
-            return AuthResult(
-                success=False,
-                error="Invalid email format"
-            )
+            return AuthResult(success=False, error="Invalid email format")
 
         # Validate password strength
         password_error = self._validate_password_strength(password)
         if password_error:
-            return AuthResult(
-                success=False,
-                error=password_error
-            )
+            return AuthResult(success=False, error=password_error)
 
         # Check if user already exists
         existing_user = self._user_repo.find_by_email(email)
         if existing_user:
             return AuthResult(
-                success=False,
-                error="User with this email already exists"
+                success=False, error="User with this email already exists"
             )
 
         # Hash password
@@ -72,11 +65,7 @@ class AuthService(IAuthService):
         # Generate token
         token = self._generate_token(created_user.id, created_user.email)
 
-        return AuthResult(
-            success=True,
-            user_id=created_user.id,
-            token=token
-        )
+        return AuthResult(success=True, user_id=created_user.id, token=token)
 
     def login(self, email: str, password: str) -> AuthResult:
         """Login user and return JWT token.
@@ -91,24 +80,15 @@ class AuthService(IAuthService):
         # Find user by email
         user = self._user_repo.find_by_email(email)
         if not user:
-            return AuthResult(
-                success=False,
-                error="Invalid credentials"
-            )
+            return AuthResult(success=False, error="Invalid credentials")
 
         # Check if user is active
         if user.status != UserStatus.ACTIVE:
-            return AuthResult(
-                success=False,
-                error="User account is inactive"
-            )
+            return AuthResult(success=False, error="User account is inactive")
 
         # Verify password
         if not self.verify_password(password, user.password_hash):
-            return AuthResult(
-                success=False,
-                error="Invalid credentials"
-            )
+            return AuthResult(success=False, error="Invalid credentials")
 
         # Generate token
         token = self._generate_token(user.id, user.email)
@@ -117,16 +97,11 @@ class AuthService(IAuthService):
         user_data = UserData(
             id=str(user.id),
             email=user.email,
-            name=user.email.split('@')[0],  # Use email prefix as name if no name field
-            roles=[user.role.value] if user.role else ['user']
+            name=user.email.split("@")[0],  # Use email prefix as name if no name field
+            roles=[user.role.value] if user.role else ["user"],
         )
 
-        return AuthResult(
-            success=True,
-            user_id=user.id,
-            token=token,
-            user=user_data
-        )
+        return AuthResult(success=True, user_id=user.id, token=token, user=user_data)
 
     def verify_token(self, token: str) -> Optional[UUID]:
         """Verify JWT token and return user_id if valid.
@@ -138,12 +113,8 @@ class AuthService(IAuthService):
             User UUID if token is valid, None otherwise
         """
         try:
-            payload = jwt.decode(
-                token,
-                self._config.SECRET_KEY,
-                algorithms=['HS256']
-            )
-            user_id_str = payload.get('user_id')
+            payload = jwt.decode(token, self._config.SECRET_KEY, algorithms=["HS256"])
+            user_id_str = payload.get("user_id")
             if user_id_str:
                 return UUID(user_id_str)
             return None
@@ -163,10 +134,10 @@ class AuthService(IAuthService):
         Returns:
             Bcrypt hashed password
         """
-        password_bytes = password.encode('utf-8')
+        password_bytes = password.encode("utf-8")
         salt = bcrypt.gensalt()
         hashed = bcrypt.hashpw(password_bytes, salt)
-        return hashed.decode('utf-8')
+        return hashed.decode("utf-8")
 
     def verify_password(self, password: str, hashed: str) -> bool:
         """Verify password against hash.
@@ -179,8 +150,8 @@ class AuthService(IAuthService):
             True if password matches hash, False otherwise
         """
         try:
-            password_bytes = password.encode('utf-8')
-            hashed_bytes = hashed.encode('utf-8')
+            password_bytes = password.encode("utf-8")
+            hashed_bytes = hashed.encode("utf-8")
             return bcrypt.checkpw(password_bytes, hashed_bytes)
         except Exception:
             return False
@@ -195,14 +166,14 @@ class AuthService(IAuthService):
         Returns:
             JWT token string
         """
-        expiration_hours = getattr(self._config, 'JWT_EXPIRATION_HOURS', 24)
+        expiration_hours = getattr(self._config, "JWT_EXPIRATION_HOURS", 24)
         payload = {
-            'user_id': str(user_id),
-            'email': email,
-            'exp': datetime.utcnow() + timedelta(hours=expiration_hours),
-            'iat': datetime.utcnow()
+            "user_id": str(user_id),
+            "email": email,
+            "exp": datetime.utcnow() + timedelta(hours=expiration_hours),
+            "iat": datetime.utcnow(),
         }
-        token = jwt.encode(payload, self._config.SECRET_KEY, algorithm='HS256')
+        token = jwt.encode(payload, self._config.SECRET_KEY, algorithm="HS256")
         return token
 
     def _validate_email(self, email: str) -> bool:
@@ -218,7 +189,7 @@ class AuthService(IAuthService):
             return False
 
         # RFC 5322 simplified email regex
-        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
         return re.match(email_pattern, email) is not None
 
     def _validate_password_strength(self, password: str) -> Optional[str]:
@@ -233,13 +204,13 @@ class AuthService(IAuthService):
         if len(password) < 8:
             return "Password must be at least 8 characters long"
 
-        if not re.search(r'[a-z]', password):
+        if not re.search(r"[a-z]", password):
             return "Password must contain at least one lowercase letter"
 
-        if not re.search(r'[A-Z]', password):
+        if not re.search(r"[A-Z]", password):
             return "Password must contain at least one uppercase letter"
 
-        if not re.search(r'\d', password):
+        if not re.search(r"\d", password):
             return "Password must contain at least one number"
 
         if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):

@@ -14,10 +14,7 @@ class FeatureUsageRepository(BaseRepository[FeatureUsage]):
         super().__init__(session, FeatureUsage)
 
     def get_usage(
-        self,
-        user_id: UUID,
-        feature_name: str,
-        period_start: datetime
+        self, user_id: UUID, feature_name: str, period_start: datetime
     ) -> Optional[FeatureUsage]:
         """
         Get usage record for user/feature/period.
@@ -35,16 +32,13 @@ class FeatureUsageRepository(BaseRepository[FeatureUsage]):
             .filter(
                 FeatureUsage.user_id == user_id,
                 FeatureUsage.feature_name == feature_name,
-                FeatureUsage.period_start == period_start
+                FeatureUsage.period_start == period_start,
             )
             .first()
         )
 
     def get_monthly_usage(
-        self,
-        user_id: UUID,
-        feature_name: str,
-        period_start: datetime
+        self, user_id: UUID, feature_name: str, period_start: datetime
     ) -> int:
         """
         Get usage count for a feature in the current period.
@@ -61,11 +55,7 @@ class FeatureUsageRepository(BaseRepository[FeatureUsage]):
         return record.usage_count if record else 0
 
     def increment_usage(
-        self,
-        user_id: UUID,
-        feature_name: str,
-        period_start: datetime,
-        amount: int = 1
+        self, user_id: UUID, feature_name: str, period_start: datetime, amount: int = 1
     ) -> int:
         """
         Increment usage for a feature.
@@ -90,7 +80,7 @@ class FeatureUsageRepository(BaseRepository[FeatureUsage]):
                 user_id=user_id,
                 feature_name=feature_name,
                 period_start=period_start,
-                usage_count=amount
+                usage_count=amount,
             )
             self._session.add(record)
 
@@ -98,10 +88,7 @@ class FeatureUsageRepository(BaseRepository[FeatureUsage]):
         return record.usage_count
 
     def reset_usage(
-        self,
-        user_id: UUID,
-        feature_name: str,
-        period_start: datetime
+        self, user_id: UUID, feature_name: str, period_start: datetime
     ) -> bool:
         """
         Reset usage count to zero.
@@ -121,11 +108,7 @@ class FeatureUsageRepository(BaseRepository[FeatureUsage]):
             return True
         return False
 
-    def get_all_usage_for_user(
-        self,
-        user_id: UUID,
-        period_start: datetime
-    ) -> dict:
+    def get_all_usage_for_user(self, user_id: UUID, period_start: datetime) -> dict:
         """
         Get all feature usage for a user in a period.
 
@@ -140,7 +123,7 @@ class FeatureUsageRepository(BaseRepository[FeatureUsage]):
             self._session.query(FeatureUsage)
             .filter(
                 FeatureUsage.user_id == user_id,
-                FeatureUsage.period_start == period_start
+                FeatureUsage.period_start == period_start,
             )
             .all()
         )

@@ -5,11 +5,11 @@ import enum
 class WebhookStatus(enum.Enum):
     """Webhook processing status."""
 
-    RECEIVED = 'received'
-    PROCESSING = 'processing'
-    PROCESSED = 'processed'
-    FAILED = 'failed'
-    SKIPPED = 'skipped'
+    RECEIVED = "received"
+    PROCESSING = "processing"
+    PROCESSED = "processed"
+    FAILED = "failed"
+    SKIPPED = "skipped"
 
 
 class WebhookEventType(enum.Enum):
@@ -19,11 +19,11 @@ class WebhookEventType(enum.Enum):
     across different payment providers.
     """
 
-    PAYMENT_SUCCEEDED = 'payment.succeeded'
-    PAYMENT_FAILED = 'payment.failed'
-    SUBSCRIPTION_CREATED = 'subscription.created'
-    SUBSCRIPTION_UPDATED = 'subscription.updated'
-    SUBSCRIPTION_CANCELLED = 'subscription.cancelled'
-    REFUND_CREATED = 'refund.created'
-    DISPUTE_CREATED = 'dispute.created'
-    UNKNOWN = 'unknown'
+    PAYMENT_SUCCEEDED = "payment.succeeded"
+    PAYMENT_FAILED = "payment.failed"
+    SUBSCRIPTION_CREATED = "subscription.created"
+    SUBSCRIPTION_UPDATED = "subscription.updated"
+    SUBSCRIPTION_CANCELLED = "subscription.cancelled"
+    REFUND_CREATED = "refund.created"
+    DISPUTE_CREATED = "dispute.created"
+    UNKNOWN = "unknown"

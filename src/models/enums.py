@@ -4,6 +4,7 @@ import enum
 
 class UserStatus(enum.Enum):
     """User account status."""
+
     PENDING = "pending"
     ACTIVE = "active"
     SUSPENDED = "suspended"
@@ -12,6 +13,7 @@ class UserStatus(enum.Enum):
 
 class UserRole(enum.Enum):
     """User role."""
+
     USER = "user"
     ADMIN = "admin"
     VENDOR = "vendor"
@@ -19,6 +21,7 @@ class UserRole(enum.Enum):
 
 class SubscriptionStatus(enum.Enum):
     """Subscription status."""
+
     PENDING = "pending"
     ACTIVE = "active"
     TRIALING = "trialing"
@@ -29,6 +32,7 @@ class SubscriptionStatus(enum.Enum):
 
 class InvoiceStatus(enum.Enum):
     """Invoice status."""
+
     PENDING = "pending"
     PAID = "paid"
     FAILED = "failed"
@@ -38,6 +42,7 @@ class InvoiceStatus(enum.Enum):
 
 class BillingPeriod(enum.Enum):
     """Billing period for tariff plans."""
+
     MONTHLY = "monthly"
     YEARLY = "yearly"
     QUARTERLY = "quarterly"
@@ -47,6 +52,7 @@ class BillingPeriod(enum.Enum):
 
 class UserCaseStatus(enum.Enum):
     """User case status."""
+
     DRAFT = "draft"
     ACTIVE = "active"
     COMPLETED = "completed"

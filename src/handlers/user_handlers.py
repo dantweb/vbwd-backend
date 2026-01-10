@@ -1,7 +1,10 @@
 """User event handlers."""
-from typing import Optional
 from src.events.domain import IEventHandler, DomainEvent, EventResult
-from src.events.user_events import UserCreatedEvent, UserStatusUpdatedEvent, UserDeletedEvent
+from src.events.user_events import (
+    UserCreatedEvent,
+    UserStatusUpdatedEvent,
+    UserDeletedEvent,
+)
 
 
 class UserCreatedHandler(IEventHandler):
@@ -47,19 +50,20 @@ class UserCreatedHandler(IEventHandler):
 
             # Send welcome email if email service available
             if self._email_service and event.email:
-                first_name = getattr(event, 'first_name', None) or 'User'
+                first_name = getattr(event, "first_name", None) or "User"
                 result = self._email_service.send_welcome_email(
-                    to_email=event.email,
-                    first_name=first_name
+                    to_email=event.email, first_name=first_name
                 )
                 email_sent = result.success
 
-            return EventResult.success_result({
-                "user_id": str(event.user_id),
-                "email": event.email,
-                "email_sent": email_sent,
-                "handled": True
-            })
+            return EventResult.success_result(
+                {
+                    "user_id": str(event.user_id),
+                    "email": event.email,
+                    "email_sent": email_sent,
+                    "handled": True,
+                }
+            )
 
         except Exception as e:
             return EventResult.error_result(str(e))
@@ -104,12 +108,14 @@ class UserStatusUpdatedHandler(IEventHandler):
             # - Update access control
             # - Trigger workflows based on status
 
-            return EventResult.success_result({
-                "user_id": str(event.user_id),
-                "old_status": event.old_status,
-                "new_status": event.new_status,
-                "handled": True
-            })
+            return EventResult.success_result(
+                {
+                    "user_id": str(event.user_id),
+                    "old_status": event.old_status,
+                    "new_status": event.new_status,
+                    "handled": True,
+                }
+            )
 
         except Exception as e:
             return EventResult.error_result(str(e))
@@ -153,10 +159,9 @@ class UserDeletedHandler(IEventHandler):
             # - Log audit trail
             # - Send confirmation
 
-            return EventResult.success_result({
-                "user_id": str(event.user_id),
-                "handled": True
-            })
+            return EventResult.success_result(
+                {"user_id": str(event.user_id), "handled": True}
+            )
 
         except Exception as e:
             return EventResult.error_result(str(e))

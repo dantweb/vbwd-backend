@@ -24,15 +24,14 @@ class PasswordResetRepository(BaseRepository[PasswordResetToken]):
         Returns:
             PasswordResetToken if found, None otherwise
         """
-        return self._session.query(PasswordResetToken).filter(
-            PasswordResetToken.token == token
-        ).first()
+        return (
+            self._session.query(PasswordResetToken)
+            .filter(PasswordResetToken.token == token)
+            .first()
+        )
 
     def create_token(
-        self,
-        user_id: UUID,
-        token: str,
-        expires_at: datetime
+        self, user_id: UUID, token: str, expires_at: datetime
     ) -> PasswordResetToken:
         """
         Create a new password reset token.
@@ -65,12 +64,13 @@ class PasswordResetRepository(BaseRepository[PasswordResetToken]):
         Returns:
             Number of tokens invalidated
         """
-        count = self._session.query(PasswordResetToken).filter(
-            PasswordResetToken.user_id == user_id,
-            PasswordResetToken.used_at.is_(None)
-        ).update(
-            {"used_at": datetime.utcnow()},
-            synchronize_session=False
+        count = (
+            self._session.query(PasswordResetToken)
+            .filter(
+                PasswordResetToken.user_id == user_id,
+                PasswordResetToken.used_at.is_(None),
+            )
+            .update({"used_at": datetime.utcnow()}, synchronize_session=False)
         )
         self._session.commit()
         return count
@@ -103,11 +103,14 @@ class PasswordResetRepository(BaseRepository[PasswordResetToken]):
             Number of tokens deleted
         """
         from datetime import timedelta
+
         cutoff = datetime.utcnow() - timedelta(days=older_than_days)
 
-        count = self._session.query(PasswordResetToken).filter(
-            PasswordResetToken.expires_at < cutoff
-        ).delete(synchronize_session=False)
+        count = (
+            self._session.query(PasswordResetToken)
+            .filter(PasswordResetToken.expires_at < cutoff)
+            .delete(synchronize_session=False)
+        )
 
         self._session.commit()
         return count

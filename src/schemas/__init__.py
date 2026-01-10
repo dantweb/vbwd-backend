@@ -2,21 +2,21 @@
 from src.schemas.auth_schemas import (
     RegisterRequestSchema,
     LoginRequestSchema,
-    AuthResponseSchema
+    AuthResponseSchema,
 )
 from src.schemas.user_schemas import (
     UserSchema,
     UserDetailsSchema,
     UserDetailsUpdateSchema,
-    UserProfileSchema
+    UserProfileSchema,
 )
 
 __all__ = [
-    'RegisterRequestSchema',
-    'LoginRequestSchema',
-    'AuthResponseSchema',
-    'UserSchema',
-    'UserDetailsSchema',
-    'UserDetailsUpdateSchema',
-    'UserProfileSchema'
+    "RegisterRequestSchema",
+    "LoginRequestSchema",
+    "AuthResponseSchema",
+    "UserSchema",
+    "UserDetailsSchema",
+    "UserDetailsUpdateSchema",
+    "UserProfileSchema",
 ]

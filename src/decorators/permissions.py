@@ -20,6 +20,7 @@ def require_permission(*permissions: str) -> Callable:
     Returns:
         Decorated function
     """
+
     def decorator(fn: Callable) -> Callable:
         @wraps(fn)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
@@ -29,14 +30,21 @@ def require_permission(*permissions: str) -> Callable:
             rbac = current_app.container.rbac_service()
 
             if not rbac.has_any_permission(user_id, list(permissions)):
-                return jsonify({
-                    "error": "Insufficient permissions",
-                    "required": list(permissions),
-                    "code": "PERMISSION_DENIED"
-                }), 403
+                return (
+                    jsonify(
+                        {
+                            "error": "Insufficient permissions",
+                            "required": list(permissions),
+                            "code": "PERMISSION_DENIED",
+                        }
+                    ),
+                    403,
+                )
 
             return fn(*args, **kwargs)
+
         return wrapper
+
     return decorator
 
 
@@ -55,6 +63,7 @@ def require_all_permissions(*permissions: str) -> Callable:
     Returns:
         Decorated function
     """
+
     def decorator(fn: Callable) -> Callable:
         @wraps(fn)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
@@ -64,14 +73,21 @@ def require_all_permissions(*permissions: str) -> Callable:
             rbac = current_app.container.rbac_service()
 
             if not rbac.has_all_permissions(user_id, list(permissions)):
-                return jsonify({
-                    "error": "Insufficient permissions",
-                    "required": list(permissions),
-                    "code": "PERMISSION_DENIED"
-                }), 403
+                return (
+                    jsonify(
+                        {
+                            "error": "Insufficient permissions",
+                            "required": list(permissions),
+                            "code": "PERMISSION_DENIED",
+                        }
+                    ),
+                    403,
+                )
 
             return fn(*args, **kwargs)
+
         return wrapper
+
     return decorator
 
 
@@ -90,6 +106,7 @@ def require_role(*roles: str) -> Callable:
     Returns:
         Decorated function
     """
+
     def decorator(fn: Callable) -> Callable:
         @wraps(fn)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
@@ -100,14 +117,21 @@ def require_role(*roles: str) -> Callable:
             user_roles = rbac.get_user_roles(user_id)
 
             if not any(role in user_roles for role in roles):
-                return jsonify({
-                    "error": "Insufficient role",
-                    "required": list(roles),
-                    "code": "ROLE_REQUIRED"
-                }), 403
+                return (
+                    jsonify(
+                        {
+                            "error": "Insufficient role",
+                            "required": list(roles),
+                            "code": "ROLE_REQUIRED",
+                        }
+                    ),
+                    403,
+                )
 
             return fn(*args, **kwargs)
+
         return wrapper
+
     return decorator
 
 
@@ -126,6 +150,7 @@ def require_feature(feature_name: str) -> Callable:
     Returns:
         Decorated function
     """
+
     def decorator(fn: Callable) -> Callable:
         @wraps(fn)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
@@ -135,15 +160,22 @@ def require_feature(feature_name: str) -> Callable:
             guard = current_app.container.feature_guard()
 
             if not guard.can_access_feature(user_id, feature_name):
-                return jsonify({
-                    "error": "Feature not available",
-                    "feature": feature_name,
-                    "upgrade_required": True,
-                    "code": "FEATURE_UNAVAILABLE"
-                }), 403
+                return (
+                    jsonify(
+                        {
+                            "error": "Feature not available",
+                            "feature": feature_name,
+                            "upgrade_required": True,
+                            "code": "FEATURE_UNAVAILABLE",
+                        }
+                    ),
+                    403,
+                )
 
             return fn(*args, **kwargs)
+
         return wrapper
+
     return decorator
 
 
@@ -163,6 +195,7 @@ def check_usage_limit(feature_name: str, amount: int = 1) -> Callable:
     Returns:
         Decorated function
     """
+
     def decorator(fn: Callable) -> Callable:
         @wraps(fn)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
@@ -170,21 +203,26 @@ def check_usage_limit(feature_name: str, amount: int = 1) -> Callable:
             user_id = get_jwt_identity()
 
             guard = current_app.container.feature_guard()
-            allowed, remaining = guard.check_usage_limit(
-                user_id, feature_name, amount
-            )
+            allowed, remaining = guard.check_usage_limit(user_id, feature_name, amount)
 
             if not allowed:
-                return jsonify({
-                    "error": "Usage limit exceeded",
-                    "feature": feature_name,
-                    "remaining": remaining,
-                    "code": "LIMIT_EXCEEDED"
-                }), 429
+                return (
+                    jsonify(
+                        {
+                            "error": "Usage limit exceeded",
+                            "feature": feature_name,
+                            "remaining": remaining,
+                            "code": "LIMIT_EXCEEDED",
+                        }
+                    ),
+                    429,
+                )
 
             # Store remaining in g for potential use in route
             g.usage_remaining = remaining
 
             return fn(*args, **kwargs)
+
         return wrapper
+
     return decorator

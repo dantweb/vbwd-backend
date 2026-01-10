@@ -20,9 +20,7 @@ class AbstractHandler(IEventHandler):
     """
 
     def __init__(
-        self,
-        dispatcher: Optional[Any] = None,
-        context: Optional['EventContext'] = None
+        self, dispatcher: Optional[Any] = None, context: Optional["EventContext"] = None
     ):
         """
         Initialize handler.
@@ -35,7 +33,7 @@ class AbstractHandler(IEventHandler):
         self._context = context
 
     @property
-    def context(self) -> Optional['EventContext']:
+    def context(self) -> Optional["EventContext"]:
         """Get event context."""
         return self._context
 
@@ -44,7 +42,7 @@ class AbstractHandler(IEventHandler):
         """Return default NORMAL priority."""
         return HandlerPriority.NORMAL
 
-    def emit(self, event: 'EventInterface') -> EventResult:
+    def emit(self, event: "EventInterface") -> EventResult:
         """
         Emit event via dispatcher (for event chaining).
 

@@ -1,6 +1,6 @@
 """Tests for RBAC service."""
 import pytest
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock
 from uuid import uuid4
 from src.services.rbac_service import RBACService
 
@@ -61,9 +61,7 @@ class TestRBACService:
         mock_role_repo.user_has_role.return_value = False
         mock_role_repo.get_user_permissions.return_value = {"users.view"}
 
-        result = rbac_service.has_any_permission(
-            user_id, ["users.view", "users.edit"]
-        )
+        result = rbac_service.has_any_permission(user_id, ["users.view", "users.edit"])
 
         assert result is True
 
@@ -75,9 +73,7 @@ class TestRBACService:
         mock_role_repo.user_has_role.return_value = False
         mock_role_repo.get_user_permissions.return_value = {"reports.view"}
 
-        result = rbac_service.has_any_permission(
-            user_id, ["users.view", "users.edit"]
-        )
+        result = rbac_service.has_any_permission(user_id, ["users.view", "users.edit"])
 
         assert result is False
 
@@ -88,12 +84,12 @@ class TestRBACService:
         user_id = uuid4()
         mock_role_repo.user_has_role.return_value = False
         mock_role_repo.get_user_permissions.return_value = {
-            "users.view", "users.edit", "reports.view"
+            "users.view",
+            "users.edit",
+            "reports.view",
         }
 
-        result = rbac_service.has_all_permissions(
-            user_id, ["users.view", "users.edit"]
-        )
+        result = rbac_service.has_all_permissions(user_id, ["users.view", "users.edit"])
 
         assert result is True
 
@@ -105,15 +101,11 @@ class TestRBACService:
         mock_role_repo.user_has_role.return_value = False
         mock_role_repo.get_user_permissions.return_value = {"users.view"}
 
-        result = rbac_service.has_all_permissions(
-            user_id, ["users.view", "users.edit"]
-        )
+        result = rbac_service.has_all_permissions(user_id, ["users.view", "users.edit"])
 
         assert result is False
 
-    def test_assign_role_delegates_to_repository(
-        self, rbac_service, mock_role_repo
-    ):
+    def test_assign_role_delegates_to_repository(self, rbac_service, mock_role_repo):
         """Role assignment is delegated to repository."""
         user_id = uuid4()
         mock_role_repo.assign_role.return_value = True
@@ -123,9 +115,7 @@ class TestRBACService:
         assert result is True
         mock_role_repo.assign_role.assert_called_once_with(user_id, "moderator")
 
-    def test_revoke_role_delegates_to_repository(
-        self, rbac_service, mock_role_repo
-    ):
+    def test_revoke_role_delegates_to_repository(self, rbac_service, mock_role_repo):
         """Role revocation is delegated to repository."""
         user_id = uuid4()
         mock_role_repo.revoke_role.return_value = True
@@ -135,9 +125,7 @@ class TestRBACService:
         assert result is True
         mock_role_repo.revoke_role.assert_called_once_with(user_id, "moderator")
 
-    def test_get_user_permissions_returns_set(
-        self, rbac_service, mock_role_repo
-    ):
+    def test_get_user_permissions_returns_set(self, rbac_service, mock_role_repo):
         """Returns set of permission names."""
         user_id = uuid4()
         expected = {"users.view", "reports.view"}
@@ -147,9 +135,7 @@ class TestRBACService:
 
         assert result == expected
 
-    def test_get_user_roles_returns_role_names(
-        self, rbac_service, mock_role_repo
-    ):
+    def test_get_user_roles_returns_role_names(self, rbac_service, mock_role_repo):
         """Returns list of role names."""
         user_id = uuid4()
         mock_role1 = Mock()
@@ -162,9 +148,7 @@ class TestRBACService:
 
         assert result == ["user", "moderator"]
 
-    def test_is_admin_returns_true_for_admin(
-        self, rbac_service, mock_role_repo
-    ):
+    def test_is_admin_returns_true_for_admin(self, rbac_service, mock_role_repo):
         """Returns True for admin user."""
         user_id = uuid4()
         mock_role_repo.user_has_role.return_value = True
@@ -174,9 +158,7 @@ class TestRBACService:
         assert result is True
         mock_role_repo.user_has_role.assert_called_with(user_id, "admin")
 
-    def test_is_admin_returns_false_for_non_admin(
-        self, rbac_service, mock_role_repo
-    ):
+    def test_is_admin_returns_false_for_non_admin(self, rbac_service, mock_role_repo):
         """Returns False for non-admin user."""
         user_id = uuid4()
         mock_role_repo.user_has_role.return_value = False

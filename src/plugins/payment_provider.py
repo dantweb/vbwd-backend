@@ -9,6 +9,7 @@ from src.plugins.base import BasePlugin
 
 class PaymentStatus(Enum):
     """Payment status."""
+
     PENDING = "pending"
     PROCESSING = "processing"
     COMPLETED = "completed"

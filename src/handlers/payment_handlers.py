@@ -1,12 +1,12 @@
 """Payment event handlers."""
-from typing import List, Optional, TYPE_CHECKING
+from typing import List, TYPE_CHECKING
 
 from src.events.domain import IEventHandler, EventResult
 from src.events.payment_events import (
     CheckoutInitiatedEvent,
     PaymentCapturedEvent,
     PaymentFailedEvent,
-    RefundRequestedEvent
+    RefundRequestedEvent,
 )
 
 if TYPE_CHECKING:
@@ -19,7 +19,7 @@ class CheckoutInitiatedHandler(IEventHandler):
     Creates payment intent via SDK adapter.
     """
 
-    def __init__(self, sdk_registry: 'SDKAdapterRegistry'):
+    def __init__(self, sdk_registry: "SDKAdapterRegistry"):
         """Initialize handler.
 
         Args:
@@ -30,7 +30,7 @@ class CheckoutInitiatedHandler(IEventHandler):
     @staticmethod
     def get_handled_event_class() -> str:
         """Return handled event name."""
-        return 'checkout.initiated'
+        return "checkout.initiated"
 
     def can_handle(self, event) -> bool:
         """Check if can handle event."""
@@ -49,19 +49,21 @@ class CheckoutInitiatedHandler(IEventHandler):
         # Call SDK to create payment intent
         sdk_result = adapter.create_payment_intent(
             amount=event.amount,
-            currency=event.currency or 'USD',
+            currency=event.currency or "USD",
             metadata={
-                'user_id': str(event.user_id),
-                'tarif_plan_id': str(event.tarif_plan_id)
-            }
+                "user_id": str(event.user_id),
+                "tarif_plan_id": str(event.tarif_plan_id),
+            },
         )
 
         if sdk_result.success:
-            return EventResult.success_result({
-                'payment_intent_id': sdk_result.data.get('payment_intent_id'),
-                'client_secret': sdk_result.data.get('client_secret'),
-                'checkout_url': sdk_result.data.get('checkout_url')
-            })
+            return EventResult.success_result(
+                {
+                    "payment_intent_id": sdk_result.data.get("payment_intent_id"),
+                    "client_secret": sdk_result.data.get("client_secret"),
+                    "checkout_url": sdk_result.data.get("checkout_url"),
+                }
+            )
         else:
             return EventResult.error_result(sdk_result.error)
 
@@ -79,7 +81,7 @@ class PaymentCapturedHandler(IEventHandler):
     @staticmethod
     def get_handled_event_class() -> str:
         """Return handled event name."""
-        return 'payment.captured'
+        return "payment.captured"
 
     @property
     def processed_events(self) -> List[PaymentCapturedEvent]:
@@ -102,11 +104,13 @@ class PaymentCapturedHandler(IEventHandler):
         # 2. Mark invoice as paid via InvoiceService
         # 3. Send confirmation notification
 
-        return EventResult.success_result({
-            'subscription_id': str(event.subscription_id),
-            'transaction_id': event.transaction_id,
-            'activated': True
-        })
+        return EventResult.success_result(
+            {
+                "subscription_id": str(event.subscription_id),
+                "transaction_id": event.transaction_id,
+                "activated": True,
+            }
+        )
 
 
 class PaymentFailedHandler(IEventHandler):
@@ -122,7 +126,7 @@ class PaymentFailedHandler(IEventHandler):
     @staticmethod
     def get_handled_event_class() -> str:
         """Return handled event name."""
-        return 'payment.failed'
+        return "payment.failed"
 
     @property
     def processed_events(self) -> List[PaymentFailedEvent]:
@@ -144,11 +148,13 @@ class PaymentFailedHandler(IEventHandler):
         # 1. Update subscription status via SubscriptionService
         # 2. Send failure notification to user
 
-        return EventResult.success_result({
-            'subscription_id': str(event.subscription_id),
-            'error_code': event.error_code,
-            'notified': True
-        })
+        return EventResult.success_result(
+            {
+                "subscription_id": str(event.subscription_id),
+                "error_code": event.error_code,
+                "notified": True,
+            }
+        )
 
 
 class RefundRequestedHandler(IEventHandler):
@@ -157,7 +163,7 @@ class RefundRequestedHandler(IEventHandler):
     Calls SDK adapter to process refund.
     """
 
-    def __init__(self, sdk_registry: 'SDKAdapterRegistry'):
+    def __init__(self, sdk_registry: "SDKAdapterRegistry"):
         """Initialize handler.
 
         Args:
@@ -168,7 +174,7 @@ class RefundRequestedHandler(IEventHandler):
     @staticmethod
     def get_handled_event_class() -> str:
         """Return handled event name."""
-        return 'refund.requested'
+        return "refund.requested"
 
     def can_handle(self, event) -> bool:
         """Check if can handle event."""
@@ -186,15 +192,16 @@ class RefundRequestedHandler(IEventHandler):
 
         # Call SDK to refund payment
         sdk_result = adapter.refund_payment(
-            payment_intent_id=event.transaction_id,
-            amount=event.amount
+            payment_intent_id=event.transaction_id, amount=event.amount
         )
 
         if sdk_result.success:
-            return EventResult.success_result({
-                'refund_id': sdk_result.data.get('refund_id'),
-                'amount': str(event.amount) if event.amount else 'full',
-                'reason': event.reason
-            })
+            return EventResult.success_result(
+                {
+                    "refund_id": sdk_result.data.get("refund_id"),
+                    "amount": str(event.amount) if event.amount else "full",
+                    "reason": event.reason,
+                }
+            )
         else:
             return EventResult.error_result(sdk_result.error)

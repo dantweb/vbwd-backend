@@ -5,16 +5,27 @@ from src.models.base import BaseModel
 
 # Association table for role-permission many-to-many
 role_permissions = db.Table(
-    'role_permissions',
-    db.Column('role_id', db.UUID(as_uuid=True), db.ForeignKey('role.id'), primary_key=True),
-    db.Column('permission_id', db.UUID(as_uuid=True), db.ForeignKey('permission.id'), primary_key=True)
+    "role_permissions",
+    db.Column(
+        "role_id", db.UUID(as_uuid=True), db.ForeignKey("role.id"), primary_key=True
+    ),
+    db.Column(
+        "permission_id",
+        db.UUID(as_uuid=True),
+        db.ForeignKey("permission.id"),
+        primary_key=True,
+    ),
 )
 
 # Association table for user-role many-to-many
 user_roles = db.Table(
-    'user_roles',
-    db.Column('user_id', db.UUID(as_uuid=True), db.ForeignKey('user.id'), primary_key=True),
-    db.Column('role_id', db.UUID(as_uuid=True), db.ForeignKey('role.id'), primary_key=True)
+    "user_roles",
+    db.Column(
+        "user_id", db.UUID(as_uuid=True), db.ForeignKey("user.id"), primary_key=True
+    ),
+    db.Column(
+        "role_id", db.UUID(as_uuid=True), db.ForeignKey("role.id"), primary_key=True
+    ),
 )
 
 
@@ -26,7 +37,7 @@ class Role(BaseModel):
     System roles (is_system=True) cannot be deleted.
     """
 
-    __tablename__ = 'role'
+    __tablename__ = "role"
 
     name = db.Column(db.String(50), unique=True, nullable=False, index=True)
     description = db.Column(db.String(255))
@@ -34,18 +45,18 @@ class Role(BaseModel):
 
     # Many-to-many: Role <-> Permission
     permissions = db.relationship(
-        'Permission',
+        "Permission",
         secondary=role_permissions,
-        backref=db.backref('roles', lazy='dynamic'),
-        lazy='joined'
+        backref=db.backref("roles", lazy="dynamic"),
+        lazy="joined",
     )
 
     # Many-to-many: User <-> Role
     users = db.relationship(
-        'User',
+        "User",
         secondary=user_roles,
-        backref=db.backref('rbac_roles', lazy='dynamic'),
-        lazy='dynamic'
+        backref=db.backref("rbac_roles", lazy="dynamic"),
+        lazy="dynamic",
     )
 
     def has_permission(self, permission_name: str) -> bool:
@@ -74,7 +85,7 @@ class Permission(BaseModel):
     Format: resource.action (e.g., users.view, subscriptions.manage)
     """
 
-    __tablename__ = 'permission'
+    __tablename__ = "permission"
 
     name = db.Column(db.String(100), unique=True, nullable=False, index=True)
     description = db.Column(db.String(255))

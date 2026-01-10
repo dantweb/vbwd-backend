@@ -7,10 +7,12 @@ from src.repositories.subscription_repository import SubscriptionRepository
 from src.extensions import db
 from src.models import TarifPlan
 
-admin_plans_bp = Blueprint('admin_plans', __name__, url_prefix='/api/v1/admin/tarif-plans')
+admin_plans_bp = Blueprint(
+    "admin_plans", __name__, url_prefix="/api/v1/admin/tarif-plans"
+)
 
 
-@admin_plans_bp.route('/', methods=['GET'])
+@admin_plans_bp.route("/", methods=["GET"])
 @require_auth
 @require_admin
 def list_plans():
@@ -28,12 +30,10 @@ def list_plans():
     # Admin sees all plans, including inactive
     plans = plan_repo.find_all()
 
-    return jsonify({
-        'plans': [plan.to_dict() for plan in plans]
-    }), 200
+    return jsonify({"plans": [plan.to_dict() for plan in plans]}), 200
 
 
-@admin_plans_bp.route('/', methods=['POST'])
+@admin_plans_bp.route("/", methods=["POST"])
 @require_auth
 @require_admin
 def create_plan():
@@ -56,35 +56,37 @@ def create_plan():
     data = request.get_json() or {}
 
     # Validate required fields
-    if not data.get('name'):
-        return jsonify({'error': 'Name is required'}), 400
-    if 'price' not in data:
-        return jsonify({'error': 'Price is required'}), 400
+    if not data.get("name"):
+        return jsonify({"error": "Name is required"}), 400
+    if "price" not in data:
+        return jsonify({"error": "Price is required"}), 400
 
     try:
         plan = TarifPlan(
-            name=data['name'],
-            description=data.get('description', ''),
-            price=Decimal(str(data['price'])),
-            currency=data.get('currency', 'EUR'),
-            billing_period=data.get('billing_period', 'monthly'),
-            features=data.get('features', {}),
-            is_active=data.get('is_active', True)
+            name=data["name"],
+            description=data.get("description", ""),
+            price=Decimal(str(data["price"])),
+            currency=data.get("currency", "EUR"),
+            billing_period=data.get("billing_period", "monthly"),
+            features=data.get("features", {}),
+            is_active=data.get("is_active", True),
         )
 
         plan_repo = TarifPlanRepository(db.session)
         saved_plan = plan_repo.save(plan)
 
-        return jsonify({
-            'plan': saved_plan.to_dict(),
-            'message': 'Plan created successfully'
-        }), 201
+        return (
+            jsonify(
+                {"plan": saved_plan.to_dict(), "message": "Plan created successfully"}
+            ),
+            201,
+        )
 
     except Exception as e:
-        return jsonify({'error': str(e)}), 400
+        return jsonify({"error": str(e)}), 400
 
 
-@admin_plans_bp.route('/<plan_id>', methods=['GET'])
+@admin_plans_bp.route("/<plan_id>", methods=["GET"])
 @require_auth
 @require_admin
 def get_plan(plan_id):
@@ -102,14 +104,12 @@ def get_plan(plan_id):
     plan = plan_repo.find_by_id(plan_id)
 
     if not plan:
-        return jsonify({'error': 'Plan not found'}), 404
+        return jsonify({"error": "Plan not found"}), 404
 
-    return jsonify({
-        'plan': plan.to_dict()
-    }), 200
+    return jsonify({"plan": plan.to_dict()}), 200
 
 
-@admin_plans_bp.route('/<plan_id>', methods=['PUT'])
+@admin_plans_bp.route("/<plan_id>", methods=["PUT"])
 @require_auth
 @require_admin
 def update_plan(plan_id):
@@ -136,33 +136,31 @@ def update_plan(plan_id):
     plan = plan_repo.find_by_id(plan_id)
 
     if not plan:
-        return jsonify({'error': 'Plan not found'}), 404
+        return jsonify({"error": "Plan not found"}), 404
 
     data = request.get_json() or {}
 
-    if 'name' in data:
-        plan.name = data['name']
-    if 'description' in data:
-        plan.description = data['description']
-    if 'price' in data:
-        plan.price = Decimal(str(data['price']))
-    if 'currency' in data:
-        plan.currency = data['currency']
-    if 'billing_period' in data:
-        plan.billing_period = data['billing_period']
-    if 'features' in data:
-        plan.features = data['features']
-    if 'is_active' in data:
-        plan.is_active = data['is_active']
+    if "name" in data:
+        plan.name = data["name"]
+    if "description" in data:
+        plan.description = data["description"]
+    if "price" in data:
+        plan.price = Decimal(str(data["price"]))
+    if "currency" in data:
+        plan.currency = data["currency"]
+    if "billing_period" in data:
+        plan.billing_period = data["billing_period"]
+    if "features" in data:
+        plan.features = data["features"]
+    if "is_active" in data:
+        plan.is_active = data["is_active"]
 
     saved_plan = plan_repo.save(plan)
 
-    return jsonify({
-        'plan': saved_plan.to_dict()
-    }), 200
+    return jsonify({"plan": saved_plan.to_dict()}), 200
 
 
-@admin_plans_bp.route('/<plan_id>', methods=['DELETE'])
+@admin_plans_bp.route("/<plan_id>", methods=["DELETE"])
 @require_auth
 @require_admin
 def delete_plan(plan_id):
@@ -182,23 +180,26 @@ def delete_plan(plan_id):
 
     plan = plan_repo.find_by_id(plan_id)
     if not plan:
-        return jsonify({'error': 'Plan not found'}), 404
+        return jsonify({"error": "Plan not found"}), 404
 
     # Check for active subscriptions
     subs, total = sub_repo.find_all_paginated(plan_id=plan_id, limit=1)
     if total > 0:
-        return jsonify({
-            'error': 'Cannot delete plan with existing subscriptions. Deactivate instead.'
-        }), 400
+        return (
+            jsonify(
+                {
+                    "error": "Cannot delete plan with existing subscriptions. Deactivate instead."
+                }
+            ),
+            400,
+        )
 
     plan_repo.delete(plan_id)
 
-    return jsonify({
-        'message': 'Plan deleted successfully'
-    }), 200
+    return jsonify({"message": "Plan deleted successfully"}), 200
 
 
-@admin_plans_bp.route('/<plan_id>/deactivate', methods=['POST'])
+@admin_plans_bp.route("/<plan_id>/deactivate", methods=["POST"])
 @require_auth
 @require_admin
 def deactivate_plan(plan_id):
@@ -216,18 +217,15 @@ def deactivate_plan(plan_id):
     plan = plan_repo.find_by_id(plan_id)
 
     if not plan:
-        return jsonify({'error': 'Plan not found'}), 404
+        return jsonify({"error": "Plan not found"}), 404
 
     plan.is_active = False
     saved_plan = plan_repo.save(plan)
 
-    return jsonify({
-        'plan': saved_plan.to_dict(),
-        'message': 'Plan deactivated'
-    }), 200
+    return jsonify({"plan": saved_plan.to_dict(), "message": "Plan deactivated"}), 200
 
 
-@admin_plans_bp.route('/<plan_id>/activate', methods=['POST'])
+@admin_plans_bp.route("/<plan_id>/activate", methods=["POST"])
 @require_auth
 @require_admin
 def activate_plan(plan_id):
@@ -245,18 +243,15 @@ def activate_plan(plan_id):
     plan = plan_repo.find_by_id(plan_id)
 
     if not plan:
-        return jsonify({'error': 'Plan not found'}), 404
+        return jsonify({"error": "Plan not found"}), 404
 
     plan.is_active = True
     saved_plan = plan_repo.save(plan)
 
-    return jsonify({
-        'plan': saved_plan.to_dict(),
-        'message': 'Plan activated'
-    }), 200
+    return jsonify({"plan": saved_plan.to_dict(), "message": "Plan activated"}), 200
 
 
-@admin_plans_bp.route('/<plan_id>/archive', methods=['POST'])
+@admin_plans_bp.route("/<plan_id>/archive", methods=["POST"])
 @require_auth
 @require_admin
 def archive_plan(plan_id):
@@ -274,18 +269,15 @@ def archive_plan(plan_id):
     plan = plan_repo.find_by_id(plan_id)
 
     if not plan:
-        return jsonify({'error': 'Plan not found'}), 404
+        return jsonify({"error": "Plan not found"}), 404
 
     plan.is_active = False
     saved_plan = plan_repo.save(plan)
 
-    return jsonify({
-        'plan': saved_plan.to_dict(),
-        'message': 'Plan archived'
-    }), 200
+    return jsonify({"plan": saved_plan.to_dict(), "message": "Plan archived"}), 200
 
 
-@admin_plans_bp.route('/<plan_id>/copy', methods=['POST'])
+@admin_plans_bp.route("/<plan_id>/copy", methods=["POST"])
 @require_auth
 @require_admin
 def copy_plan(plan_id):
@@ -303,13 +295,16 @@ def copy_plan(plan_id):
     source_plan = plan_repo.find_by_id(plan_id)
 
     if not source_plan:
-        return jsonify({'error': 'Plan not found'}), 404
+        return jsonify({"error": "Plan not found"}), 404
 
     # Create a copy with "(copy)" appended to the name
     # Generate a unique slug for the copy
     import re
     from datetime import datetime
-    base_slug = source_plan.slug or re.sub(r'[^a-z0-9]+', '-', source_plan.name.lower()).strip('-')
+
+    base_slug = source_plan.slug or re.sub(
+        r"[^a-z0-9]+", "-", source_plan.name.lower()
+    ).strip("-")
     new_slug = f"{base_slug}-copy-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
 
     new_plan = TarifPlan(
@@ -321,12 +316,12 @@ def copy_plan(plan_id):
         currency=source_plan.currency,
         billing_period=source_plan.billing_period,
         features=source_plan.features,
-        is_active=True  # New copy is active by default
+        is_active=True,  # New copy is active by default
     )
 
     saved_plan = plan_repo.save(new_plan)
 
-    return jsonify({
-        'plan': saved_plan.to_dict(),
-        'message': 'Plan copied successfully'
-    }), 201
+    return (
+        jsonify({"plan": saved_plan.to_dict(), "message": "Plan copied successfully"}),
+        201,
+    )

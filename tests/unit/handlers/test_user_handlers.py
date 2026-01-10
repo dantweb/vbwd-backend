@@ -24,11 +24,7 @@ class TestUserCreatedHandler:
 
     def test_can_handle_returns_true_for_user_created_event(self, handler):
         """can_handle should return True for UserCreatedEvent."""
-        event = UserCreatedEvent(
-            user_id=uuid4(),
-            email="test@example.com",
-            role="user"
-        )
+        event = UserCreatedEvent(user_id=uuid4(), email="test@example.com", role="user")
 
         assert handler.can_handle(event) is True
 
@@ -41,11 +37,7 @@ class TestUserCreatedHandler:
     def test_handle_processes_user_created_event(self, handler):
         """handle should process UserCreatedEvent successfully."""
         user_id = uuid4()
-        event = UserCreatedEvent(
-            user_id=user_id,
-            email="test@example.com",
-            role="user"
-        )
+        event = UserCreatedEvent(user_id=user_id, email="test@example.com", role="user")
 
         result = handler.handle(event)
 
@@ -75,9 +67,7 @@ class TestUserStatusUpdatedHandler:
     def test_can_handle_returns_true_for_user_status_updated_event(self, handler):
         """can_handle should return True for UserStatusUpdatedEvent."""
         event = UserStatusUpdatedEvent(
-            user_id=uuid4(),
-            old_status="active",
-            new_status="suspended"
+            user_id=uuid4(), old_status="active", new_status="suspended"
         )
 
         assert handler.can_handle(event) is True
@@ -89,7 +79,7 @@ class TestUserStatusUpdatedHandler:
             user_id=user_id,
             old_status="active",
             new_status="suspended",
-            reason="Policy violation"
+            reason="Policy violation",
         )
 
         result = handler.handle(event)
@@ -110,10 +100,7 @@ class TestUserDeletedHandler:
 
     def test_can_handle_returns_true_for_user_deleted_event(self, handler):
         """can_handle should return True for UserDeletedEvent."""
-        event = UserDeletedEvent(
-            user_id=uuid4(),
-            deleted_by=uuid4()
-        )
+        event = UserDeletedEvent(user_id=uuid4(), deleted_by=uuid4())
 
         assert handler.can_handle(event) is True
 
@@ -121,9 +108,7 @@ class TestUserDeletedHandler:
         """handle should process UserDeletedEvent successfully."""
         user_id = uuid4()
         event = UserDeletedEvent(
-            user_id=user_id,
-            deleted_by=uuid4(),
-            reason="User request"
+            user_id=user_id, deleted_by=uuid4(), reason="User request"
         )
 
         result = handler.handle(event)

@@ -10,21 +10,21 @@ class RegisterRequestSchema(Schema):
         required=True,
         validate=validate.Length(max=255),
         error_messages={
-            'required': 'Email is required',
-            'invalid': 'Invalid email format'
-        }
+            "required": "Email is required",
+            "invalid": "Invalid email format",
+        },
     )
     password = fields.Str(
         required=True,
         validate=validate.Length(min=8),
         load_only=True,  # Never serialize password
         error_messages={
-            'required': 'Password is required',
-            'invalid': 'Password must be at least 8 characters'
-        }
+            "required": "Password is required",
+            "invalid": "Password must be at least 8 characters",
+        },
     )
 
-    @validates('password')
+    @validates("password")
     def validate_password(self, value):
         """Validate password strength.
 
@@ -37,17 +37,19 @@ class RegisterRequestSchema(Schema):
         if len(value) < 8:
             raise ValidationError("Password must be at least 8 characters long")
 
-        if not re.search(r'[a-z]', value):
+        if not re.search(r"[a-z]", value):
             raise ValidationError("Password must contain at least one lowercase letter")
 
-        if not re.search(r'[A-Z]', value):
+        if not re.search(r"[A-Z]", value):
             raise ValidationError("Password must contain at least one uppercase letter")
 
-        if not re.search(r'\d', value):
+        if not re.search(r"\d", value):
             raise ValidationError("Password must contain at least one number")
 
         if not re.search(r'[!@#$%^&*(),.?":{}|<>]', value):
-            raise ValidationError("Password must contain at least one special character")
+            raise ValidationError(
+                "Password must contain at least one special character"
+            )
 
 
 class LoginRequestSchema(Schema):
@@ -56,16 +58,14 @@ class LoginRequestSchema(Schema):
     email = fields.Email(
         required=True,
         error_messages={
-            'required': 'Email is required',
-            'invalid': 'Invalid email format'
-        }
+            "required": "Email is required",
+            "invalid": "Invalid email format",
+        },
     )
     password = fields.Str(
         required=True,
         load_only=True,  # Never serialize password
-        error_messages={
-            'required': 'Password is required'
-        }
+        error_messages={"required": "Password is required"},
     )
 
 

@@ -38,10 +38,7 @@ class PluginManager:
         self._plugins[name] = plugin
 
         # Emit event
-        event = Event(
-            name="plugin.registered",
-            data={"plugin_name": name}
-        )
+        event = Event(name="plugin.registered", data={"plugin_name": name})
         self._event_dispatcher.dispatch(event)
 
     def get_plugin(self, name: str) -> Optional[BasePlugin]:
@@ -55,7 +52,8 @@ class PluginManager:
     def get_enabled_plugins(self) -> List[BasePlugin]:
         """Get all enabled plugins."""
         return [
-            plugin for plugin in self._plugins.values()
+            plugin
+            for plugin in self._plugins.values()
             if plugin.status == PluginStatus.ENABLED
         ]
 
@@ -81,10 +79,7 @@ class PluginManager:
         plugin.initialize(config)
 
         # Emit event
-        event = Event(
-            name="plugin.initialized",
-            data={"plugin_name": name}
-        )
+        event = Event(name="plugin.initialized", data={"plugin_name": name})
         self._event_dispatcher.dispatch(event)
 
     def enable_plugin(self, name: str) -> None:
@@ -102,7 +97,7 @@ class PluginManager:
             raise ValueError(f"Plugin '{name}' not found")
 
         # Check dependencies
-        for dep in plugin.metadata.dependencies:
+        for dep in plugin.metadata.dependencies or []:
             dep_plugin = self.get_plugin(dep)
             if not dep_plugin or dep_plugin.status != PluginStatus.ENABLED:
                 raise ValueError(f"Dependency '{dep}' not enabled")
@@ -110,10 +105,7 @@ class PluginManager:
         plugin.enable()
 
         # Emit event
-        event = Event(
-            name="plugin.enabled",
-            data={"plugin_name": name}
-        )
+        event = Event(name="plugin.enabled", data={"plugin_name": name})
         self._event_dispatcher.dispatch(event)
 
     def disable_plugin(self, name: str) -> None:
@@ -132,8 +124,9 @@ class PluginManager:
 
         # Check if other plugins depend on this one
         dependent_plugins = [
-            p for p in self._plugins.values()
-            if name in p.metadata.dependencies
+            p
+            for p in self._plugins.values()
+            if name in (p.metadata.dependencies or [])
             and p.status == PluginStatus.ENABLED
         ]
 
@@ -144,8 +137,5 @@ class PluginManager:
         plugin.disable()
 
         # Emit event
-        event = Event(
-            name="plugin.disabled",
-            data={"plugin_name": name}
-        )
+        event = Event(name="plugin.disabled", data={"plugin_name": name})
         self._event_dispatcher.dispatch(event)

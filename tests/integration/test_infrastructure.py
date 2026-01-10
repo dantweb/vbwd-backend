@@ -18,7 +18,7 @@ class TestDockerInfrastructure:
                 port=5432,
                 user="vbwd",
                 password="vbwd",
-                database="vbwd"
+                database="vbwd",
             )
             cursor = conn.cursor()
             cursor.execute("SELECT version();")
@@ -84,10 +84,12 @@ class TestDockerInfrastructure:
         try:
             engine = create_engine(get_database_url())
             with engine.connect() as connection:
-                result = connection.execute(text(
-                    "SELECT table_name FROM information_schema.tables "
-                    "WHERE table_schema = 'public'"
-                ))
+                result = connection.execute(
+                    text(
+                        "SELECT table_name FROM information_schema.tables "
+                        "WHERE table_schema = 'public'"
+                    )
+                )
                 tables = [row[0] for row in result.fetchall()]
 
                 for table in expected_tables:
@@ -127,7 +129,9 @@ class TestDockerInfrastructure:
                 assert acquired is True
 
                 # Try to acquire same lock (should fail/wait)
-                with redis_client.lock(test_lock_key, timeout=1, blocking_timeout=0) as acquired2:
+                with redis_client.lock(
+                    test_lock_key, timeout=1, blocking_timeout=0
+                ) as acquired2:
                     assert acquired2 is False  # Lock is held
         except Exception as e:
             pytest.fail(f"Redis lock test failed: {e}")
@@ -135,11 +139,14 @@ class TestDockerInfrastructure:
     def test_flask_app_creation(self):
         """Test Flask app can be created successfully."""
         from src.config import get_database_url
+
         try:
-            app = create_app({
-                "SQLALCHEMY_DATABASE_URI": get_database_url(),
-                "SQLALCHEMY_TRACK_MODIFICATIONS": False
-            })
+            app = create_app(
+                {
+                    "SQLALCHEMY_DATABASE_URI": get_database_url(),
+                    "SQLALCHEMY_TRACK_MODIFICATIONS": False,
+                }
+            )
             assert app is not None
             assert app.name == "src.app"
         except Exception as e:
@@ -176,10 +183,12 @@ class TestDockerInfrastructure:
             engine = create_engine(get_database_url())
             with engine.connect() as connection:
                 # Test UUID column exists in a table
-                result = connection.execute(text(
-                    "SELECT column_name, data_type FROM information_schema.columns "
-                    "WHERE table_name = 'user' AND column_name = 'id'"
-                ))
+                result = connection.execute(
+                    text(
+                        "SELECT column_name, data_type FROM information_schema.columns "
+                        "WHERE table_name = 'user' AND column_name = 'id'"
+                    )
+                )
                 row = result.fetchone()
                 assert row is not None
                 assert row[1] == "uuid", f"Expected UUID type, got {row[1]}"
@@ -200,11 +209,13 @@ class TestDockerInfrastructure:
         try:
             engine = create_engine(get_database_url())
             with engine.connect() as connection:
-                result = connection.execute(text(
-                    "SELECT typname FROM pg_type "
-                    "WHERE typtype = 'e' AND typnamespace = "
-                    "(SELECT oid FROM pg_namespace WHERE nspname = 'public')"
-                ))
+                result = connection.execute(
+                    text(
+                        "SELECT typname FROM pg_type "
+                        "WHERE typtype = 'e' AND typnamespace = "
+                        "(SELECT oid FROM pg_namespace WHERE nspname = 'public')"
+                    )
+                )
                 enum_types = [row[0] for row in result.fetchall()]
 
                 for enum in expected_enums:
@@ -215,14 +226,16 @@ class TestDockerInfrastructure:
     def test_cross_service_communication_python_to_postgres(self):
         """Test Python service can communicate with PostgreSQL service."""
         try:
-            from src.extensions import db, engine
+            from src.extensions import engine
 
             # Test connection via SQLAlchemy
             with engine.connect() as connection:
-                result = connection.execute(text(
-                    "SELECT COUNT(*) FROM information_schema.tables "
-                    "WHERE table_schema = 'public'"
-                ))
+                result = connection.execute(
+                    text(
+                        "SELECT COUNT(*) FROM information_schema.tables "
+                        "WHERE table_schema = 'public'"
+                    )
+                )
                 table_count = result.fetchone()[0]
                 assert table_count > 0, "No tables found in database"
         except Exception as e:
@@ -258,12 +271,15 @@ class TestDockerInfrastructure:
         # Check PostgreSQL
         try:
             conn = psycopg2.connect(
-                host="postgres", port=5432,
-                user="vbwd", password="vbwd", database="vbwd"
+                host="postgres",
+                port=5432,
+                user="vbwd",
+                password="vbwd",
+                database="vbwd",
             )
             conn.close()
             services_status["postgres"] = True
-        except:
+        except Exception:
             pass
 
         # Check Redis
@@ -271,18 +287,21 @@ class TestDockerInfrastructure:
             client = redis.Redis(host="redis", port=6379)
             client.ping()
             services_status["redis"] = True
-        except:
+        except Exception:
             pass
 
         # Check Python (Flask app)
         try:
             from src.config import get_database_url
-            app = create_app({
-                "SQLALCHEMY_DATABASE_URI": get_database_url(),
-                "SQLALCHEMY_TRACK_MODIFICATIONS": False
-            })
+
+            app = create_app(
+                {
+                    "SQLALCHEMY_DATABASE_URI": get_database_url(),
+                    "SQLALCHEMY_TRACK_MODIFICATIONS": False,
+                }
+            )
             services_status["python"] = app is not None
-        except:
+        except Exception:
             pass
 
         # Verify all services are healthy

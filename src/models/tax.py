@@ -59,7 +59,7 @@ class Tax(BaseModel):
         Returns:
             Tax amount.
         """
-        tax = (net_amount * self.rate / Decimal("100"))
+        tax = net_amount * self.rate / Decimal("100")
         return tax.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
     def calculate_gross(self, net_amount: Decimal) -> Decimal:

@@ -1,6 +1,5 @@
 """Tests for dependency injection container."""
-import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 
 class TestContainer:

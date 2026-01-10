@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 class RedisClient:
     """Redis client wrapper with distributed lock support."""
 
-    def __init__(self, url: str = None):
+    def __init__(self, url: Optional[str] = None):
         """Initialize Redis client."""
         self._url = url or get_redis_url()
         self._client = redis.from_url(

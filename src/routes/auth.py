@@ -4,7 +4,7 @@ from marshmallow import ValidationError
 from src.schemas.auth_schemas import (
     RegisterRequestSchema,
     LoginRequestSchema,
-    AuthResponseSchema
+    AuthResponseSchema,
 )
 from src.services.auth_service import AuthService
 from src.repositories.user_repository import UserRepository
@@ -15,7 +15,7 @@ from src.events.security_events import (
 )
 
 # Create blueprint
-auth_bp = Blueprint('auth', __name__, url_prefix='/api/v1/auth')
+auth_bp = Blueprint("auth", __name__, url_prefix="/api/v1/auth")
 
 # Initialize schemas
 register_schema = RegisterRequestSchema()
@@ -23,8 +23,8 @@ login_schema = LoginRequestSchema()
 auth_response_schema = AuthResponseSchema()
 
 
-@auth_bp.route('/register', methods=['POST'])
-@limiter.limit("1000 per minute")
+@auth_bp.route("/register", methods=["POST"])
+@limiter.limit("3 per minute")
 def register():
     """Register a new user.
 
@@ -50,20 +50,14 @@ def register():
         # Validate request data
         data = register_schema.load(request.json)
     except ValidationError as err:
-        return jsonify({
-            'success': False,
-            'error': str(err.messages)
-        }), 400
+        return jsonify({"success": False, "error": str(err.messages)}), 400
 
     # Initialize service
     user_repo = UserRepository(db.session)
     auth_service = AuthService(user_repository=user_repo)
 
     # Register user
-    result = auth_service.register(
-        email=data['email'],
-        password=data['password']
-    )
+    result = auth_service.register(email=data["email"], password=data["password"])
 
     # Return response
     if result.success:
@@ -72,8 +66,8 @@ def register():
         return jsonify(auth_response_schema.dump(result)), 400
 
 
-@auth_bp.route('/login', methods=['POST'])
-@limiter.limit("1000 per minute")
+@auth_bp.route("/login", methods=["POST"])
+@limiter.limit("5 per minute")
 def login():
     """Login a user.
 
@@ -99,20 +93,14 @@ def login():
         # Validate request data
         data = login_schema.load(request.json)
     except ValidationError as err:
-        return jsonify({
-            'success': False,
-            'error': str(err.messages)
-        }), 400
+        return jsonify({"success": False, "error": str(err.messages)}), 400
 
     # Initialize service
     user_repo = UserRepository(db.session)
     auth_service = AuthService(user_repository=user_repo)
 
     # Login user
-    result = auth_service.login(
-        email=data['email'],
-        password=data['password']
-    )
+    result = auth_service.login(email=data["email"], password=data["password"])
 
     # Return response
     if result.success:
@@ -121,8 +109,8 @@ def login():
         return jsonify(auth_response_schema.dump(result)), 401
 
 
-@auth_bp.route('/forgot-password', methods=['POST'])
-@limiter.limit("1000 per minute")
+@auth_bp.route("/forgot-password", methods=["POST"])
+@limiter.limit("3 per minute")
 def forgot_password():
     """
     Request password reset.
@@ -144,10 +132,10 @@ def forgot_password():
         }
     """
     data = request.get_json() or {}
-    email = data.get('email')
+    email = data.get("email")
 
     if not email:
-        return jsonify({'error': 'Email required'}), 400
+        return jsonify({"error": "Email required"}), 400
 
     # Get dispatcher from container
     try:
@@ -155,21 +143,18 @@ def forgot_password():
 
         # Emit event - handler will do the work
         result = dispatcher.emit(
-            PasswordResetRequestEvent(
-                email=email,
-                request_ip=request.remote_addr
-            )
+            PasswordResetRequestEvent(email=email, request_ip=request.remote_addr)
         )
 
         # Always return success (don't reveal if email exists)
-        return jsonify(result.data or {'message': 'If email exists, reset link sent'})
+        return jsonify(result.data or {"message": "If email exists, reset link sent"})
     except Exception:
         # Even on error, don't reveal information
-        return jsonify({'message': 'If email exists, reset link sent'})
+        return jsonify({"message": "If email exists, reset link sent"})
 
 
-@auth_bp.route('/reset-password', methods=['POST'])
-@limiter.limit("1000 per minute")
+@auth_bp.route("/reset-password", methods=["POST"])
+@limiter.limit("5 per minute")
 def reset_password():
     """
     Execute password reset with token.
@@ -192,11 +177,11 @@ def reset_password():
         }
     """
     data = request.get_json() or {}
-    token = data.get('token')
-    new_password = data.get('new_password')
+    token = data.get("token")
+    new_password = data.get("new_password")
 
     if not token or not new_password:
-        return jsonify({'error': 'Token and new password required'}), 400
+        return jsonify({"error": "Token and new password required"}), 400
 
     # Get dispatcher from container
     try:
@@ -205,14 +190,12 @@ def reset_password():
         # Emit event - handler will do the work
         result = dispatcher.emit(
             PasswordResetExecuteEvent(
-                token=token,
-                new_password=new_password,
-                reset_ip=request.remote_addr
+                token=token, new_password=new_password, reset_ip=request.remote_addr
             )
         )
 
         if result.success:
-            return jsonify(result.data or {'message': 'Password reset successful'})
-        return jsonify({'error': result.error}), 400
-    except Exception as e:
-        return jsonify({'error': 'Password reset failed'}), 400
+            return jsonify(result.data or {"message": "Password reset successful"})
+        return jsonify({"error": result.error}), 400
+    except Exception:
+        return jsonify({"error": "Password reset failed"}), 400

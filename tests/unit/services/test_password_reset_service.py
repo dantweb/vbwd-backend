@@ -1,7 +1,7 @@
 """Tests for PasswordResetService - TDD First."""
 import pytest
 from datetime import datetime, timedelta
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock
 from uuid import uuid4
 
 
@@ -22,14 +22,16 @@ class TestPasswordResetService:
     def service(self, mock_user_repo, mock_reset_repo):
         """Create PasswordResetService with mocked dependencies."""
         from src.services.password_reset_service import PasswordResetService
+
         return PasswordResetService(
-            user_repository=mock_user_repo,
-            reset_repository=mock_reset_repo
+            user_repository=mock_user_repo, reset_repository=mock_reset_repo
         )
 
     # --- Tests for create_reset_token ---
 
-    def test_create_reset_token_for_valid_email(self, service, mock_user_repo, mock_reset_repo):
+    def test_create_reset_token_for_valid_email(
+        self, service, mock_user_repo, mock_reset_repo
+    ):
         """Token created and stored for valid email."""
         # Arrange
         user_id = uuid4()
@@ -51,7 +53,9 @@ class TestPasswordResetService:
         mock_reset_repo.invalidate_tokens_for_user.assert_called_once_with(user_id)
         mock_reset_repo.create_token.assert_called_once()
 
-    def test_create_reset_token_for_unknown_email_returns_success(self, service, mock_user_repo):
+    def test_create_reset_token_for_unknown_email_returns_success(
+        self, service, mock_user_repo
+    ):
         """No event emitted for unknown email (security - don't reveal existence)."""
         # Arrange
         mock_user_repo.find_by_email.return_value = None
@@ -64,7 +68,9 @@ class TestPasswordResetService:
         assert result.token is None  # But no token generated
         assert result.user_id is None
 
-    def test_create_reset_token_invalidates_existing_tokens(self, service, mock_user_repo, mock_reset_repo):
+    def test_create_reset_token_invalidates_existing_tokens(
+        self, service, mock_user_repo, mock_reset_repo
+    ):
         """Existing tokens invalidated before creating new one."""
         # Arrange
         user_id = uuid4()
@@ -79,7 +85,9 @@ class TestPasswordResetService:
         # Assert
         mock_reset_repo.invalidate_tokens_for_user.assert_called_once_with(user_id)
 
-    def test_create_reset_token_sets_expiry_one_hour(self, service, mock_user_repo, mock_reset_repo):
+    def test_create_reset_token_sets_expiry_one_hour(
+        self, service, mock_user_repo, mock_reset_repo
+    ):
         """Token should expire after 1 hour."""
         # Arrange
         mock_user = Mock()
@@ -100,7 +108,9 @@ class TestPasswordResetService:
 
     # --- Tests for reset_password ---
 
-    def test_reset_password_with_valid_token(self, service, mock_user_repo, mock_reset_repo):
+    def test_reset_password_with_valid_token(
+        self, service, mock_user_repo, mock_reset_repo
+    ):
         """Password reset succeeds with valid token."""
         # Arrange
         user_id = uuid4()
@@ -170,7 +180,9 @@ class TestPasswordResetService:
         assert result.error == "Token already used"
         assert result.failure_reason == "already_used"
 
-    def test_reset_password_updates_user_password(self, service, mock_user_repo, mock_reset_repo):
+    def test_reset_password_updates_user_password(
+        self, service, mock_user_repo, mock_reset_repo
+    ):
         """Password is actually updated in the database."""
         # Arrange
         user_id = uuid4()
@@ -192,7 +204,9 @@ class TestPasswordResetService:
         # Assert
         mock_user_repo.update.assert_called_once()
 
-    def test_reset_password_marks_token_as_used(self, service, mock_user_repo, mock_reset_repo):
+    def test_reset_password_marks_token_as_used(
+        self, service, mock_user_repo, mock_reset_repo
+    ):
         """Token is marked as used after successful reset."""
         # Arrange
         user_id = uuid4()

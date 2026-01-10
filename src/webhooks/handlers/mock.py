@@ -28,7 +28,7 @@ class MockWebhookHandler(IWebhookHandler):
     @property
     def provider(self) -> str:
         """Return 'mock' as provider name."""
-        return 'mock'
+        return "mock"
 
     @property
     def handled_events(self) -> List[NormalizedWebhookEvent]:
@@ -46,7 +46,7 @@ class MockWebhookHandler(IWebhookHandler):
         Returns:
             True if signature is 'valid_signature'
         """
-        return signature == 'valid_signature'
+        return signature == "valid_signature"
 
     def parse_event(self, payload: Dict[str, Any]) -> NormalizedWebhookEvent:
         """Parse payload to normalized event.
@@ -62,29 +62,29 @@ class MockWebhookHandler(IWebhookHandler):
             }
         }
         """
-        event_id = payload.get('id', 'evt_unknown')
-        event_type_str = payload.get('type', 'unknown')
-        data = payload.get('data', {})
+        event_id = payload.get("id", "evt_unknown")
+        event_type_str = payload.get("type", "unknown")
+        data = payload.get("data", {})
 
         # Map event type string to enum
         event_type = self._map_event_type(event_type_str)
 
         # Extract amount (convert from cents to decimal)
         amount = None
-        if 'amount' in data:
-            amount = Decimal(data['amount']) / 100
+        if "amount" in data:
+            amount = Decimal(data["amount"]) / 100
 
         # Extract currency (uppercase)
-        currency = data.get('currency', '').upper() if data.get('currency') else None
+        currency = data.get("currency", "").upper() if data.get("currency") else None
 
         return NormalizedWebhookEvent(
-            provider='mock',
+            provider="mock",
             event_id=event_id,
             event_type=event_type,
-            payment_intent_id=data.get('payment_intent_id'),
+            payment_intent_id=data.get("payment_intent_id"),
             amount=amount,
             currency=currency,
-            raw_payload=payload
+            raw_payload=payload,
         )
 
     def handle(self, event: NormalizedWebhookEvent) -> WebhookResult:
@@ -95,25 +95,21 @@ class MockWebhookHandler(IWebhookHandler):
         self._handled_events.append(event)
 
         if self._should_fail:
-            return WebhookResult(
-                success=False,
-                error='Mock handler configured to fail'
-            )
+            return WebhookResult(success=False, error="Mock handler configured to fail")
 
         return WebhookResult(
-            success=True,
-            message=f'Successfully processed {event.event_type.value}'
+            success=True, message=f"Successfully processed {event.event_type.value}"
         )
 
     def _map_event_type(self, event_type_str: str) -> WebhookEventType:
         """Map event type string to enum."""
         mapping = {
-            'payment.succeeded': WebhookEventType.PAYMENT_SUCCEEDED,
-            'payment.failed': WebhookEventType.PAYMENT_FAILED,
-            'subscription.created': WebhookEventType.SUBSCRIPTION_CREATED,
-            'subscription.updated': WebhookEventType.SUBSCRIPTION_UPDATED,
-            'subscription.cancelled': WebhookEventType.SUBSCRIPTION_CANCELLED,
-            'refund.created': WebhookEventType.REFUND_CREATED,
-            'dispute.created': WebhookEventType.DISPUTE_CREATED,
+            "payment.succeeded": WebhookEventType.PAYMENT_SUCCEEDED,
+            "payment.failed": WebhookEventType.PAYMENT_FAILED,
+            "subscription.created": WebhookEventType.SUBSCRIPTION_CREATED,
+            "subscription.updated": WebhookEventType.SUBSCRIPTION_UPDATED,
+            "subscription.cancelled": WebhookEventType.SUBSCRIPTION_CANCELLED,
+            "refund.created": WebhookEventType.REFUND_CREATED,
+            "dispute.created": WebhookEventType.DISPUTE_CREATED,
         }
         return mapping.get(event_type_str, WebhookEventType.UNKNOWN)

@@ -21,7 +21,7 @@ class CheckoutInitiatedEvent:
     return_url: Optional[str] = None
     cancel_url: Optional[str] = None
     metadata: Dict[str, Any] = field(default_factory=dict)
-    name: str = field(default='checkout.initiated', init=False)
+    name: str = field(default="checkout.initiated", init=False)
 
 
 @dataclass
@@ -39,7 +39,7 @@ class PaymentCapturedEvent:
     currency: str
     provider: str
     metadata: Dict[str, Any] = field(default_factory=dict)
-    name: str = field(default='payment.captured', init=False)
+    name: str = field(default="payment.captured", init=False)
 
 
 @dataclass
@@ -56,7 +56,7 @@ class PaymentFailedEvent:
     error_message: str
     provider: str
     metadata: Dict[str, Any] = field(default_factory=dict)
-    name: str = field(default='payment.failed', init=False)
+    name: str = field(default="payment.failed", init=False)
 
 
 @dataclass
@@ -73,4 +73,4 @@ class RefundRequestedEvent:
     provider: Optional[str] = None
     amount: Optional[Decimal] = None  # None for full refund
     metadata: Dict[str, Any] = field(default_factory=dict)
-    name: str = field(default='refund.requested', init=False)
+    name: str = field(default="refund.requested", init=False)

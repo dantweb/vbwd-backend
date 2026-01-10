@@ -1,11 +1,8 @@
 """Subscription event handlers."""
-from typing import Optional
 from src.events.domain import IEventHandler, DomainEvent, EventResult
 from src.events.subscription_events import (
-    SubscriptionCreatedEvent,
     SubscriptionActivatedEvent,
     SubscriptionCancelledEvent,
-    SubscriptionExpiredEvent,
     PaymentCompletedEvent,
     PaymentFailedEvent,
 )
@@ -55,18 +52,20 @@ class SubscriptionActivatedHandler(IEventHandler):
             if self._email_service and event.user_email:
                 result = self._email_service.send_subscription_activated(
                     to_email=event.user_email,
-                    first_name=event.first_name or 'User',
-                    plan_name=event.plan_name or 'Subscription',
-                    expires_at=event.expires_at
+                    first_name=event.first_name or "User",
+                    plan_name=event.plan_name or "Subscription",
+                    expires_at=event.expires_at,
                 )
                 email_sent = result.success
 
-            return EventResult.success_result({
-                "subscription_id": str(event.subscription_id),
-                "user_id": str(event.user_id),
-                "email_sent": email_sent,
-                "handled": True
-            })
+            return EventResult.success_result(
+                {
+                    "subscription_id": str(event.subscription_id),
+                    "user_id": str(event.user_id),
+                    "email_sent": email_sent,
+                    "handled": True,
+                }
+            )
 
         except Exception as e:
             return EventResult.error_result(str(e))
@@ -116,17 +115,19 @@ class SubscriptionCancelledHandler(IEventHandler):
             if self._email_service and event.user_email:
                 result = self._email_service.send_subscription_cancelled(
                     to_email=event.user_email,
-                    first_name=event.first_name or 'User',
-                    plan_name=event.plan_name or 'Subscription'
+                    first_name=event.first_name or "User",
+                    plan_name=event.plan_name or "Subscription",
                 )
                 email_sent = result.success
 
-            return EventResult.success_result({
-                "subscription_id": str(event.subscription_id),
-                "user_id": str(event.user_id),
-                "email_sent": email_sent,
-                "handled": True
-            })
+            return EventResult.success_result(
+                {
+                    "subscription_id": str(event.subscription_id),
+                    "user_id": str(event.user_id),
+                    "email_sent": email_sent,
+                    "handled": True,
+                }
+            )
 
         except Exception as e:
             return EventResult.error_result(str(e))
@@ -183,19 +184,21 @@ class PaymentCompletedHandler(IEventHandler):
                 amount_str = f"{event.amount} {event.currency}" if event.amount else ""
                 result = self._email_service.send_payment_receipt(
                     to_email=event.user_email,
-                    first_name=event.first_name or 'User',
+                    first_name=event.first_name or "User",
                     invoice_number=event.invoice_number or event.transaction_id,
-                    amount=amount_str
+                    amount=amount_str,
                 )
                 email_sent = result.success
 
-            return EventResult.success_result({
-                "subscription_id": str(event.subscription_id),
-                "transaction_id": event.transaction_id,
-                "activated": self.subscription_service is not None,
-                "email_sent": email_sent,
-                "handled": True
-            })
+            return EventResult.success_result(
+                {
+                    "subscription_id": str(event.subscription_id),
+                    "transaction_id": event.transaction_id,
+                    "activated": self.subscription_service is not None,
+                    "email_sent": email_sent,
+                    "handled": True,
+                }
+            )
 
         except Exception as e:
             return EventResult.error_result(str(e))
@@ -245,18 +248,20 @@ class PaymentFailedHandler(IEventHandler):
             if self._email_service and event.user_email:
                 result = self._email_service.send_payment_failed(
                     to_email=event.user_email,
-                    first_name=event.first_name or 'User',
-                    plan_name=event.plan_name or 'Subscription',
-                    retry_url=event.retry_url or 'https://vbwd.com/retry'
+                    first_name=event.first_name or "User",
+                    plan_name=event.plan_name or "Subscription",
+                    retry_url=event.retry_url or "https://vbwd.com/retry",
                 )
                 email_sent = result.success
 
-            return EventResult.success_result({
-                "subscription_id": str(event.subscription_id),
-                "user_id": str(event.user_id),
-                "email_sent": email_sent,
-                "handled": True
-            })
+            return EventResult.success_result(
+                {
+                    "subscription_id": str(event.subscription_id),
+                    "user_id": str(event.user_id),
+                    "email_sent": email_sent,
+                    "handled": True,
+                }
+            )
 
         except Exception as e:
             return EventResult.error_result(str(e))

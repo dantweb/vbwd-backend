@@ -17,9 +17,12 @@ class TestCurrencyServiceGetDefault:
     def currency_service(self, mock_currency_repo):
         """Create CurrencyService with mocked dependencies."""
         from src.services.currency_service import CurrencyService
+
         return CurrencyService(currency_repo=mock_currency_repo)
 
-    def test_get_default_currency_returns_default(self, currency_service, mock_currency_repo):
+    def test_get_default_currency_returns_default(
+        self, currency_service, mock_currency_repo
+    ):
         """get_default_currency should return the default currency."""
         from src.models.currency import Currency
 
@@ -39,7 +42,9 @@ class TestCurrencyServiceGetDefault:
         assert result.is_default is True
         mock_currency_repo.find_default.assert_called_once()
 
-    def test_get_default_currency_raises_if_none(self, currency_service, mock_currency_repo):
+    def test_get_default_currency_raises_if_none(
+        self, currency_service, mock_currency_repo
+    ):
         """get_default_currency should raise if no default currency."""
         mock_currency_repo.find_default.return_value = None
 
@@ -59,9 +64,12 @@ class TestCurrencyServiceConvert:
     def currency_service(self, mock_currency_repo):
         """Create CurrencyService with mocked dependencies."""
         from src.services.currency_service import CurrencyService
+
         return CurrencyService(currency_repo=mock_currency_repo)
 
-    def test_convert_amount_between_currencies(self, currency_service, mock_currency_repo):
+    def test_convert_amount_between_currencies(
+        self, currency_service, mock_currency_repo
+    ):
         """convert should convert amount between currencies."""
         from src.models.currency import Currency
 
@@ -75,14 +83,18 @@ class TestCurrencyServiceConvert:
         usd.exchange_rate = Decimal("1.08")
         usd.decimal_places = 2
 
-        mock_currency_repo.find_by_code.side_effect = lambda c: eur if c == "EUR" else usd
+        mock_currency_repo.find_by_code.side_effect = (
+            lambda c: eur if c == "EUR" else usd
+        )
 
         result = currency_service.convert(Decimal("100"), "EUR", "USD")
 
         assert result == Decimal("108.00")
         assert mock_currency_repo.find_by_code.call_count == 2
 
-    def test_convert_same_currency_returns_same_amount(self, currency_service, mock_currency_repo):
+    def test_convert_same_currency_returns_same_amount(
+        self, currency_service, mock_currency_repo
+    ):
         """convert should return same amount for same currency."""
         result = currency_service.convert(Decimal("100"), "EUR", "EUR")
 
@@ -90,7 +102,9 @@ class TestCurrencyServiceConvert:
         # Should not call repository for same currency
         mock_currency_repo.find_by_code.assert_not_called()
 
-    def test_convert_raises_for_unknown_currency(self, currency_service, mock_currency_repo):
+    def test_convert_raises_for_unknown_currency(
+        self, currency_service, mock_currency_repo
+    ):
         """convert should raise for unknown currency."""
         mock_currency_repo.find_by_code.return_value = None
 
@@ -110,9 +124,12 @@ class TestCurrencyServiceGetActive:
     def currency_service(self, mock_currency_repo):
         """Create CurrencyService with mocked dependencies."""
         from src.services.currency_service import CurrencyService
+
         return CurrencyService(currency_repo=mock_currency_repo)
 
-    def test_get_active_currencies_returns_list(self, currency_service, mock_currency_repo):
+    def test_get_active_currencies_returns_list(
+        self, currency_service, mock_currency_repo
+    ):
         """get_active_currencies should return active currencies."""
         from src.models.currency import Currency
 
@@ -147,9 +164,12 @@ class TestCurrencyServiceGetByCode:
     def currency_service(self, mock_currency_repo):
         """Create CurrencyService with mocked dependencies."""
         from src.services.currency_service import CurrencyService
+
         return CurrencyService(currency_repo=mock_currency_repo)
 
-    def test_get_currency_by_code_returns_currency(self, currency_service, mock_currency_repo):
+    def test_get_currency_by_code_returns_currency(
+        self, currency_service, mock_currency_repo
+    ):
         """get_currency_by_code should return currency."""
         from src.models.currency import Currency
 
@@ -164,7 +184,9 @@ class TestCurrencyServiceGetByCode:
         assert result.code == "USD"
         mock_currency_repo.find_by_code.assert_called_once_with("USD")
 
-    def test_get_currency_by_code_uppercases_code(self, currency_service, mock_currency_repo):
+    def test_get_currency_by_code_uppercases_code(
+        self, currency_service, mock_currency_repo
+    ):
         """get_currency_by_code should uppercase the code."""
         from src.models.currency import Currency
 

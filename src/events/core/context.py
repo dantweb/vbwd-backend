@@ -1,7 +1,7 @@
 """Event context for request-scoped data caching."""
 from typing import Dict, Any, Optional, Callable, TypeVar
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class EventContext:

@@ -1,9 +1,6 @@
 """Tests for webhook system (Sprint 15)."""
-import pytest
 from decimal import Decimal
-from unittest.mock import Mock, MagicMock, patch
 from uuid import uuid4
-import json
 
 
 class TestWebhookStatus:
@@ -13,31 +10,31 @@ class TestWebhookStatus:
         """WebhookStatus has RECEIVED value."""
         from src.webhooks.enums import WebhookStatus
 
-        assert WebhookStatus.RECEIVED.value == 'received'
+        assert WebhookStatus.RECEIVED.value == "received"
 
     def test_webhook_status_has_processing(self):
         """WebhookStatus has PROCESSING value."""
         from src.webhooks.enums import WebhookStatus
 
-        assert WebhookStatus.PROCESSING.value == 'processing'
+        assert WebhookStatus.PROCESSING.value == "processing"
 
     def test_webhook_status_has_processed(self):
         """WebhookStatus has PROCESSED value."""
         from src.webhooks.enums import WebhookStatus
 
-        assert WebhookStatus.PROCESSED.value == 'processed'
+        assert WebhookStatus.PROCESSED.value == "processed"
 
     def test_webhook_status_has_failed(self):
         """WebhookStatus has FAILED value."""
         from src.webhooks.enums import WebhookStatus
 
-        assert WebhookStatus.FAILED.value == 'failed'
+        assert WebhookStatus.FAILED.value == "failed"
 
     def test_webhook_status_has_skipped(self):
         """WebhookStatus has SKIPPED value."""
         from src.webhooks.enums import WebhookStatus
 
-        assert WebhookStatus.SKIPPED.value == 'skipped'
+        assert WebhookStatus.SKIPPED.value == "skipped"
 
 
 class TestWebhookEventType:
@@ -47,43 +44,43 @@ class TestWebhookEventType:
         """WebhookEventType has PAYMENT_SUCCEEDED."""
         from src.webhooks.enums import WebhookEventType
 
-        assert WebhookEventType.PAYMENT_SUCCEEDED.value == 'payment.succeeded'
+        assert WebhookEventType.PAYMENT_SUCCEEDED.value == "payment.succeeded"
 
     def test_event_type_has_payment_failed(self):
         """WebhookEventType has PAYMENT_FAILED."""
         from src.webhooks.enums import WebhookEventType
 
-        assert WebhookEventType.PAYMENT_FAILED.value == 'payment.failed'
+        assert WebhookEventType.PAYMENT_FAILED.value == "payment.failed"
 
     def test_event_type_has_subscription_created(self):
         """WebhookEventType has SUBSCRIPTION_CREATED."""
         from src.webhooks.enums import WebhookEventType
 
-        assert WebhookEventType.SUBSCRIPTION_CREATED.value == 'subscription.created'
+        assert WebhookEventType.SUBSCRIPTION_CREATED.value == "subscription.created"
 
     def test_event_type_has_subscription_updated(self):
         """WebhookEventType has SUBSCRIPTION_UPDATED."""
         from src.webhooks.enums import WebhookEventType
 
-        assert WebhookEventType.SUBSCRIPTION_UPDATED.value == 'subscription.updated'
+        assert WebhookEventType.SUBSCRIPTION_UPDATED.value == "subscription.updated"
 
     def test_event_type_has_subscription_cancelled(self):
         """WebhookEventType has SUBSCRIPTION_CANCELLED."""
         from src.webhooks.enums import WebhookEventType
 
-        assert WebhookEventType.SUBSCRIPTION_CANCELLED.value == 'subscription.cancelled'
+        assert WebhookEventType.SUBSCRIPTION_CANCELLED.value == "subscription.cancelled"
 
     def test_event_type_has_refund_created(self):
         """WebhookEventType has REFUND_CREATED."""
         from src.webhooks.enums import WebhookEventType
 
-        assert WebhookEventType.REFUND_CREATED.value == 'refund.created'
+        assert WebhookEventType.REFUND_CREATED.value == "refund.created"
 
     def test_event_type_has_unknown(self):
         """WebhookEventType has UNKNOWN for unhandled events."""
         from src.webhooks.enums import WebhookEventType
 
-        assert WebhookEventType.UNKNOWN.value == 'unknown'
+        assert WebhookEventType.UNKNOWN.value == "unknown"
 
 
 class TestNormalizedWebhookEvent:
@@ -95,12 +92,12 @@ class TestNormalizedWebhookEvent:
         from src.webhooks.enums import WebhookEventType
 
         event = NormalizedWebhookEvent(
-            provider='stripe',
-            event_id='evt_123',
-            event_type=WebhookEventType.PAYMENT_SUCCEEDED
+            provider="stripe",
+            event_id="evt_123",
+            event_type=WebhookEventType.PAYMENT_SUCCEEDED,
         )
 
-        assert event.provider == 'stripe'
+        assert event.provider == "stripe"
 
     def test_normalized_event_has_event_id(self):
         """NormalizedWebhookEvent has event_id field."""
@@ -108,12 +105,12 @@ class TestNormalizedWebhookEvent:
         from src.webhooks.enums import WebhookEventType
 
         event = NormalizedWebhookEvent(
-            provider='stripe',
-            event_id='evt_123',
-            event_type=WebhookEventType.PAYMENT_SUCCEEDED
+            provider="stripe",
+            event_id="evt_123",
+            event_type=WebhookEventType.PAYMENT_SUCCEEDED,
         )
 
-        assert event.event_id == 'evt_123'
+        assert event.event_id == "evt_123"
 
     def test_normalized_event_has_event_type(self):
         """NormalizedWebhookEvent has event_type field."""
@@ -121,9 +118,9 @@ class TestNormalizedWebhookEvent:
         from src.webhooks.enums import WebhookEventType
 
         event = NormalizedWebhookEvent(
-            provider='stripe',
-            event_id='evt_123',
-            event_type=WebhookEventType.PAYMENT_SUCCEEDED
+            provider="stripe",
+            event_id="evt_123",
+            event_type=WebhookEventType.PAYMENT_SUCCEEDED,
         )
 
         assert event.event_type == WebhookEventType.PAYMENT_SUCCEEDED
@@ -135,18 +132,18 @@ class TestNormalizedWebhookEvent:
 
         user_id = uuid4()
         event = NormalizedWebhookEvent(
-            provider='stripe',
-            event_id='evt_123',
+            provider="stripe",
+            event_id="evt_123",
             event_type=WebhookEventType.PAYMENT_SUCCEEDED,
-            payment_intent_id='pi_123',
-            amount=Decimal('29.99'),
-            currency='USD',
-            user_id=user_id
+            payment_intent_id="pi_123",
+            amount=Decimal("29.99"),
+            currency="USD",
+            user_id=user_id,
         )
 
-        assert event.payment_intent_id == 'pi_123'
-        assert event.amount == Decimal('29.99')
-        assert event.currency == 'USD'
+        assert event.payment_intent_id == "pi_123"
+        assert event.amount == Decimal("29.99")
+        assert event.currency == "USD"
         assert event.user_id == user_id
 
     def test_normalized_event_default_metadata(self):
@@ -155,9 +152,9 @@ class TestNormalizedWebhookEvent:
         from src.webhooks.enums import WebhookEventType
 
         event = NormalizedWebhookEvent(
-            provider='stripe',
-            event_id='evt_123',
-            event_type=WebhookEventType.PAYMENT_SUCCEEDED
+            provider="stripe",
+            event_id="evt_123",
+            event_type=WebhookEventType.PAYMENT_SUCCEEDED,
         )
 
         assert event.metadata == {}
@@ -171,32 +168,30 @@ class TestWebhookResult:
         """WebhookResult for successful processing."""
         from src.webhooks.dto import WebhookResult
 
-        result = WebhookResult(success=True, message='Processed successfully')
+        result = WebhookResult(success=True, message="Processed successfully")
 
         assert result.success is True
-        assert result.message == 'Processed successfully'
+        assert result.message == "Processed successfully"
         assert result.error is None
 
     def test_webhook_result_failure(self):
         """WebhookResult for failed processing."""
         from src.webhooks.dto import WebhookResult
 
-        result = WebhookResult(success=False, error='Signature verification failed')
+        result = WebhookResult(success=False, error="Signature verification failed")
 
         assert result.success is False
-        assert result.error == 'Signature verification failed'
+        assert result.error == "Signature verification failed"
 
     def test_webhook_result_with_data(self):
         """WebhookResult can include data."""
         from src.webhooks.dto import WebhookResult
 
         result = WebhookResult(
-            success=True,
-            message='Payment processed',
-            data={'payment_id': 'pay_123'}
+            success=True, message="Payment processed", data={"payment_id": "pay_123"}
         )
 
-        assert result.data == {'payment_id': 'pay_123'}
+        assert result.data == {"payment_id": "pay_123"}
 
 
 class TestIWebhookHandler:
@@ -206,25 +201,25 @@ class TestIWebhookHandler:
         """IWebhookHandler has provider property."""
         from src.webhooks.handlers.base import IWebhookHandler
 
-        assert hasattr(IWebhookHandler, 'provider')
+        assert hasattr(IWebhookHandler, "provider")
 
     def test_handler_has_verify_signature(self):
         """IWebhookHandler has verify_signature method."""
         from src.webhooks.handlers.base import IWebhookHandler
 
-        assert hasattr(IWebhookHandler, 'verify_signature')
+        assert hasattr(IWebhookHandler, "verify_signature")
 
     def test_handler_has_parse_event(self):
         """IWebhookHandler has parse_event method."""
         from src.webhooks.handlers.base import IWebhookHandler
 
-        assert hasattr(IWebhookHandler, 'parse_event')
+        assert hasattr(IWebhookHandler, "parse_event")
 
     def test_handler_has_handle(self):
         """IWebhookHandler has handle method."""
         from src.webhooks.handlers.base import IWebhookHandler
 
-        assert hasattr(IWebhookHandler, 'handle')
+        assert hasattr(IWebhookHandler, "handle")
 
     def test_concrete_handler_implements_interface(self):
         """Concrete handler can implement IWebhookHandler."""
@@ -235,16 +230,18 @@ class TestIWebhookHandler:
         class TestHandler(IWebhookHandler):
             @property
             def provider(self) -> str:
-                return 'test'
+                return "test"
 
-            def verify_signature(self, payload: bytes, signature: str, secret: str) -> bool:
+            def verify_signature(
+                self, payload: bytes, signature: str, secret: str
+            ) -> bool:
                 return True
 
             def parse_event(self, payload: dict) -> NormalizedWebhookEvent:
                 return NormalizedWebhookEvent(
-                    provider='test',
-                    event_id='evt_test',
-                    event_type=WebhookEventType.UNKNOWN
+                    provider="test",
+                    event_id="evt_test",
+                    event_type=WebhookEventType.UNKNOWN,
                 )
 
             def handle(self, event: NormalizedWebhookEvent) -> WebhookResult:
@@ -252,7 +249,7 @@ class TestIWebhookHandler:
 
         handler = TestHandler()
         assert isinstance(handler, IWebhookHandler)
-        assert handler.provider == 'test'
+        assert handler.provider == "test"
 
 
 class TestMockWebhookHandler:
@@ -271,14 +268,14 @@ class TestMockWebhookHandler:
         from src.webhooks.handlers.mock import MockWebhookHandler
 
         handler = MockWebhookHandler()
-        assert handler.provider == 'mock'
+        assert handler.provider == "mock"
 
     def test_mock_handler_verify_signature_valid(self):
         """MockWebhookHandler verifies 'valid_signature'."""
         from src.webhooks.handlers.mock import MockWebhookHandler
 
         handler = MockWebhookHandler()
-        result = handler.verify_signature(b'payload', 'valid_signature', 'secret')
+        result = handler.verify_signature(b"payload", "valid_signature", "secret")
 
         assert result is True
 
@@ -287,7 +284,7 @@ class TestMockWebhookHandler:
         from src.webhooks.handlers.mock import MockWebhookHandler
 
         handler = MockWebhookHandler()
-        result = handler.verify_signature(b'payload', 'bad_signature', 'secret')
+        result = handler.verify_signature(b"payload", "bad_signature", "secret")
 
         assert result is False
 
@@ -298,23 +295,19 @@ class TestMockWebhookHandler:
 
         handler = MockWebhookHandler()
         payload = {
-            'id': 'evt_mock_123',
-            'type': 'payment.succeeded',
-            'data': {
-                'payment_intent_id': 'pi_123',
-                'amount': 2999,
-                'currency': 'usd'
-            }
+            "id": "evt_mock_123",
+            "type": "payment.succeeded",
+            "data": {"payment_intent_id": "pi_123", "amount": 2999, "currency": "usd"},
         }
 
         event = handler.parse_event(payload)
 
-        assert event.provider == 'mock'
-        assert event.event_id == 'evt_mock_123'
+        assert event.provider == "mock"
+        assert event.event_id == "evt_mock_123"
         assert event.event_type == WebhookEventType.PAYMENT_SUCCEEDED
-        assert event.payment_intent_id == 'pi_123'
-        assert event.amount == Decimal('29.99')
-        assert event.currency == 'USD'
+        assert event.payment_intent_id == "pi_123"
+        assert event.amount == Decimal("29.99")
+        assert event.currency == "USD"
 
     def test_mock_handler_handle_succeeds(self):
         """MockWebhookHandler handle() returns success."""
@@ -324,9 +317,9 @@ class TestMockWebhookHandler:
 
         handler = MockWebhookHandler()
         event = NormalizedWebhookEvent(
-            provider='mock',
-            event_id='evt_123',
-            event_type=WebhookEventType.PAYMENT_SUCCEEDED
+            provider="mock",
+            event_id="evt_123",
+            event_type=WebhookEventType.PAYMENT_SUCCEEDED,
         )
 
         result = handler.handle(event)
@@ -341,9 +334,9 @@ class TestMockWebhookHandler:
 
         handler = MockWebhookHandler(should_fail=True)
         event = NormalizedWebhookEvent(
-            provider='mock',
-            event_id='evt_123',
-            event_type=WebhookEventType.PAYMENT_SUCCEEDED
+            provider="mock",
+            event_id="evt_123",
+            event_type=WebhookEventType.PAYMENT_SUCCEEDED,
         )
 
         result = handler.handle(event)
@@ -359,22 +352,22 @@ class TestMockWebhookHandler:
 
         handler = MockWebhookHandler()
         event1 = NormalizedWebhookEvent(
-            provider='mock',
-            event_id='evt_1',
-            event_type=WebhookEventType.PAYMENT_SUCCEEDED
+            provider="mock",
+            event_id="evt_1",
+            event_type=WebhookEventType.PAYMENT_SUCCEEDED,
         )
         event2 = NormalizedWebhookEvent(
-            provider='mock',
-            event_id='evt_2',
-            event_type=WebhookEventType.PAYMENT_FAILED
+            provider="mock",
+            event_id="evt_2",
+            event_type=WebhookEventType.PAYMENT_FAILED,
         )
 
         handler.handle(event1)
         handler.handle(event2)
 
         assert len(handler.handled_events) == 2
-        assert handler.handled_events[0].event_id == 'evt_1'
-        assert handler.handled_events[1].event_id == 'evt_2'
+        assert handler.handled_events[0].event_id == "evt_1"
+        assert handler.handled_events[1].event_id == "evt_2"
 
 
 class TestWebhookService:
@@ -387,14 +380,11 @@ class TestWebhookService:
         service = WebhookService(handlers={})
 
         result = service.process(
-            provider='unknown',
-            payload=b'{}',
-            signature='sig',
-            headers={}
+            provider="unknown", payload=b"{}", signature="sig", headers={}
         )
 
         assert result.success is False
-        assert 'unknown' in result.error.lower()
+        assert "unknown" in result.error.lower()
 
     def test_service_verifies_signature(self):
         """Signature verified before processing."""
@@ -403,19 +393,18 @@ class TestWebhookService:
 
         handler = MockWebhookHandler()
         service = WebhookService(
-            handlers={'mock': handler},
-            webhook_secrets={'mock': 'test_secret'}
+            handlers={"mock": handler}, webhook_secrets={"mock": "test_secret"}
         )
 
         result = service.process(
-            provider='mock',
+            provider="mock",
             payload=b'{"id": "evt_123", "type": "payment.succeeded", "data": {}}',
-            signature='bad_signature',
-            headers={}
+            signature="bad_signature",
+            headers={},
         )
 
         assert result.success is False
-        assert 'signature' in result.error.lower()
+        assert "signature" in result.error.lower()
 
     def test_service_processes_valid_webhook(self):
         """Valid webhook is processed successfully."""
@@ -424,15 +413,14 @@ class TestWebhookService:
 
         handler = MockWebhookHandler()
         service = WebhookService(
-            handlers={'mock': handler},
-            webhook_secrets={'mock': 'test_secret'}
+            handlers={"mock": handler}, webhook_secrets={"mock": "test_secret"}
         )
 
         result = service.process(
-            provider='mock',
+            provider="mock",
             payload=b'{"id": "evt_123", "type": "payment.succeeded", "data": {}}',
-            signature='valid_signature',
-            headers={}
+            signature="valid_signature",
+            headers={},
         )
 
         assert result.success is True
@@ -444,19 +432,18 @@ class TestWebhookService:
 
         handler = MockWebhookHandler()
         service = WebhookService(
-            handlers={'mock': handler},
-            webhook_secrets={'mock': 'test_secret'}
+            handlers={"mock": handler}, webhook_secrets={"mock": "test_secret"}
         )
 
         service.process(
-            provider='mock',
+            provider="mock",
             payload=b'{"id": "evt_123", "type": "payment.succeeded", "data": {}}',
-            signature='valid_signature',
-            headers={}
+            signature="valid_signature",
+            headers={},
         )
 
         assert len(handler.handled_events) == 1
-        assert handler.handled_events[0].event_id == 'evt_123'
+        assert handler.handled_events[0].event_id == "evt_123"
 
     def test_service_handles_handler_failure(self):
         """Handler failure is returned correctly."""
@@ -465,15 +452,14 @@ class TestWebhookService:
 
         handler = MockWebhookHandler(should_fail=True)
         service = WebhookService(
-            handlers={'mock': handler},
-            webhook_secrets={'mock': 'test_secret'}
+            handlers={"mock": handler}, webhook_secrets={"mock": "test_secret"}
         )
 
         result = service.process(
-            provider='mock',
+            provider="mock",
             payload=b'{"id": "evt_123", "type": "payment.succeeded", "data": {}}',
-            signature='valid_signature',
-            headers={}
+            signature="valid_signature",
+            headers={},
         )
 
         assert result.success is False
@@ -485,19 +471,18 @@ class TestWebhookService:
 
         handler = MockWebhookHandler()
         service = WebhookService(
-            handlers={'mock': handler},
-            webhook_secrets={'mock': 'test_secret'}
+            handlers={"mock": handler}, webhook_secrets={"mock": "test_secret"}
         )
 
         result = service.process(
-            provider='mock',
-            payload=b'not valid json',
-            signature='valid_signature',
-            headers={}
+            provider="mock",
+            payload=b"not valid json",
+            signature="valid_signature",
+            headers={},
         )
 
         assert result.success is False
-        assert 'json' in result.error.lower() or 'parse' in result.error.lower()
+        assert "json" in result.error.lower() or "parse" in result.error.lower()
 
     def test_service_register_handler(self):
         """Service can register handlers dynamically."""
@@ -507,9 +492,9 @@ class TestWebhookService:
         service = WebhookService(handlers={}, webhook_secrets={})
         handler = MockWebhookHandler()
 
-        service.register_handler(handler, webhook_secret='secret')
+        service.register_handler(handler, webhook_secret="secret")
 
-        assert service.has_handler('mock')
+        assert service.has_handler("mock")
 
     def test_service_get_handler(self):
         """Service returns registered handler."""
@@ -518,10 +503,9 @@ class TestWebhookService:
 
         handler = MockWebhookHandler()
         service = WebhookService(
-            handlers={'mock': handler},
-            webhook_secrets={'mock': 'secret'}
+            handlers={"mock": handler}, webhook_secrets={"mock": "secret"}
         )
 
-        retrieved = service.get_handler('mock')
+        retrieved = service.get_handler("mock")
 
         assert retrieved is handler

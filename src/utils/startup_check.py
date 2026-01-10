@@ -8,22 +8,22 @@ logger = logging.getLogger(__name__)
 
 # Required in all environments
 REQUIRED_ENV_VARS = [
-    'DATABASE_URL',
-    'REDIS_URL',
+    "DATABASE_URL",
+    "REDIS_URL",
 ]
 
 # Required only in production
 REQUIRED_IN_PRODUCTION = [
-    'FLASK_SECRET_KEY',
-    'JWT_SECRET_KEY',
+    "FLASK_SECRET_KEY",
+    "JWT_SECRET_KEY",
 ]
 
 # Insecure default values that must not be used in production
 INSECURE_DEFAULTS = [
-    'dev-secret-key',
-    'dev-secret-key-change-in-production',
-    'dev-jwt-secret-change-in-production',
-    'change-me-in-production',
+    "dev-secret-key",
+    "dev-secret-key-change-in-production",
+    "dev-jwt-secret-change-in-production",
+    "change-me-in-production",
 ]
 
 
@@ -57,7 +57,7 @@ def validate_environment() -> bool:
     Returns:
         True if all required variables are present and valid.
     """
-    is_production = os.environ.get('FLASK_ENV') == 'production'
+    is_production = os.environ.get("FLASK_ENV") == "production"
     missing = get_missing_vars()
     security_issues = []
 
@@ -74,7 +74,9 @@ def validate_environment() -> bool:
     if missing:
         logger.error(f"Missing required environment variables: {missing}")
         if is_production:
-            logger.critical("Cannot start in production with missing required variables")
+            logger.critical(
+                "Cannot start in production with missing required variables"
+            )
             sys.exit(1)
         else:
             logger.warning("Continuing in development mode with missing variables")

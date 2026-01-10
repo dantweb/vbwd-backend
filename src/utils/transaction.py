@@ -1,7 +1,6 @@
 """Transaction management utilities for multi-step database operations."""
 from functools import wraps
 from typing import Callable, Any, Union
-from contextlib import contextmanager
 
 
 class TransactionContext:
@@ -124,7 +123,9 @@ class UnitOfWork:
         self._rolled_back = True
 
 
-def transactional(session_or_getter: Union[Any, Callable[[], Any]], is_getter: bool = False):
+def transactional(
+    session_or_getter: Union[Any, Callable[[], Any]], is_getter: bool = False
+):
     """
     Decorator to wrap a function in a transaction.
 
@@ -147,6 +148,7 @@ def transactional(session_or_getter: Union[Any, Callable[[], Any]], is_getter: b
         def my_function():
             ...
     """
+
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -165,4 +167,5 @@ def transactional(session_or_getter: Union[Any, Callable[[], Any]], is_getter: b
                 raise
 
         return wrapper
+
     return decorator

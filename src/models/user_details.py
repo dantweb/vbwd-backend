@@ -1,5 +1,5 @@
 """UserDetails domain model."""
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from src.extensions import db
 from src.models.base import BaseModel
 
@@ -29,6 +29,12 @@ class UserDetails(BaseModel):
     postal_code = db.Column(db.String(20))
     country = db.Column(db.String(2))  # ISO 3166-1 alpha-2
     phone = db.Column(db.String(20))
+
+    # New fields for Sprint 03
+    company = db.Column(db.String(255))
+    tax_number = db.Column(db.String(100))
+    config = db.Column(JSONB, default=dict)  # User preferences: language, theme, etc.
+    balance = db.Column(db.Numeric(10, 2), default=0.00, nullable=False)
 
     @property
     def full_name(self) -> str:
@@ -61,6 +67,10 @@ class UserDetails(BaseModel):
             "postal_code": self.postal_code,
             "country": self.country,
             "phone": self.phone,
+            "company": self.company,
+            "tax_number": self.tax_number,
+            "config": self.config or {},
+            "balance": float(self.balance) if self.balance is not None else 0.00,
         }
 
     def __repr__(self) -> str:

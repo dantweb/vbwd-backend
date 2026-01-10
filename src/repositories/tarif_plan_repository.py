@@ -12,17 +12,13 @@ class TarifPlanRepository(BaseRepository[TarifPlan]):
 
     def find_by_slug(self, slug: str) -> Optional[TarifPlan]:
         """Find tariff plan by slug."""
-        return (
-            self._session.query(TarifPlan)
-            .filter(TarifPlan.slug == slug)
-            .first()
-        )
+        return self._session.query(TarifPlan).filter(TarifPlan.slug == slug).first()
 
     def find_active(self) -> List[TarifPlan]:
         """Find all active tariff plans."""
         return (
             self._session.query(TarifPlan)
-            .filter(TarifPlan.is_active == True)
+            .filter(TarifPlan.is_active.is_(True))
             .order_by(TarifPlan.sort_order)
             .all()
         )
@@ -30,10 +26,11 @@ class TarifPlanRepository(BaseRepository[TarifPlan]):
     def find_recurring(self) -> List[TarifPlan]:
         """Find all recurring tariff plans."""
         from src.models.enums import BillingPeriod
+
         return (
             self._session.query(TarifPlan)
             .filter(
-                TarifPlan.is_active == True,
+                TarifPlan.is_active.is_(True),
                 TarifPlan.billing_period != BillingPeriod.ONE_TIME,
             )
             .order_by(TarifPlan.sort_order)

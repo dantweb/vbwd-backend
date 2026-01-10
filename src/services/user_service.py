@@ -15,7 +15,7 @@ class UserService(IUserService):
     def __init__(
         self,
         user_repository: UserRepository,
-        user_details_repository: UserDetailsRepository
+        user_details_repository: UserDetailsRepository,
     ):
         """Initialize UserService.
 
@@ -48,7 +48,9 @@ class UserService(IUserService):
         """
         return self._user_details_repo.find_by_user_id(user_id)
 
-    def update_user_details(self, user_id: UUID, details: dict) -> Optional[UserDetails]:
+    def update_user_details(
+        self, user_id: UUID, details: dict
+    ) -> Optional[UserDetails]:
         """Update user details.
 
         Creates new user details record if none exists.

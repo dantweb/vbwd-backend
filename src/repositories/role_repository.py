@@ -52,10 +52,7 @@ class RoleRepository(BaseRepository[Role]):
         # Check if already assigned
         existing = (
             self._session.query(user_roles)
-            .filter(
-                user_roles.c.user_id == user_id,
-                user_roles.c.role_id == role.id
-            )
+            .filter(user_roles.c.user_id == user_id, user_roles.c.role_id == role.id)
             .first()
         )
 
@@ -86,8 +83,7 @@ class RoleRepository(BaseRepository[Role]):
 
         self._session.execute(
             user_roles.delete().where(
-                user_roles.c.user_id == user_id,
-                user_roles.c.role_id == role.id
+                user_roles.c.user_id == user_id, user_roles.c.role_id == role.id
             )
         )
         self._session.commit()
@@ -101,10 +97,7 @@ class RoleRepository(BaseRepository[Role]):
 
         result = (
             self._session.query(user_roles)
-            .filter(
-                user_roles.c.user_id == user_id,
-                user_roles.c.role_id == role.id
-            )
+            .filter(user_roles.c.user_id == user_id, user_roles.c.role_id == role.id)
             .first()
         )
         return result is not None

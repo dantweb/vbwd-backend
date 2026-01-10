@@ -1,7 +1,6 @@
 """Tests for payment handlers and events (Sprint 18)."""
-import pytest
 from decimal import Decimal
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock
 from uuid import uuid4
 
 
@@ -14,9 +13,7 @@ class TestCheckoutInitiatedEvent:
 
         user_id = uuid4()
         event = CheckoutInitiatedEvent(
-            user_id=user_id,
-            tarif_plan_id=uuid4(),
-            provider='stripe'
+            user_id=user_id, tarif_plan_id=uuid4(), provider="stripe"
         )
 
         assert event.user_id == user_id
@@ -27,9 +24,7 @@ class TestCheckoutInitiatedEvent:
 
         plan_id = uuid4()
         event = CheckoutInitiatedEvent(
-            user_id=uuid4(),
-            tarif_plan_id=plan_id,
-            provider='stripe'
+            user_id=uuid4(), tarif_plan_id=plan_id, provider="stripe"
         )
 
         assert event.tarif_plan_id == plan_id
@@ -39,24 +34,20 @@ class TestCheckoutInitiatedEvent:
         from src.events.payment_events import CheckoutInitiatedEvent
 
         event = CheckoutInitiatedEvent(
-            user_id=uuid4(),
-            tarif_plan_id=uuid4(),
-            provider='paypal'
+            user_id=uuid4(), tarif_plan_id=uuid4(), provider="paypal"
         )
 
-        assert event.provider == 'paypal'
+        assert event.provider == "paypal"
 
     def test_event_has_name(self):
         """CheckoutInitiatedEvent has correct name."""
         from src.events.payment_events import CheckoutInitiatedEvent
 
         event = CheckoutInitiatedEvent(
-            user_id=uuid4(),
-            tarif_plan_id=uuid4(),
-            provider='stripe'
+            user_id=uuid4(), tarif_plan_id=uuid4(), provider="stripe"
         )
 
-        assert event.name == 'checkout.initiated'
+        assert event.name == "checkout.initiated"
 
     def test_event_has_optional_urls(self):
         """CheckoutInitiatedEvent has optional return/cancel URLs."""
@@ -65,13 +56,13 @@ class TestCheckoutInitiatedEvent:
         event = CheckoutInitiatedEvent(
             user_id=uuid4(),
             tarif_plan_id=uuid4(),
-            provider='stripe',
-            return_url='https://example.com/success',
-            cancel_url='https://example.com/cancel'
+            provider="stripe",
+            return_url="https://example.com/success",
+            cancel_url="https://example.com/cancel",
         )
 
-        assert event.return_url == 'https://example.com/success'
-        assert event.cancel_url == 'https://example.com/cancel'
+        assert event.return_url == "https://example.com/success"
+        assert event.cancel_url == "https://example.com/cancel"
 
 
 class TestPaymentCapturedEvent:
@@ -85,10 +76,10 @@ class TestPaymentCapturedEvent:
         event = PaymentCapturedEvent(
             subscription_id=sub_id,
             user_id=uuid4(),
-            transaction_id='pi_123',
-            amount=Decimal('29.99'),
-            currency='USD',
-            provider='stripe'
+            transaction_id="pi_123",
+            amount=Decimal("29.99"),
+            currency="USD",
+            provider="stripe",
         )
 
         assert event.subscription_id == sub_id
@@ -100,15 +91,15 @@ class TestPaymentCapturedEvent:
         event = PaymentCapturedEvent(
             subscription_id=uuid4(),
             user_id=uuid4(),
-            transaction_id='pi_test_123',
-            amount=Decimal('49.99'),
-            currency='EUR',
-            provider='stripe'
+            transaction_id="pi_test_123",
+            amount=Decimal("49.99"),
+            currency="EUR",
+            provider="stripe",
         )
 
-        assert event.transaction_id == 'pi_test_123'
-        assert event.amount == Decimal('49.99')
-        assert event.currency == 'EUR'
+        assert event.transaction_id == "pi_test_123"
+        assert event.amount == Decimal("49.99")
+        assert event.currency == "EUR"
 
     def test_event_has_name(self):
         """PaymentCapturedEvent has correct name."""
@@ -117,13 +108,13 @@ class TestPaymentCapturedEvent:
         event = PaymentCapturedEvent(
             subscription_id=uuid4(),
             user_id=uuid4(),
-            transaction_id='pi_123',
-            amount=Decimal('29.99'),
-            currency='USD',
-            provider='stripe'
+            transaction_id="pi_123",
+            amount=Decimal("29.99"),
+            currency="USD",
+            provider="stripe",
         )
 
-        assert event.name == 'payment.captured'
+        assert event.name == "payment.captured"
 
 
 class TestPaymentFailedEvent:
@@ -136,13 +127,13 @@ class TestPaymentFailedEvent:
         event = PaymentFailedEvent(
             subscription_id=uuid4(),
             user_id=uuid4(),
-            error_code='card_declined',
-            error_message='Your card was declined.',
-            provider='stripe'
+            error_code="card_declined",
+            error_message="Your card was declined.",
+            provider="stripe",
         )
 
-        assert event.error_code == 'card_declined'
-        assert event.error_message == 'Your card was declined.'
+        assert event.error_code == "card_declined"
+        assert event.error_message == "Your card was declined."
 
     def test_event_has_name(self):
         """PaymentFailedEvent has correct name."""
@@ -151,12 +142,12 @@ class TestPaymentFailedEvent:
         event = PaymentFailedEvent(
             subscription_id=uuid4(),
             user_id=uuid4(),
-            error_code='card_declined',
-            error_message='Declined',
-            provider='stripe'
+            error_code="card_declined",
+            error_message="Declined",
+            provider="stripe",
         )
 
-        assert event.name == 'payment.failed'
+        assert event.name == "payment.failed"
 
 
 class TestRefundRequestedEvent:
@@ -167,22 +158,20 @@ class TestRefundRequestedEvent:
         from src.events.payment_events import RefundRequestedEvent
 
         event = RefundRequestedEvent(
-            transaction_id='pi_123',
+            transaction_id="pi_123",
             subscription_id=uuid4(),
-            amount=Decimal('15.00'),
-            reason='Customer request'
+            amount=Decimal("15.00"),
+            reason="Customer request",
         )
 
-        assert event.transaction_id == 'pi_123'
+        assert event.transaction_id == "pi_123"
 
     def test_event_has_optional_amount(self):
         """RefundRequestedEvent has optional amount for partial refund."""
         from src.events.payment_events import RefundRequestedEvent
 
         event = RefundRequestedEvent(
-            transaction_id='pi_123',
-            subscription_id=uuid4(),
-            reason='Partial refund'
+            transaction_id="pi_123", subscription_id=uuid4(), reason="Partial refund"
         )
 
         assert event.amount is None
@@ -192,12 +181,10 @@ class TestRefundRequestedEvent:
         from src.events.payment_events import RefundRequestedEvent
 
         event = RefundRequestedEvent(
-            transaction_id='pi_123',
-            subscription_id=uuid4(),
-            reason='Refund'
+            transaction_id="pi_123", subscription_id=uuid4(), reason="Refund"
         )
 
-        assert event.name == 'refund.requested'
+        assert event.name == "refund.requested"
 
 
 class TestCheckoutInitiatedHandler:
@@ -207,20 +194,18 @@ class TestCheckoutInitiatedHandler:
         """Handler declares handled event class."""
         from src.handlers.payment_handlers import CheckoutInitiatedHandler
 
-        assert CheckoutInitiatedHandler.get_handled_event_class() == 'checkout.initiated'
+        assert (
+            CheckoutInitiatedHandler.get_handled_event_class() == "checkout.initiated"
+        )
 
     def test_handler_can_handle_checkout_event(self):
         """Handler can handle CheckoutInitiatedEvent."""
         from src.handlers.payment_handlers import CheckoutInitiatedHandler
         from src.events.payment_events import CheckoutInitiatedEvent
 
-        handler = CheckoutInitiatedHandler(
-            sdk_registry=Mock()
-        )
+        handler = CheckoutInitiatedHandler(sdk_registry=Mock())
         event = CheckoutInitiatedEvent(
-            user_id=uuid4(),
-            tarif_plan_id=uuid4(),
-            provider='mock'
+            user_id=uuid4(), tarif_plan_id=uuid4(), provider="mock"
         )
 
         assert handler.can_handle(event) is True
@@ -234,7 +219,7 @@ class TestCheckoutInitiatedHandler:
         mock_adapter = Mock()
         mock_adapter.create_payment_intent.return_value = SDKResponse(
             success=True,
-            data={'payment_intent_id': 'pi_test', 'client_secret': 'cs_test'}
+            data={"payment_intent_id": "pi_test", "client_secret": "cs_test"},
         )
 
         mock_registry = Mock()
@@ -244,14 +229,14 @@ class TestCheckoutInitiatedHandler:
         event = CheckoutInitiatedEvent(
             user_id=uuid4(),
             tarif_plan_id=uuid4(),
-            provider='mock',
-            amount=Decimal('29.99'),
-            currency='USD'
+            provider="mock",
+            amount=Decimal("29.99"),
+            currency="USD",
         )
 
         result = handler.handle(event)
 
-        mock_registry.get.assert_called_once_with('mock')
+        mock_registry.get.assert_called_once_with("mock")
         mock_adapter.create_payment_intent.assert_called_once()
         assert result.success is True
 
@@ -264,7 +249,7 @@ class TestCheckoutInitiatedHandler:
         mock_adapter = Mock()
         mock_adapter.create_payment_intent.return_value = SDKResponse(
             success=True,
-            data={'payment_intent_id': 'pi_test', 'client_secret': 'cs_test_secret'}
+            data={"payment_intent_id": "pi_test", "client_secret": "cs_test_secret"},
         )
 
         mock_registry = Mock()
@@ -274,14 +259,14 @@ class TestCheckoutInitiatedHandler:
         event = CheckoutInitiatedEvent(
             user_id=uuid4(),
             tarif_plan_id=uuid4(),
-            provider='mock',
-            amount=Decimal('29.99'),
-            currency='USD'
+            provider="mock",
+            amount=Decimal("29.99"),
+            currency="USD",
         )
 
         result = handler.handle(event)
 
-        assert 'client_secret' in result.data or 'checkout_url' in result.data
+        assert "client_secret" in result.data or "checkout_url" in result.data
 
     def test_handler_returns_error_on_sdk_failure(self):
         """Handler returns error when SDK fails."""
@@ -291,8 +276,7 @@ class TestCheckoutInitiatedHandler:
 
         mock_adapter = Mock()
         mock_adapter.create_payment_intent.return_value = SDKResponse(
-            success=False,
-            error='Card declined'
+            success=False, error="Card declined"
         )
 
         mock_registry = Mock()
@@ -302,9 +286,9 @@ class TestCheckoutInitiatedHandler:
         event = CheckoutInitiatedEvent(
             user_id=uuid4(),
             tarif_plan_id=uuid4(),
-            provider='mock',
-            amount=Decimal('29.99'),
-            currency='USD'
+            provider="mock",
+            amount=Decimal("29.99"),
+            currency="USD",
         )
 
         result = handler.handle(event)
@@ -324,9 +308,9 @@ class TestCheckoutInitiatedHandler:
         event = CheckoutInitiatedEvent(
             user_id=uuid4(),
             tarif_plan_id=uuid4(),
-            provider='unknown',
-            amount=Decimal('29.99'),
-            currency='USD'
+            provider="unknown",
+            amount=Decimal("29.99"),
+            currency="USD",
         )
 
         result = handler.handle(event)
@@ -341,7 +325,7 @@ class TestPaymentCapturedHandler:
         """Handler declares handled event class."""
         from src.handlers.payment_handlers import PaymentCapturedHandler
 
-        assert PaymentCapturedHandler.get_handled_event_class() == 'payment.captured'
+        assert PaymentCapturedHandler.get_handled_event_class() == "payment.captured"
 
     def test_handler_can_handle_payment_captured_event(self):
         """Handler can handle PaymentCapturedEvent."""
@@ -352,10 +336,10 @@ class TestPaymentCapturedHandler:
         event = PaymentCapturedEvent(
             subscription_id=uuid4(),
             user_id=uuid4(),
-            transaction_id='pi_123',
-            amount=Decimal('29.99'),
-            currency='USD',
-            provider='stripe'
+            transaction_id="pi_123",
+            amount=Decimal("29.99"),
+            currency="USD",
+            provider="stripe",
         )
 
         assert handler.can_handle(event) is True
@@ -369,10 +353,10 @@ class TestPaymentCapturedHandler:
         event = PaymentCapturedEvent(
             subscription_id=uuid4(),
             user_id=uuid4(),
-            transaction_id='pi_123',
-            amount=Decimal('29.99'),
-            currency='USD',
-            provider='stripe'
+            transaction_id="pi_123",
+            amount=Decimal("29.99"),
+            currency="USD",
+            provider="stripe",
         )
 
         result = handler.handle(event)
@@ -388,18 +372,18 @@ class TestPaymentCapturedHandler:
         event1 = PaymentCapturedEvent(
             subscription_id=uuid4(),
             user_id=uuid4(),
-            transaction_id='pi_1',
-            amount=Decimal('29.99'),
-            currency='USD',
-            provider='stripe'
+            transaction_id="pi_1",
+            amount=Decimal("29.99"),
+            currency="USD",
+            provider="stripe",
         )
         event2 = PaymentCapturedEvent(
             subscription_id=uuid4(),
             user_id=uuid4(),
-            transaction_id='pi_2',
-            amount=Decimal('49.99'),
-            currency='USD',
-            provider='stripe'
+            transaction_id="pi_2",
+            amount=Decimal("49.99"),
+            currency="USD",
+            provider="stripe",
         )
 
         handler.handle(event1)
@@ -415,7 +399,7 @@ class TestPaymentFailedHandler:
         """Handler declares handled event class."""
         from src.handlers.payment_handlers import PaymentFailedHandler
 
-        assert PaymentFailedHandler.get_handled_event_class() == 'payment.failed'
+        assert PaymentFailedHandler.get_handled_event_class() == "payment.failed"
 
     def test_handler_can_handle_payment_failed_event(self):
         """Handler can handle PaymentFailedEvent."""
@@ -426,9 +410,9 @@ class TestPaymentFailedHandler:
         event = PaymentFailedEvent(
             subscription_id=uuid4(),
             user_id=uuid4(),
-            error_code='card_declined',
-            error_message='Declined',
-            provider='stripe'
+            error_code="card_declined",
+            error_message="Declined",
+            provider="stripe",
         )
 
         assert handler.can_handle(event) is True
@@ -442,9 +426,9 @@ class TestPaymentFailedHandler:
         event = PaymentFailedEvent(
             subscription_id=uuid4(),
             user_id=uuid4(),
-            error_code='card_declined',
-            error_message='Declined',
-            provider='stripe'
+            error_code="card_declined",
+            error_message="Declined",
+            provider="stripe",
         )
 
         result = handler.handle(event)
@@ -459,7 +443,7 @@ class TestRefundRequestedHandler:
         """Handler declares handled event class."""
         from src.handlers.payment_handlers import RefundRequestedHandler
 
-        assert RefundRequestedHandler.get_handled_event_class() == 'refund.requested'
+        assert RefundRequestedHandler.get_handled_event_class() == "refund.requested"
 
     def test_handler_calls_sdk_refund(self):
         """Handler calls SDK adapter refund_payment."""
@@ -469,8 +453,7 @@ class TestRefundRequestedHandler:
 
         mock_adapter = Mock()
         mock_adapter.refund_payment.return_value = SDKResponse(
-            success=True,
-            data={'refund_id': 're_test'}
+            success=True, data={"refund_id": "re_test"}
         )
 
         mock_registry = Mock()
@@ -478,11 +461,11 @@ class TestRefundRequestedHandler:
 
         handler = RefundRequestedHandler(sdk_registry=mock_registry)
         event = RefundRequestedEvent(
-            transaction_id='pi_123',
+            transaction_id="pi_123",
             subscription_id=uuid4(),
-            amount=Decimal('15.00'),
-            reason='Customer request',
-            provider='mock'
+            amount=Decimal("15.00"),
+            reason="Customer request",
+            provider="mock",
         )
 
         result = handler.handle(event)
@@ -498,8 +481,7 @@ class TestRefundRequestedHandler:
 
         mock_adapter = Mock()
         mock_adapter.refund_payment.return_value = SDKResponse(
-            success=False,
-            error='Refund failed'
+            success=False, error="Refund failed"
         )
 
         mock_registry = Mock()
@@ -507,11 +489,11 @@ class TestRefundRequestedHandler:
 
         handler = RefundRequestedHandler(sdk_registry=mock_registry)
         event = RefundRequestedEvent(
-            transaction_id='pi_123',
+            transaction_id="pi_123",
             subscription_id=uuid4(),
-            amount=Decimal('15.00'),
-            reason='Customer request',
-            provider='mock'
+            amount=Decimal("15.00"),
+            reason="Customer request",
+            provider="mock",
         )
 
         result = handler.handle(event)

@@ -29,9 +29,14 @@ def list_subscriptions():
     # Get user subscriptions
     subscriptions = subscription_service.get_user_subscriptions(g.user_id)
 
-    return jsonify({
-        "subscriptions": [s.to_dict() for s in subscriptions],
-    }), 200
+    return (
+        jsonify(
+            {
+                "subscriptions": [s.to_dict() for s in subscriptions],
+            }
+        ),
+        200,
+    )
 
 
 @subscriptions_bp.route("/active", methods=["GET"])
@@ -56,9 +61,14 @@ def get_active_subscription():
     if not subscription:
         return jsonify({"subscription": None}), 200
 
-    return jsonify({
-        "subscription": subscription.to_dict(),
-    }), 200
+    return (
+        jsonify(
+            {
+                "subscription": subscription.to_dict(),
+            }
+        ),
+        200,
+    )
 
 
 @subscriptions_bp.route("/<subscription_id>/cancel", methods=["POST"])
@@ -98,10 +108,15 @@ def cancel_subscription(subscription_id: str):
     if not result.success:
         return jsonify({"error": result.error}), 400
 
-    return jsonify({
-        "subscription": result.subscription.to_dict(),
-        "message": "Subscription cancelled. Access continues until expiration.",
-    }), 200
+    return (
+        jsonify(
+            {
+                "subscription": result.subscription.to_dict(),
+                "message": "Subscription cancelled. Access continues until expiration.",
+            }
+        ),
+        200,
+    )
 
 
 @subscriptions_bp.route("/<subscription_id>/pause", methods=["POST"])
@@ -136,10 +151,15 @@ def pause_subscription(subscription_id: str):
     if not result.success:
         return jsonify({"error": result.error}), 400
 
-    return jsonify({
-        "subscription": result.subscription.to_dict(),
-        "message": "Subscription paused.",
-    }), 200
+    return (
+        jsonify(
+            {
+                "subscription": result.subscription.to_dict(),
+                "message": "Subscription paused.",
+            }
+        ),
+        200,
+    )
 
 
 @subscriptions_bp.route("/<subscription_id>/resume", methods=["POST"])
@@ -174,10 +194,15 @@ def resume_subscription(subscription_id: str):
     if not result.success:
         return jsonify({"error": result.error}), 400
 
-    return jsonify({
-        "subscription": result.subscription.to_dict(),
-        "message": "Subscription resumed. Expiration extended by pause duration.",
-    }), 200
+    return (
+        jsonify(
+            {
+                "subscription": result.subscription.to_dict(),
+                "message": "Subscription resumed. Expiration extended by pause duration.",
+            }
+        ),
+        200,
+    )
 
 
 @subscriptions_bp.route("/<subscription_id>/upgrade", methods=["POST"])
@@ -214,8 +239,7 @@ def upgrade_subscription(subscription_id: str):
     subscription_repo = SubscriptionRepository(db.session)
     tarif_plan_repo = TarifPlanRepository(db.session)
     subscription_service = SubscriptionService(
-        subscription_repo=subscription_repo,
-        tarif_plan_repo=tarif_plan_repo
+        subscription_repo=subscription_repo, tarif_plan_repo=tarif_plan_repo
     )
 
     # Verify ownership
@@ -228,10 +252,15 @@ def upgrade_subscription(subscription_id: str):
     if not result.success:
         return jsonify({"error": result.error}), 400
 
-    return jsonify({
-        "subscription": result.subscription.to_dict(),
-        "message": "Subscription upgraded successfully.",
-    }), 200
+    return (
+        jsonify(
+            {
+                "subscription": result.subscription.to_dict(),
+                "message": "Subscription upgraded successfully.",
+            }
+        ),
+        200,
+    )
 
 
 @subscriptions_bp.route("/<subscription_id>/downgrade", methods=["POST"])
@@ -268,8 +297,7 @@ def downgrade_subscription(subscription_id: str):
     subscription_repo = SubscriptionRepository(db.session)
     tarif_plan_repo = TarifPlanRepository(db.session)
     subscription_service = SubscriptionService(
-        subscription_repo=subscription_repo,
-        tarif_plan_repo=tarif_plan_repo
+        subscription_repo=subscription_repo, tarif_plan_repo=tarif_plan_repo
     )
 
     # Verify ownership
@@ -282,10 +310,15 @@ def downgrade_subscription(subscription_id: str):
     if not result.success:
         return jsonify({"error": result.error}), 400
 
-    return jsonify({
-        "subscription": result.subscription.to_dict(),
-        "message": "Downgrade scheduled for next renewal.",
-    }), 200
+    return (
+        jsonify(
+            {
+                "subscription": result.subscription.to_dict(),
+                "message": "Downgrade scheduled for next renewal.",
+            }
+        ),
+        200,
+    )
 
 
 @subscriptions_bp.route("/<subscription_id>/proration", methods=["GET"])
@@ -319,8 +352,7 @@ def get_proration(subscription_id: str):
     subscription_repo = SubscriptionRepository(db.session)
     tarif_plan_repo = TarifPlanRepository(db.session)
     subscription_service = SubscriptionService(
-        subscription_repo=subscription_repo,
-        tarif_plan_repo=tarif_plan_repo
+        subscription_repo=subscription_repo, tarif_plan_repo=tarif_plan_repo
     )
 
     # Verify ownership
@@ -328,15 +360,22 @@ def get_proration(subscription_id: str):
     if not subscription or subscription.user_id != g.user_id:
         return jsonify({"error": "Subscription not found"}), 404
 
-    proration = subscription_service.calculate_proration(subscription_uuid, new_plan_uuid)
+    proration = subscription_service.calculate_proration(
+        subscription_uuid, new_plan_uuid
+    )
 
     if not proration:
         return jsonify({"error": "Unable to calculate proration"}), 400
 
-    return jsonify({
-        "proration": {
-            "credit": str(proration.credit),
-            "amount_due": str(proration.amount_due),
-            "days_remaining": proration.days_remaining,
-        }
-    }), 200
+    return (
+        jsonify(
+            {
+                "proration": {
+                    "credit": str(proration.credit),
+                    "amount_due": str(proration.amount_due),
+                    "days_remaining": proration.days_remaining,
+                }
+            }
+        ),
+        200,
+    )

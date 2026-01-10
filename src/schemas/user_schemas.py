@@ -14,6 +14,7 @@ class UserSchema(Schema):
 
     class Meta:
         """Schema metadata."""
+
         ordered = True
 
 
@@ -35,6 +36,7 @@ class UserDetailsSchema(Schema):
 
     class Meta:
         """Schema metadata."""
+
         ordered = True
 
 
@@ -52,6 +54,7 @@ class UserDetailsUpdateSchema(Schema):
 
     class Meta:
         """Schema metadata."""
+
         ordered = True
 
 
@@ -63,4 +66,5 @@ class UserProfileSchema(Schema):
 
     class Meta:
         """Schema metadata."""
+
         ordered = True

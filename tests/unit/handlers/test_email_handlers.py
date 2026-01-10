@@ -1,6 +1,5 @@
 """Tests for email-integrated event handlers."""
-import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 from uuid import uuid4
 from datetime import datetime
 
@@ -30,10 +29,7 @@ class TestUserCreatedHandlerWithEmail:
 
         # Create event
         event = UserCreatedEvent(
-            user_id=uuid4(),
-            email="newuser@example.com",
-            role="user",
-            first_name="John"
+            user_id=uuid4(), email="newuser@example.com", role="user", first_name="John"
         )
 
         # Handle event
@@ -42,8 +38,7 @@ class TestUserCreatedHandlerWithEmail:
         # Assert email was sent
         assert result.success is True
         mock_email_service.send_welcome_email.assert_called_once_with(
-            to_email="newuser@example.com",
-            first_name="John"
+            to_email="newuser@example.com", first_name="John"
         )
 
     def test_user_created_handles_email_failure(self):
@@ -53,16 +48,13 @@ class TestUserCreatedHandlerWithEmail:
         # Mock email service that fails
         mock_email_service = MagicMock()
         mock_email_service.send_welcome_email.return_value = EmailResult(
-            success=False,
-            error="SMTP error"
+            success=False, error="SMTP error"
         )
 
         handler = UserCreatedHandler(email_service=mock_email_service)
 
         event = UserCreatedEvent(
-            user_id=uuid4(),
-            email="newuser@example.com",
-            role="user"
+            user_id=uuid4(), email="newuser@example.com", role="user"
         )
 
         # Should still succeed even if email fails
@@ -80,7 +72,9 @@ class TestSubscriptionActivatedHandlerWithEmail:
         from src.handlers.subscription_handlers import SubscriptionActivatedHandler
 
         mock_email_service = MagicMock()
-        mock_email_service.send_subscription_activated.return_value = EmailResult(success=True)
+        mock_email_service.send_subscription_activated.return_value = EmailResult(
+            success=True
+        )
 
         handler = SubscriptionActivatedHandler(email_service=mock_email_service)
 
@@ -91,7 +85,7 @@ class TestSubscriptionActivatedHandlerWithEmail:
             plan_name="Premium",
             user_email="user@example.com",
             first_name="John",
-            expires_at=datetime(2025, 12, 31)
+            expires_at=datetime(2025, 12, 31),
         )
 
         result = handler.handle(event)
@@ -108,7 +102,9 @@ class TestSubscriptionCancelledHandlerWithEmail:
         from src.handlers.subscription_handlers import SubscriptionCancelledHandler
 
         mock_email_service = MagicMock()
-        mock_email_service.send_subscription_cancelled.return_value = EmailResult(success=True)
+        mock_email_service.send_subscription_cancelled.return_value = EmailResult(
+            success=True
+        )
 
         handler = SubscriptionCancelledHandler(email_service=mock_email_service)
 
@@ -117,7 +113,7 @@ class TestSubscriptionCancelledHandlerWithEmail:
             user_id=uuid4(),
             plan_name="Premium",
             user_email="user@example.com",
-            first_name="John"
+            first_name="John",
         )
 
         result = handler.handle(event)
@@ -146,7 +142,7 @@ class TestPaymentCompletedHandlerWithEmail:
             currency="EUR",
             invoice_number="INV-2025-001",
             user_email="user@example.com",
-            first_name="John"
+            first_name="John",
         )
 
         result = handler.handle(event)
@@ -174,7 +170,7 @@ class TestPaymentFailedHandlerWithEmail:
             plan_name="Premium",
             user_email="user@example.com",
             first_name="John",
-            retry_url="https://vbwd.com/retry"
+            retry_url="https://vbwd.com/retry",
         )
 
         result = handler.handle(event)

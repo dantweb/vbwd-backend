@@ -1,5 +1,5 @@
 """Domain event system with handlers and results."""
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Dict, Optional, List
 from abc import ABC, abstractmethod
@@ -13,6 +13,7 @@ class DomainEvent(BaseEvent):
 
     Extends base Event with timestamp and metadata for domain events.
     """
+
     timestamp: Optional[datetime] = None
     metadata: Optional[Dict[str, Any]] = None
 
@@ -38,26 +39,28 @@ class EventResult:
     error_type: Optional[str] = None
 
     @classmethod
-    def success_result(cls, data: Any = None) -> 'EventResult':
+    def success_result(cls, data: Any = None) -> "EventResult":
         """Create successful result."""
         return cls(success=True, data=data)
 
     @classmethod
-    def error_result(cls, error: str, error_type: str = 'handler_error') -> 'EventResult':
+    def error_result(
+        cls, error: str, error_type: str = "handler_error"
+    ) -> "EventResult":
         """Create failed result."""
         return cls(success=False, error=error, error_type=error_type)
 
     @classmethod
-    def no_handler(cls) -> 'EventResult':
+    def no_handler(cls) -> "EventResult":
         """Create no handler result."""
         return cls(
             success=False,
-            error='No handler registered for event',
-            error_type='no_handler'
+            error="No handler registered for event",
+            error_type="no_handler",
         )
 
     @classmethod
-    def combine(cls, results: List['EventResult']) -> 'EventResult':
+    def combine(cls, results: List["EventResult"]) -> "EventResult":
         """
         Combine multiple results.
 
@@ -71,8 +74,10 @@ class EventResult:
         if failed:
             errors = [r.error for r in failed if r.error]
             # Use error_type from first failed result
-            error_type = failed[0].error_type if failed[0].error_type else 'handler_error'
-            return cls.error_result('; '.join(errors), error_type=error_type)
+            error_type = (
+                failed[0].error_type if failed[0].error_type else "handler_error"
+            )
+            return cls.error_result("; ".join(errors), error_type=error_type)
 
         # All succeeded, combine data
         data = [r.data for r in results if r.data is not None]
@@ -81,10 +86,10 @@ class EventResult:
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
         return {
-            'success': self.success,
-            'data': self.data,
-            'error': self.error,
-            'error_type': self.error_type
+            "success": self.success,
+            "data": self.data,
+            "error": self.error,
+            "error_type": self.error_type,
         }
 
 
@@ -170,10 +175,11 @@ class DomainEventDispatcher:
                     result = handler.handle(event)
                     results.append(result)
             except Exception as e:
-                results.append(EventResult.error_result(
-                    error=str(e),
-                    error_type='handler_exception'
-                ))
+                results.append(
+                    EventResult.error_result(
+                        error=str(e), error_type="handler_exception"
+                    )
+                )
 
         if not results:
             return EventResult.no_handler()

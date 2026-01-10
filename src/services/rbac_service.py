@@ -1,5 +1,5 @@
 """RBAC service for role-based access control."""
-from typing import List, Set, Optional
+from typing import List, Set
 from uuid import UUID
 from src.repositories.role_repository import RoleRepository
 

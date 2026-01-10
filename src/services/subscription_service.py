@@ -1,5 +1,5 @@
 """Subscription service implementation."""
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 from typing import Optional, List
 from uuid import UUID
@@ -16,7 +16,7 @@ class SubscriptionResult:
         self,
         success: bool,
         subscription: Optional[Subscription] = None,
-        error: Optional[str] = None
+        error: Optional[str] = None,
     ):
         """
         Initialize subscription result.
@@ -34,12 +34,7 @@ class SubscriptionResult:
 class ProrationResult:
     """Result of a proration calculation."""
 
-    def __init__(
-        self,
-        credit: Decimal,
-        amount_due: Decimal,
-        days_remaining: int
-    ):
+    def __init__(self, credit: Decimal, amount_due: Decimal, days_remaining: int):
         """
         Initialize proration result.
 
@@ -257,10 +252,14 @@ class SubscriptionService:
             return SubscriptionResult(success=False, error="Subscription not found")
 
         if subscription.status == SubscriptionStatus.PAUSED:
-            return SubscriptionResult(success=False, error="Subscription is already paused")
+            return SubscriptionResult(
+                success=False, error="Subscription is already paused"
+            )
 
         if subscription.status != SubscriptionStatus.ACTIVE:
-            return SubscriptionResult(success=False, error="Only active subscriptions can be paused")
+            return SubscriptionResult(
+                success=False, error="Only active subscriptions can be paused"
+            )
 
         subscription.pause()
         saved = self._subscription_repo.save(subscription)
@@ -297,9 +296,7 @@ class SubscriptionService:
         return SubscriptionResult(success=True, subscription=saved)
 
     def calculate_proration(
-        self,
-        subscription_id: UUID,
-        new_plan_id: UUID
+        self, subscription_id: UUID, new_plan_id: UUID
     ) -> Optional[ProrationResult]:
         """
         Calculate proration for plan change.
@@ -341,15 +338,13 @@ class SubscriptionService:
         amount_due = new_plan.price - credit
 
         return ProrationResult(
-            credit=credit.quantize(Decimal('0.01')),
-            amount_due=max(amount_due, Decimal('0')).quantize(Decimal('0.01')),
-            days_remaining=days_remaining
+            credit=credit.quantize(Decimal("0.01")),
+            amount_due=max(amount_due, Decimal("0")).quantize(Decimal("0.01")),
+            days_remaining=days_remaining,
         )
 
     def upgrade_subscription(
-        self,
-        subscription_id: UUID,
-        new_plan_id: UUID
+        self, subscription_id: UUID, new_plan_id: UUID
     ) -> SubscriptionResult:
         """
         Upgrade subscription to higher tier plan immediately.
@@ -366,10 +361,14 @@ class SubscriptionService:
             return SubscriptionResult(success=False, error="Subscription not found")
 
         if str(subscription.tarif_plan_id) == str(new_plan_id):
-            return SubscriptionResult(success=False, error="Already subscribed to this plan")
+            return SubscriptionResult(
+                success=False, error="Already subscribed to this plan"
+            )
 
         if subscription.status != SubscriptionStatus.ACTIVE:
-            return SubscriptionResult(success=False, error="Only active subscriptions can be upgraded")
+            return SubscriptionResult(
+                success=False, error="Only active subscriptions can be upgraded"
+            )
 
         # Change plan immediately
         subscription.tarif_plan_id = new_plan_id
@@ -379,9 +378,7 @@ class SubscriptionService:
         return SubscriptionResult(success=True, subscription=saved)
 
     def downgrade_subscription(
-        self,
-        subscription_id: UUID,
-        new_plan_id: UUID
+        self, subscription_id: UUID, new_plan_id: UUID
     ) -> SubscriptionResult:
         """
         Downgrade subscription at next renewal.
@@ -398,10 +395,14 @@ class SubscriptionService:
             return SubscriptionResult(success=False, error="Subscription not found")
 
         if str(subscription.tarif_plan_id) == str(new_plan_id):
-            return SubscriptionResult(success=False, error="Already subscribed to this plan")
+            return SubscriptionResult(
+                success=False, error="Already subscribed to this plan"
+            )
 
         if subscription.status != SubscriptionStatus.ACTIVE:
-            return SubscriptionResult(success=False, error="Only active subscriptions can be downgraded")
+            return SubscriptionResult(
+                success=False, error="Only active subscriptions can be downgraded"
+            )
 
         # Set pending plan change (takes effect at renewal)
         subscription.pending_plan_id = new_plan_id

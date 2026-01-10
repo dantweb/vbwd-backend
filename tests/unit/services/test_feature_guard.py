@@ -1,6 +1,6 @@
 """Tests for Feature Guard service."""
 import pytest
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock
 from uuid import uuid4
 from datetime import datetime
 from src.services.feature_guard import FeatureGuard
@@ -122,7 +122,9 @@ class TestFeatureGuard:
         mock_subscription.tarif_plan.features = []  # No limits defined
         mock_subscription_repo.get_active_subscription.return_value = mock_subscription
 
-        allowed, remaining = feature_guard.check_usage_limit(user_id, "unlimited_feature")
+        allowed, remaining = feature_guard.check_usage_limit(
+            user_id, "unlimited_feature"
+        )
 
         assert allowed is True
         assert remaining is None

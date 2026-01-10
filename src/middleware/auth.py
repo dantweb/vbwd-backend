@@ -22,17 +22,18 @@ def require_auth(f):
     Returns:
         401: If token is missing or invalid
     """
+
     @wraps(f)
     def decorated_function(*args, **kwargs):
         # Get token from Authorization header
-        auth_header = request.headers.get('Authorization')
+        auth_header = request.headers.get("Authorization")
         if not auth_header:
-            return jsonify({'error': 'Authorization header is required'}), 401
+            return jsonify({"error": "Authorization header is required"}), 401
 
         # Extract token (format: "Bearer <token>")
         parts = auth_header.split()
-        if len(parts) != 2 or parts[0].lower() != 'bearer':
-            return jsonify({'error': 'Invalid Authorization header format'}), 401
+        if len(parts) != 2 or parts[0].lower() != "bearer":
+            return jsonify({"error": "Invalid Authorization header format"}), 401
 
         token = parts[1]
 
@@ -42,15 +43,15 @@ def require_auth(f):
 
         user_id = auth_service.verify_token(token)
         if not user_id:
-            return jsonify({'error': 'Invalid or expired token'}), 401
+            return jsonify({"error": "Invalid or expired token"}), 401
 
         # Verify user exists and is active
         user = user_repo.find_by_id(user_id)
         if not user:
-            return jsonify({'error': 'User not found'}), 401
+            return jsonify({"error": "User not found"}), 401
 
-        if user.status.value != 'active':
-            return jsonify({'error': 'User account is not active'}), 401
+        if user.status.value != "active":
+            return jsonify({"error": "User account is not active"}), 401
 
         # Store user_id in Flask's g object for use in route
         g.user_id = user_id
@@ -76,15 +77,16 @@ def require_admin(f):
     Returns:
         403: If user is not an admin
     """
+
     @wraps(f)
     def decorated_function(*args, **kwargs):
         # Check if user was loaded by @require_auth
-        if not hasattr(g, 'user'):
-            return jsonify({'error': 'Authentication required'}), 401
+        if not hasattr(g, "user"):
+            return jsonify({"error": "Authentication required"}), 401
 
         # Check if user is admin
         if g.user.role != UserRole.ADMIN:
-            return jsonify({'error': 'Admin access required'}), 403
+            return jsonify({"error": "Admin access required"}), 403
 
         return f(*args, **kwargs)
 
@@ -109,17 +111,18 @@ def optional_auth(f):
                 ...
 
     """
+
     @wraps(f)
     def decorated_function(*args, **kwargs):
         # Get token from Authorization header
-        auth_header = request.headers.get('Authorization')
+        auth_header = request.headers.get("Authorization")
         if not auth_header:
             # No token, continue without auth
             return f(*args, **kwargs)
 
         # Extract token (format: "Bearer <token>")
         parts = auth_header.split()
-        if len(parts) != 2 or parts[0].lower() != 'bearer':
+        if len(parts) != 2 or parts[0].lower() != "bearer":
             # Invalid format, continue without auth
             return f(*args, **kwargs)
 
@@ -133,7 +136,7 @@ def optional_auth(f):
         if user_id:
             # Valid token, load user
             user = user_repo.find_by_id(user_id)
-            if user and user.status.value == 'active':
+            if user and user.status.value == "active":
                 g.user_id = user_id
                 g.user = user
 

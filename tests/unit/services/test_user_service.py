@@ -23,7 +23,7 @@ class TestUserService:
         """Mock UserDetailsRepository."""
         repo = Mock()
         repo.find_by_user_id = Mock()
-        repo.create = Mock()
+        repo.save = Mock()
         repo.update = Mock()
         return repo
 
@@ -31,9 +31,10 @@ class TestUserService:
     def user_service(self, mock_user_repo, mock_user_details_repo):
         """Create UserService with mocked dependencies."""
         from src.services.user_service import UserService
+
         return UserService(
             user_repository=mock_user_repo,
-            user_details_repository=mock_user_details_repo
+            user_details_repository=mock_user_details_repo,
         )
 
     def test_get_user_returns_user(self, user_service, mock_user_repo):
@@ -75,7 +76,9 @@ class TestUserService:
         # Verify repository was called
         mock_user_repo.find_by_id.assert_called_once_with(user_id)
 
-    def test_get_user_details_returns_details(self, user_service, mock_user_details_repo):
+    def test_get_user_details_returns_details(
+        self, user_service, mock_user_details_repo
+    ):
         """Test get_user_details returns user details."""
         user_id = uuid4()
 
@@ -100,7 +103,9 @@ class TestUserService:
         # Verify repository was called
         mock_user_details_repo.find_by_user_id.assert_called_once_with(user_id)
 
-    def test_get_user_details_returns_none_if_not_found(self, user_service, mock_user_details_repo):
+    def test_get_user_details_returns_none_if_not_found(
+        self, user_service, mock_user_details_repo
+    ):
         """Test get_user_details returns None if details not found."""
         user_id = uuid4()
 
@@ -116,13 +121,15 @@ class TestUserService:
         # Verify repository was called
         mock_user_details_repo.find_by_user_id.assert_called_once_with(user_id)
 
-    def test_update_user_details_updates_existing_details(self, user_service, mock_user_details_repo):
+    def test_update_user_details_updates_existing_details(
+        self, user_service, mock_user_details_repo
+    ):
         """Test update_user_details updates existing details."""
         user_id = uuid4()
         details_data = {
             "first_name": "Jane",
             "last_name": "Smith",
-            "phone": "+9876543210"
+            "phone": "+9876543210",
         }
 
         # Mock existing details
@@ -150,13 +157,15 @@ class TestUserService:
         mock_user_details_repo.find_by_user_id.assert_called_once_with(user_id)
         mock_user_details_repo.update.assert_called_once_with(mock_details)
 
-    def test_update_user_details_creates_if_not_exists(self, user_service, mock_user_details_repo):
+    def test_update_user_details_creates_if_not_exists(
+        self, user_service, mock_user_details_repo
+    ):
         """Test update_user_details creates details if not exists."""
         user_id = uuid4()
         details_data = {
             "first_name": "Jane",
             "last_name": "Smith",
-            "phone": "+9876543210"
+            "phone": "+9876543210",
         }
 
         # Mock no existing details
@@ -169,7 +178,7 @@ class TestUserService:
         created_details.first_name = "Jane"
         created_details.last_name = "Smith"
         created_details.phone = "+9876543210"
-        mock_user_details_repo.create.return_value = created_details
+        mock_user_details_repo.save.return_value = created_details
 
         # Call update_user_details
         result = user_service.update_user_details(user_id, details_data)
@@ -182,13 +191,13 @@ class TestUserService:
 
         # Verify repository was called
         mock_user_details_repo.find_by_user_id.assert_called_once_with(user_id)
-        mock_user_details_repo.create.assert_called_once()
+        mock_user_details_repo.save.assert_called_once()
 
         # Verify create was called with proper UserDetails object
-        create_call_args = mock_user_details_repo.create.call_args[0][0]
-        assert isinstance(create_call_args, UserDetails)
-        assert create_call_args.user_id == user_id
-        assert create_call_args.first_name == "Jane"
+        save_call_args = mock_user_details_repo.save.call_args[0][0]
+        assert isinstance(save_call_args, UserDetails)
+        assert save_call_args.user_id == user_id
+        assert save_call_args.first_name == "Jane"
 
     def test_update_user_status_changes_status(self, user_service, mock_user_repo):
         """Test update_user_status changes user status."""
@@ -217,7 +226,9 @@ class TestUserService:
         mock_user_repo.find_by_id.assert_called_once_with(user_id)
         mock_user_repo.update.assert_called_once_with(mock_user)
 
-    def test_update_user_status_returns_none_if_user_not_found(self, user_service, mock_user_repo):
+    def test_update_user_status_returns_none_if_user_not_found(
+        self, user_service, mock_user_repo
+    ):
         """Test update_user_status returns None if user not found."""
         user_id = uuid4()
         new_status = UserStatus.SUSPENDED
@@ -234,7 +245,9 @@ class TestUserService:
         # Verify update was NOT called
         mock_user_repo.update.assert_not_called()
 
-    def test_update_user_details_validates_data(self, user_service, mock_user_details_repo):
+    def test_update_user_details_validates_data(
+        self, user_service, mock_user_details_repo
+    ):
         """Test update_user_details validates input data."""
         user_id = uuid4()
 
@@ -246,9 +259,11 @@ class TestUserService:
         assert result is not None  # Should still create empty details
 
         # Verify create was called
-        mock_user_details_repo.create.assert_called_once()
+        mock_user_details_repo.save.assert_called_once()
 
-    def test_update_user_details_handles_partial_updates(self, user_service, mock_user_details_repo):
+    def test_update_user_details_handles_partial_updates(
+        self, user_service, mock_user_details_repo
+    ):
         """Test update_user_details handles partial field updates."""
         user_id = uuid4()
         details_data = {

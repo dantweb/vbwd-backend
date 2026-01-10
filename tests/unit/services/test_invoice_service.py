@@ -1,6 +1,5 @@
 """Tests for InvoiceService."""
-import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 from decimal import Decimal
 from datetime import datetime, timedelta
 from uuid import uuid4
@@ -13,13 +12,13 @@ class TestInvoiceServiceCreation:
 
     def test_create_invoice_success(self):
         """Create invoice with PENDING status."""
-        from src.services.invoice_service import InvoiceService, InvoiceResult
+        from src.services.invoice_service import InvoiceService
 
         mock_repo = MagicMock()
         mock_repo.save.return_value = MagicMock(
             id=uuid4(),
             status=InvoiceStatus.PENDING,
-            invoice_number="INV-20251229-ABC123"
+            invoice_number="INV-20251229-ABC123",
         )
 
         service = InvoiceService(invoice_repository=mock_repo)
@@ -28,7 +27,7 @@ class TestInvoiceServiceCreation:
             subscription_id=str(uuid4()),
             tarif_plan_id=str(uuid4()),
             amount=Decimal("99.99"),
-            currency="USD"
+            currency="USD",
         )
 
         assert result.success is True
@@ -56,7 +55,7 @@ class TestInvoiceServiceCreation:
             user_id=str(uuid4()),
             subscription_id=str(uuid4()),
             tarif_plan_id=str(uuid4()),
-            amount=Decimal("50.00")
+            amount=Decimal("50.00"),
         )
 
         assert saved_invoice is not None
@@ -83,7 +82,7 @@ class TestInvoiceServiceCreation:
             user_id=str(uuid4()),
             subscription_id=subscription_id,
             tarif_plan_id=str(uuid4()),
-            amount=Decimal("50.00")
+            amount=Decimal("50.00"),
         )
 
         assert str(saved_invoice.subscription_id) == subscription_id
@@ -109,7 +108,7 @@ class TestInvoiceServiceCreation:
             subscription_id=str(uuid4()),
             tarif_plan_id=str(uuid4()),
             amount=Decimal("50.00"),
-            due_days=30
+            due_days=30,
         )
 
         assert saved_invoice.expires_at is not None
@@ -200,10 +199,7 @@ class TestInvoiceServiceStatusTransitions:
         from src.services.invoice_service import InvoiceService
 
         invoice_id = uuid4()
-        mock_invoice = MagicMock(
-            id=invoice_id,
-            status=InvoiceStatus.PENDING
-        )
+        mock_invoice = MagicMock(id=invoice_id, status=InvoiceStatus.PENDING)
         mock_repo = MagicMock()
         mock_repo.find_by_id.return_value = mock_invoice
         mock_repo.save.return_value = mock_invoice
@@ -212,7 +208,7 @@ class TestInvoiceServiceStatusTransitions:
         result = service.mark_paid(
             invoice_id=str(invoice_id),
             payment_reference="pay_123abc",
-            payment_method="stripe"
+            payment_method="stripe",
         )
 
         assert result.success is True
@@ -232,7 +228,7 @@ class TestInvoiceServiceStatusTransitions:
         service.mark_paid(
             invoice_id=str(uuid4()),
             payment_reference="pay_ref_xyz",
-            payment_method="paypal"
+            payment_method="paypal",
         )
 
         mock_invoice.mark_paid.assert_called_with("pay_ref_xyz", "paypal")
@@ -249,7 +245,7 @@ class TestInvoiceServiceStatusTransitions:
         result = service.mark_paid(
             invoice_id=str(uuid4()),
             payment_reference="pay_123",
-            payment_method="stripe"
+            payment_method="stripe",
         )
 
         assert result.success is False
@@ -266,7 +262,7 @@ class TestInvoiceServiceStatusTransitions:
         result = service.mark_paid(
             invoice_id=str(uuid4()),
             payment_reference="pay_123",
-            payment_method="stripe"
+            payment_method="stripe",
         )
 
         assert result.success is False
@@ -313,8 +309,7 @@ class TestInvoiceServiceStatusTransitions:
 
         service = InvoiceService(invoice_repository=mock_repo)
         result = service.mark_refunded(
-            invoice_id=str(uuid4()),
-            refund_reference="refund_123"
+            invoice_id=str(uuid4()), refund_reference="refund_123"
         )
 
         assert result.success is True
@@ -330,12 +325,14 @@ class TestInvoiceServiceStatusTransitions:
 
         service = InvoiceService(invoice_repository=mock_repo)
         result = service.mark_refunded(
-            invoice_id=str(uuid4()),
-            refund_reference="refund_123"
+            invoice_id=str(uuid4()), refund_reference="refund_123"
         )
 
         assert result.success is False
-        assert "not paid" in result.error.lower() or "cannot refund" in result.error.lower()
+        assert (
+            "not paid" in result.error.lower()
+            or "cannot refund" in result.error.lower()
+        )
 
 
 class TestInvoiceServiceQueries:

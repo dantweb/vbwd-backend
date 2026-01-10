@@ -29,7 +29,9 @@ class InvoiceRepository(BaseRepository[UserInvoice]):
             .first()
         )
 
-    def find_by_subscription(self, subscription_id: Union[UUID, str]) -> List[UserInvoice]:
+    def find_by_subscription(
+        self, subscription_id: Union[UUID, str]
+    ) -> List[UserInvoice]:
         """Find all invoices for a subscription."""
         return (
             self._session.query(UserInvoice)
@@ -75,7 +77,7 @@ class InvoiceRepository(BaseRepository[UserInvoice]):
         limit: int = 20,
         offset: int = 0,
         status: Optional[str] = None,
-        user_id: Optional[str] = None
+        user_id: Optional[str] = None,
     ) -> Tuple[List[UserInvoice], int]:
         """
         Find all invoices with pagination and filters.
@@ -107,6 +109,11 @@ class InvoiceRepository(BaseRepository[UserInvoice]):
         total = query.count()
 
         # Apply pagination
-        invoices = query.order_by(UserInvoice.created_at.desc()).offset(offset).limit(limit).all()
+        invoices = (
+            query.order_by(UserInvoice.created_at.desc())
+            .offset(offset)
+            .limit(limit)
+            .all()
+        )
 
         return invoices, total

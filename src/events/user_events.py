@@ -1,6 +1,5 @@
 """User domain events."""
 from dataclasses import dataclass
-from datetime import datetime
 from typing import Optional
 from uuid import UUID
 from src.events.domain import DomainEvent
@@ -10,18 +9,18 @@ from src.events.domain import DomainEvent
 class UserCreatedEvent(DomainEvent):
     """Event: New user was created."""
 
-    user_id: UUID = None
-    email: str = None
-    role: str = None
+    user_id: Optional[UUID] = None
+    email: Optional[str] = None
+    role: Optional[str] = None
     first_name: Optional[str] = None
 
     def __post_init__(self):
         """Set event name and timestamp."""
         super().__post_init__()
-        self.name = 'user.created'
-        if not hasattr(self, 'data'):
+        self.name = "user.created"
+        if not hasattr(self, "data"):
             self.data = {}
-        if not hasattr(self, 'propagation_stopped'):
+        if not hasattr(self, "propagation_stopped"):
             self.propagation_stopped = False
 
 
@@ -29,19 +28,19 @@ class UserCreatedEvent(DomainEvent):
 class UserStatusUpdatedEvent(DomainEvent):
     """Event: User status was updated."""
 
-    user_id: UUID = None
-    old_status: str = None
-    new_status: str = None
+    user_id: Optional[UUID] = None
+    old_status: Optional[str] = None
+    new_status: Optional[str] = None
     updated_by: Optional[UUID] = None
     reason: Optional[str] = None
 
     def __post_init__(self):
         """Set event name and timestamp."""
         super().__post_init__()
-        self.name = 'user.status.updated'
-        if not hasattr(self, 'data'):
+        self.name = "user.status.updated"
+        if not hasattr(self, "data"):
             self.data = {}
-        if not hasattr(self, 'propagation_stopped'):
+        if not hasattr(self, "propagation_stopped"):
             self.propagation_stopped = False
 
 
@@ -49,15 +48,15 @@ class UserStatusUpdatedEvent(DomainEvent):
 class UserDeletedEvent(DomainEvent):
     """Event: User was deleted."""
 
-    user_id: UUID = None
-    deleted_by: UUID = None
+    user_id: Optional[UUID] = None
+    deleted_by: Optional[UUID] = None
     reason: Optional[str] = None
 
     def __post_init__(self):
         """Set event name and timestamp."""
         super().__post_init__()
-        self.name = 'user.deleted'
-        if not hasattr(self, 'data'):
+        self.name = "user.deleted"
+        if not hasattr(self, "data"):
             self.data = {}
-        if not hasattr(self, 'propagation_stopped'):
+        if not hasattr(self, "propagation_stopped"):
             self.propagation_stopped = False

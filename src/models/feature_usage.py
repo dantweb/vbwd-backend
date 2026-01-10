@@ -1,5 +1,4 @@
 """Feature usage tracking model."""
-from datetime import datetime
 from sqlalchemy.dialects.postgresql import UUID
 from src.extensions import db
 from src.models.base import BaseModel
@@ -13,13 +12,10 @@ class FeatureUsage(BaseModel):
     within a billing period.
     """
 
-    __tablename__ = 'feature_usage'
+    __tablename__ = "feature_usage"
 
     user_id = db.Column(
-        UUID(as_uuid=True),
-        db.ForeignKey('user.id'),
-        nullable=False,
-        index=True
+        UUID(as_uuid=True), db.ForeignKey("user.id"), nullable=False, index=True
     )
     feature_name = db.Column(db.String(100), nullable=False, index=True)
     usage_count = db.Column(db.Integer, default=0, nullable=False)
@@ -28,18 +24,12 @@ class FeatureUsage(BaseModel):
     # Unique constraint: one record per user/feature/period
     __table_args__ = (
         db.UniqueConstraint(
-            'user_id',
-            'feature_name',
-            'period_start',
-            name='uq_user_feature_period'
+            "user_id", "feature_name", "period_start", name="uq_user_feature_period"
         ),
     )
 
     # Relationship
-    user = db.relationship(
-        'User',
-        backref=db.backref('feature_usages', lazy='dynamic')
-    )
+    user = db.relationship("User", backref=db.backref("feature_usages", lazy="dynamic"))
 
     def increment(self, amount: int = 1) -> int:
         """
@@ -61,7 +51,9 @@ class FeatureUsage(BaseModel):
             "user_id": str(self.user_id),
             "feature_name": self.feature_name,
             "usage_count": self.usage_count,
-            "period_start": self.period_start.isoformat() if self.period_start else None,
+            "period_start": self.period_start.isoformat()
+            if self.period_start
+            else None,
         }
 
     def __repr__(self) -> str:

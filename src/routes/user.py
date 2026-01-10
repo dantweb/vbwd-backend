@@ -6,7 +6,7 @@ from src.schemas.user_schemas import (
     UserSchema,
     UserDetailsSchema,
     UserDetailsUpdateSchema,
-    UserProfileSchema
+    UserProfileSchema,
 )
 from src.services.user_service import UserService
 from src.services.auth_service import AuthService
@@ -15,7 +15,7 @@ from src.repositories.user_details_repository import UserDetailsRepository
 from src.extensions import db
 
 # Create blueprint
-user_bp = Blueprint('user', __name__, url_prefix='/api/v1/user')
+user_bp = Blueprint("user", __name__, url_prefix="/api/v1/user")
 
 # Initialize schemas
 user_schema = UserSchema()
@@ -24,7 +24,7 @@ user_details_update_schema = UserDetailsUpdateSchema()
 user_profile_schema = UserProfileSchema()
 
 
-@user_bp.route('/profile', methods=['GET'])
+@user_bp.route("/profile", methods=["GET"])
 @require_auth
 def get_profile():
     """Get current user's profile (user + details).
@@ -56,25 +56,21 @@ def get_profile():
     user_repo = UserRepository(db.session)
     user_details_repo = UserDetailsRepository(db.session)
     user_service = UserService(
-        user_repository=user_repo,
-        user_details_repository=user_details_repo
+        user_repository=user_repo, user_details_repository=user_details_repo
     )
 
     # Get user and details
     user = user_service.get_user(user_id)
     if not user:
-        return jsonify({'error': 'User not found'}), 404
+        return jsonify({"error": "User not found"}), 404
 
     details = user_service.get_user_details(user_id)
 
     # Return profile
-    return jsonify(user_profile_schema.dump({
-        'user': user,
-        'details': details
-    })), 200
+    return jsonify(user_profile_schema.dump({"user": user, "details": details})), 200
 
 
-@user_bp.route('/details', methods=['GET'])
+@user_bp.route("/details", methods=["GET"])
 @require_auth
 def get_details():
     """Get current user's details.
@@ -91,19 +87,18 @@ def get_details():
     user_repo = UserRepository(db.session)
     user_details_repo = UserDetailsRepository(db.session)
     user_service = UserService(
-        user_repository=user_repo,
-        user_details_repository=user_details_repo
+        user_repository=user_repo, user_details_repository=user_details_repo
     )
 
     # Get details
     details = user_service.get_user_details(user_id)
     if not details:
-        return jsonify({'error': 'User details not found'}), 404
+        return jsonify({"error": "User details not found"}), 404
 
     return jsonify(user_details_schema.dump(details)), 200
 
 
-@user_bp.route('/details', methods=['PUT'])
+@user_bp.route("/details", methods=["PUT"])
 @require_auth
 def update_details():
     """Update current user's details.
@@ -132,14 +127,13 @@ def update_details():
         # Validate request data
         data = user_details_update_schema.load(request.json)
     except ValidationError as err:
-        return jsonify({'error': err.messages}), 400
+        return jsonify({"error": err.messages}), 400
 
     # Initialize services
     user_repo = UserRepository(db.session)
     user_details_repo = UserDetailsRepository(db.session)
     user_service = UserService(
-        user_repository=user_repo,
-        user_details_repository=user_details_repo
+        user_repository=user_repo, user_details_repository=user_details_repo
     )
 
     # Update details
@@ -148,7 +142,7 @@ def update_details():
     return jsonify(user_details_schema.dump(details)), 200
 
 
-@user_bp.route('/change-password', methods=['POST'])
+@user_bp.route("/change-password", methods=["POST"])
 @require_auth
 def change_password():
     """Change current user's password.
@@ -168,11 +162,11 @@ def change_password():
     user_id = g.user_id
     data = request.get_json() or {}
 
-    current_password = data.get('currentPassword')
-    new_password = data.get('newPassword')
+    current_password = data.get("currentPassword")
+    new_password = data.get("newPassword")
 
     if not current_password or not new_password:
-        return jsonify({'error': 'Current password and new password are required'}), 400
+        return jsonify({"error": "Current password and new password are required"}), 400
 
     # Initialize services
     user_repo = UserRepository(db.session)
@@ -181,14 +175,14 @@ def change_password():
     # Get user
     user = user_repo.find_by_id(user_id)
     if not user:
-        return jsonify({'error': 'User not found'}), 404
+        return jsonify({"error": "User not found"}), 404
 
     # Verify current password
     if not auth_service.verify_password(current_password, user.password_hash):
-        return jsonify({'error': 'Current password is incorrect'}), 400
+        return jsonify({"error": "Current password is incorrect"}), 400
 
     # Update password
     user.password_hash = auth_service.hash_password(new_password)
     user_repo.save(user)
 
-    return jsonify({'success': True}), 200
+    return jsonify({"success": True}), 200

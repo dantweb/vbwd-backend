@@ -1,5 +1,4 @@
 """TarifPlan domain model."""
-from decimal import Decimal
 from sqlalchemy.dialects.postgresql import UUID
 from src.extensions import db
 from src.models.base import BaseModel

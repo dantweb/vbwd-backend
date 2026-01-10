@@ -6,10 +6,12 @@ from src.repositories.user_repository import UserRepository
 from src.services.invoice_service import InvoiceService
 from src.extensions import db
 
-admin_invoices_bp = Blueprint('admin_invoices', __name__, url_prefix='/api/v1/admin/invoices')
+admin_invoices_bp = Blueprint(
+    "admin_invoices", __name__, url_prefix="/api/v1/admin/invoices"
+)
 
 
-@admin_invoices_bp.route('/', methods=['GET'])
+@admin_invoices_bp.route("/", methods=["GET"])
 @require_auth
 @require_admin
 def list_invoices():
@@ -25,19 +27,16 @@ def list_invoices():
     Returns:
         200: List of invoices with pagination info
     """
-    limit = min(int(request.args.get('limit', 20)), 100)
-    offset = int(request.args.get('offset', 0))
-    status = request.args.get('status')
-    user_id = request.args.get('user_id')
+    limit = min(int(request.args.get("limit", 20)), 100)
+    offset = int(request.args.get("offset", 0))
+    status = request.args.get("status")
+    user_id = request.args.get("user_id")
 
     invoice_repo = InvoiceRepository(db.session)
     user_repo = UserRepository(db.session)
 
     invoices, total = invoice_repo.find_all_paginated(
-        limit=limit,
-        offset=offset,
-        status=status,
-        user_id=user_id
+        limit=limit, offset=offset, status=status, user_id=user_id
     )
 
     # Enrich invoices with user info for admin display
@@ -46,20 +45,18 @@ def list_invoices():
         inv_dict = inv.to_dict()
         # Add user email
         user = user_repo.find_by_id(str(inv.user_id))
-        inv_dict['user_email'] = user.email if user else ''
+        inv_dict["user_email"] = user.email if user else ""
         # Add created_at for sorting
-        inv_dict['created_at'] = inv.created_at.isoformat() if inv.created_at else None
+        inv_dict["created_at"] = inv.created_at.isoformat() if inv.created_at else None
         result.append(inv_dict)
 
-    return jsonify({
-        'invoices': result,
-        'total': total,
-        'limit': limit,
-        'offset': offset
-    }), 200
+    return (
+        jsonify({"invoices": result, "total": total, "limit": limit, "offset": offset}),
+        200,
+    )
 
 
-@admin_invoices_bp.route('/<invoice_id>', methods=['GET'])
+@admin_invoices_bp.route("/<invoice_id>", methods=["GET"])
 @require_auth
 @require_admin
 def get_invoice(invoice_id):
@@ -84,52 +81,72 @@ def get_invoice(invoice_id):
     invoice = invoice_repo.find_by_id(invoice_id)
 
     if not invoice:
-        return jsonify({'error': 'Invoice not found'}), 404
+        return jsonify({"error": "Invoice not found"}), 404
 
     inv_dict = invoice.to_dict()
 
     # Enrich with user info
     user = user_repo.find_by_id(str(invoice.user_id))
     if user:
-        inv_dict['user_email'] = user.email
-        inv_dict['user_name'] = user.details.first_name + ' ' + user.details.last_name if user.details else ''
+        inv_dict["user_email"] = user.email
+        inv_dict["user_name"] = (
+            user.details.first_name + " " + user.details.last_name
+            if user.details
+            else ""
+        )
 
     # Enrich with tariff plan info
     plan = plan_repo.find_by_id(str(invoice.tarif_plan_id))
     if plan:
-        inv_dict['plan_name'] = plan.name
-        inv_dict['plan_description'] = plan.description
-        inv_dict['plan_billing_period'] = plan.billing_period.value if plan.billing_period else None
-        inv_dict['plan_price'] = str(plan.price) if plan.price else None
+        inv_dict["plan_name"] = plan.name
+        inv_dict["plan_description"] = plan.description
+        inv_dict["plan_billing_period"] = (
+            plan.billing_period.value if plan.billing_period else None
+        )
+        inv_dict["plan_price"] = str(plan.price) if plan.price else None
 
     # Enrich with subscription info
     if invoice.subscription_id:
         subscription = subscription_repo.find_by_id(str(invoice.subscription_id))
         if subscription:
-            inv_dict['subscription_status'] = subscription.status.value if subscription.status else None
-            inv_dict['subscription_start_date'] = subscription.started_at.isoformat() if subscription.started_at else None
-            inv_dict['subscription_end_date'] = subscription.expires_at.isoformat() if subscription.expires_at else None
-            inv_dict['subscription_is_trial'] = False  # No trial flag in current model
-            inv_dict['subscription_trial_end'] = None
+            inv_dict["subscription_status"] = (
+                subscription.status.value if subscription.status else None
+            )
+            inv_dict["subscription_start_date"] = (
+                subscription.started_at.isoformat() if subscription.started_at else None
+            )
+            inv_dict["subscription_end_date"] = (
+                subscription.expires_at.isoformat() if subscription.expires_at else None
+            )
+            inv_dict["subscription_is_trial"] = False  # No trial flag in current model
+            inv_dict["subscription_trial_end"] = None
 
     # Add line items (for now, generate from invoice data)
-    inv_dict['line_items'] = [{
-        'description': inv_dict.get('plan_name', 'Subscription'),
-        'quantity': 1,
-        'unit_price': float(invoice.amount),
-        'amount': float(invoice.amount)
-    }]
+    inv_dict["line_items"] = [
+        {
+            "description": inv_dict.get("plan_name", "Subscription"),
+            "quantity": 1,
+            "unit_price": float(invoice.amount),
+            "amount": float(invoice.amount),
+        }
+    ]
 
     # Add due_date and created_at
-    inv_dict['due_date'] = invoice.expires_at.isoformat() if invoice.expires_at else invoice.invoiced_at.isoformat() if invoice.invoiced_at else None
-    inv_dict['created_at'] = invoice.created_at.isoformat() if invoice.created_at else None
+    inv_dict["due_date"] = (
+        invoice.expires_at.isoformat()
+        if invoice.expires_at
+        else invoice.invoiced_at.isoformat()
+        if invoice.invoiced_at
+        else None
+    )
+    inv_dict["created_at"] = (
+        invoice.created_at.isoformat() if invoice.created_at else None
+    )
 
-    return jsonify({
-        'invoice': inv_dict
-    }), 200
+    return jsonify({"invoice": inv_dict}), 200
 
 
-@admin_invoices_bp.route('/<invoice_id>/duplicate', methods=['POST'])
+@admin_invoices_bp.route("/<invoice_id>/duplicate", methods=["POST"])
 @require_auth
 @require_admin
 def duplicate_invoice(invoice_id):
@@ -153,7 +170,7 @@ def duplicate_invoice(invoice_id):
     source_invoice = invoice_repo.find_by_id(invoice_id)
 
     if not source_invoice:
-        return jsonify({'error': 'Invoice not found'}), 404
+        return jsonify({"error": "Invoice not found"}), 404
 
     # Create new invoice with same data but new number and date
     new_invoice = UserInvoice(
@@ -170,13 +187,18 @@ def duplicate_invoice(invoice_id):
     db.session.add(new_invoice)
     db.session.commit()
 
-    return jsonify({
-        'invoice': new_invoice.to_dict(),
-        'message': 'Invoice duplicated successfully'
-    }), 201
+    return (
+        jsonify(
+            {
+                "invoice": new_invoice.to_dict(),
+                "message": "Invoice duplicated successfully",
+            }
+        ),
+        201,
+    )
 
 
-@admin_invoices_bp.route('/<invoice_id>/mark-paid', methods=['POST'])
+@admin_invoices_bp.route("/<invoice_id>/mark-paid", methods=["POST"])
 @require_auth
 @require_admin
 def mark_paid(invoice_id):
@@ -196,8 +218,8 @@ def mark_paid(invoice_id):
         400: Invalid operation
     """
     data = request.get_json() or {}
-    payment_reference = data.get('payment_reference', 'MANUAL')
-    payment_method = data.get('payment_method', 'manual')
+    payment_reference = data.get("payment_reference", "MANUAL")
+    payment_method = data.get("payment_method", "manual")
 
     invoice_repo = InvoiceRepository(db.session)
     invoice_service = InvoiceService(invoice_repository=invoice_repo)
@@ -206,16 +228,18 @@ def mark_paid(invoice_id):
 
     if not result.success:
         if "not found" in result.error.lower():
-            return jsonify({'error': result.error}), 404
-        return jsonify({'error': result.error}), 400
+            return jsonify({"error": result.error}), 404
+        return jsonify({"error": result.error}), 400
 
-    return jsonify({
-        'invoice': result.invoice.to_dict(),
-        'message': 'Invoice marked as paid'
-    }), 200
+    return (
+        jsonify(
+            {"invoice": result.invoice.to_dict(), "message": "Invoice marked as paid"}
+        ),
+        200,
+    )
 
 
-@admin_invoices_bp.route('/<invoice_id>/void', methods=['POST'])
+@admin_invoices_bp.route("/<invoice_id>/void", methods=["POST"])
 @require_auth
 @require_admin
 def void_invoice(invoice_id):
@@ -236,16 +260,16 @@ def void_invoice(invoice_id):
 
     if not result.success:
         if "not found" in result.error.lower():
-            return jsonify({'error': result.error}), 404
-        return jsonify({'error': result.error}), 400
+            return jsonify({"error": result.error}), 404
+        return jsonify({"error": result.error}), 400
 
-    return jsonify({
-        'invoice': result.invoice.to_dict(),
-        'message': 'Invoice voided'
-    }), 200
+    return (
+        jsonify({"invoice": result.invoice.to_dict(), "message": "Invoice voided"}),
+        200,
+    )
 
 
-@admin_invoices_bp.route('/<invoice_id>/refund', methods=['POST'])
+@admin_invoices_bp.route("/<invoice_id>/refund", methods=["POST"])
 @require_auth
 @require_admin
 def refund_invoice(invoice_id):
@@ -264,7 +288,7 @@ def refund_invoice(invoice_id):
         400: Invoice cannot be refunded
     """
     data = request.get_json() or {}
-    refund_reference = data.get('refund_reference', 'ADMIN_REFUND')
+    refund_reference = data.get("refund_reference", "ADMIN_REFUND")
 
     invoice_repo = InvoiceRepository(db.session)
     invoice_service = InvoiceService(invoice_repository=invoice_repo)
@@ -273,16 +297,16 @@ def refund_invoice(invoice_id):
 
     if not result.success:
         if "not found" in result.error.lower():
-            return jsonify({'error': result.error}), 404
-        return jsonify({'error': result.error}), 400
+            return jsonify({"error": result.error}), 404
+        return jsonify({"error": result.error}), 400
 
-    return jsonify({
-        'invoice': result.invoice.to_dict(),
-        'message': 'Invoice refunded'
-    }), 200
+    return (
+        jsonify({"invoice": result.invoice.to_dict(), "message": "Invoice refunded"}),
+        200,
+    )
 
 
-@admin_invoices_bp.route('/<invoice_id>/pdf', methods=['GET'])
+@admin_invoices_bp.route("/<invoice_id>/pdf", methods=["GET"])
 @require_auth
 @require_admin
 def download_pdf(invoice_id):
@@ -300,10 +324,12 @@ def download_pdf(invoice_id):
     invoice = invoice_repo.find_by_id(invoice_id)
 
     if not invoice:
-        return jsonify({'error': 'Invoice not found'}), 404
+        return jsonify({"error": "Invoice not found"}), 404
 
     # For now, return invoice data as JSON (PDF generation would be a separate service)
-    return jsonify({
-        'invoice': invoice.to_dict(),
-        'message': 'PDF generation not implemented'
-    }), 200
+    return (
+        jsonify(
+            {"invoice": invoice.to_dict(), "message": "PDF generation not implemented"}
+        ),
+        200,
+    )

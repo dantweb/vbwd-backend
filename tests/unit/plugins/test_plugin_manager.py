@@ -2,7 +2,7 @@
 import pytest
 from src.plugins.manager import PluginManager
 from src.plugins.base import BasePlugin, PluginMetadata, PluginStatus
-from src.events.dispatcher import EventDispatcher, Event
+from src.events.dispatcher import Event
 
 
 class MockPlugin(BasePlugin):

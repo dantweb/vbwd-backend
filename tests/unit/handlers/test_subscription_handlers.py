@@ -32,7 +32,7 @@ class TestSubscriptionActivatedHandler:
             user_id=uuid4(),
             tarif_plan_id=uuid4(),
             started_at=datetime.utcnow(),
-            expires_at=datetime.utcnow() + timedelta(days=30)
+            expires_at=datetime.utcnow() + timedelta(days=30),
         )
 
         assert handler.can_handle(event) is True
@@ -46,7 +46,7 @@ class TestSubscriptionActivatedHandler:
             user_id=user_id,
             tarif_plan_id=uuid4(),
             started_at=datetime.utcnow(),
-            expires_at=datetime.utcnow() + timedelta(days=30)
+            expires_at=datetime.utcnow() + timedelta(days=30),
         )
 
         result = handler.handle(event)
@@ -68,9 +68,7 @@ class TestSubscriptionCancelledHandler:
     def test_can_handle_returns_true_for_subscription_cancelled_event(self, handler):
         """can_handle should return True for SubscriptionCancelledEvent."""
         event = SubscriptionCancelledEvent(
-            subscription_id=uuid4(),
-            user_id=uuid4(),
-            cancelled_by=uuid4()
+            subscription_id=uuid4(), user_id=uuid4(), cancelled_by=uuid4()
         )
 
         assert handler.can_handle(event) is True
@@ -82,7 +80,7 @@ class TestSubscriptionCancelledHandler:
             subscription_id=subscription_id,
             user_id=uuid4(),
             cancelled_by=uuid4(),
-            reason="User request"
+            reason="User request",
         )
 
         result = handler.handle(event)
@@ -107,7 +105,7 @@ class TestPaymentCompletedHandler:
             user_id=uuid4(),
             transaction_id="tx_123",
             amount=Decimal("29.99"),
-            currency="USD"
+            currency="USD",
         )
 
         assert handler.can_handle(event) is True
@@ -120,7 +118,7 @@ class TestPaymentCompletedHandler:
             user_id=uuid4(),
             transaction_id="tx_123",
             amount=Decimal("29.99"),
-            currency="USD"
+            currency="USD",
         )
 
         result = handler.handle(event)
@@ -143,7 +141,7 @@ class TestPaymentCompletedHandler:
             user_id=uuid4(),
             transaction_id="tx_123",
             amount=Decimal("29.99"),
-            currency="USD"
+            currency="USD",
         )
 
         result = handler.handle(event)
@@ -163,9 +161,7 @@ class TestPaymentFailedHandler:
     def test_can_handle_returns_true_for_payment_failed_event(self, handler):
         """can_handle should return True for PaymentFailedEvent."""
         event = PaymentFailedEvent(
-            subscription_id=uuid4(),
-            user_id=uuid4(),
-            error_message="Insufficient funds"
+            subscription_id=uuid4(), user_id=uuid4(), error_message="Insufficient funds"
         )
 
         assert handler.can_handle(event) is True
@@ -176,7 +172,7 @@ class TestPaymentFailedHandler:
         event = PaymentFailedEvent(
             subscription_id=subscription_id,
             user_id=uuid4(),
-            error_message="Insufficient funds"
+            error_message="Insufficient funds",
         )
 
         result = handler.handle(event)

@@ -1,6 +1,6 @@
 """Tax service implementation."""
 from decimal import Decimal
-from typing import Optional, List
+from typing import Optional
 from src.repositories.tax_repository import TaxRepository
 from src.models.tax import Tax
 

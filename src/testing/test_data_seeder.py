@@ -58,7 +58,7 @@ class TestDataSeeder:
         Returns:
             True if TEST_DATA_SEED environment variable is 'true' (case-insensitive).
         """
-        return os.getenv('TEST_DATA_SEED', 'false').lower() == 'true'
+        return os.getenv("TEST_DATA_SEED", "false").lower() == "true"
 
     def should_cleanup(self) -> bool:
         """
@@ -67,7 +67,7 @@ class TestDataSeeder:
         Returns:
             True if TEST_DATA_CLEANUP environment variable is 'true' (case-insensitive).
         """
-        return os.getenv('TEST_DATA_CLEANUP', 'false').lower() == 'true'
+        return os.getenv("TEST_DATA_CLEANUP", "false").lower() == "true"
 
     def seed(self) -> bool:
         """
@@ -86,7 +86,7 @@ class TestDataSeeder:
         test_user = self._create_test_user()
 
         # Create test admin
-        test_admin = self._create_test_admin()
+        self._create_test_admin()
 
         # Create test tariff plan
         test_plan = self._create_test_plan()
@@ -129,10 +129,7 @@ class TestDataSeeder:
         Returns:
             Hashed password string.
         """
-        return bcrypt.hashpw(
-            password.encode('utf-8'),
-            bcrypt.gensalt()
-        ).decode('utf-8')
+        return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
     def _create_test_user(self) -> Optional[User]:
         """
@@ -141,8 +138,8 @@ class TestDataSeeder:
         Returns:
             Created or existing User, or None on error.
         """
-        email = os.getenv('TEST_USER_EMAIL', 'test@example.com')
-        password = os.getenv('TEST_USER_PASSWORD', 'TestPass123@')
+        email = os.getenv("TEST_USER_EMAIL", "test@example.com")
+        password = os.getenv("TEST_USER_PASSWORD", "TestPass123@")
 
         existing = self.session.query(User).filter_by(email=email).first()
         if existing:
@@ -155,7 +152,7 @@ class TestDataSeeder:
             email=email,
             password_hash=self._hash_password(password),
             status=UserStatus.ACTIVE,
-            role=UserRole.USER
+            role=UserRole.USER,
         )
         self.session.add(user)
         self.session.flush()
@@ -168,8 +165,8 @@ class TestDataSeeder:
         Returns:
             Created or existing admin User, or None on error.
         """
-        email = os.getenv('TEST_ADMIN_EMAIL', 'admin@example.com')
-        password = os.getenv('TEST_ADMIN_PASSWORD', 'AdminPass123@')
+        email = os.getenv("TEST_ADMIN_EMAIL", "admin@example.com")
+        password = os.getenv("TEST_ADMIN_PASSWORD", "AdminPass123@")
 
         existing = self.session.query(User).filter_by(email=email).first()
         if existing:
@@ -179,7 +176,7 @@ class TestDataSeeder:
             email=email,
             password_hash=self._hash_password(password),
             status=UserStatus.ACTIVE,
-            role=UserRole.ADMIN
+            role=UserRole.ADMIN,
         )
         self.session.add(admin)
         self.session.flush()
@@ -209,13 +206,15 @@ class TestDataSeeder:
             is_active=True,
             billing_period=BillingPeriod.MONTHLY,
             features={"api_calls": 1000, "storage_gb": 5},
-            sort_order=999  # Put at the end
+            sort_order=999,  # Put at the end
         )
         self.session.add(plan)
         self.session.flush()
         return plan
 
-    def _create_test_subscription(self, user: User, plan: TarifPlan) -> Optional[Subscription]:
+    def _create_test_subscription(
+        self, user: User, plan: TarifPlan
+    ) -> Optional[Subscription]:
         """
         Create test subscription for user.
 
@@ -226,9 +225,7 @@ class TestDataSeeder:
         Returns:
             Created or existing Subscription, or None on error.
         """
-        existing = self.session.query(Subscription).filter_by(
-            user_id=user.id
-        ).first()
+        existing = self.session.query(Subscription).filter_by(user_id=user.id).first()
         if existing:
             return existing
 
@@ -237,7 +234,7 @@ class TestDataSeeder:
             tarif_plan_id=plan.id,
             status=SubscriptionStatus.ACTIVE,
             started_at=datetime.utcnow(),
-            expires_at=datetime.utcnow() + timedelta(days=30)
+            expires_at=datetime.utcnow() + timedelta(days=30),
         )
         self.session.add(subscription)
         self.session.flush()
@@ -246,26 +243,24 @@ class TestDataSeeder:
     def _cleanup_subscriptions(self) -> None:
         """Remove test subscriptions."""
         test_emails = [
-            os.getenv('TEST_USER_EMAIL', 'test@example.com'),
-            os.getenv('TEST_ADMIN_EMAIL', 'admin@example.com')
+            os.getenv("TEST_USER_EMAIL", "test@example.com"),
+            os.getenv("TEST_ADMIN_EMAIL", "admin@example.com"),
         ]
-        users = self.session.query(User).filter(
-            User.email.in_(test_emails)
-        ).all()
+        users = self.session.query(User).filter(User.email.in_(test_emails)).all()
         for user in users:
-            self.session.query(Subscription).filter_by(
-                user_id=user.id
-            ).delete(synchronize_session=False)
+            self.session.query(Subscription).filter_by(user_id=user.id).delete(
+                synchronize_session=False
+            )
 
     def _cleanup_users(self) -> None:
         """Remove test users."""
         test_emails = [
-            os.getenv('TEST_USER_EMAIL', 'test@example.com'),
-            os.getenv('TEST_ADMIN_EMAIL', 'admin@example.com')
+            os.getenv("TEST_USER_EMAIL", "test@example.com"),
+            os.getenv("TEST_ADMIN_EMAIL", "admin@example.com"),
         ]
-        self.session.query(User).filter(
-            User.email.in_(test_emails)
-        ).delete(synchronize_session=False)
+        self.session.query(User).filter(User.email.in_(test_emails)).delete(
+            synchronize_session=False
+        )
 
     def _cleanup_plans(self) -> None:
         """Remove test plans (identified by marker prefix or slug)."""

@@ -261,7 +261,9 @@ class TestMockPaymentPluginWebhooks:
         plugin.handle_webhook(payload)
 
         # Verify internal state updated
-        assert plugin._transactions[create_result.transaction_id]["status"] == "succeeded"
+        assert (
+            plugin._transactions[create_result.transaction_id]["status"] == "succeeded"
+        )
 
     def test_handle_webhook_payment_failed(self, plugin):
         """handle_webhook should process payment_intent.failed."""

@@ -17,6 +17,7 @@ class TestTaxServiceGetApplicable:
     def tax_service(self, mock_tax_repo):
         """Create TaxService with mocked dependencies."""
         from src.services.tax_service import TaxService
+
         return TaxService(tax_repo=mock_tax_repo)
 
     def test_get_applicable_tax_for_country(self, tax_service, mock_tax_repo):
@@ -39,7 +40,9 @@ class TestTaxServiceGetApplicable:
         assert result.rate == Decimal("19.0")
         mock_tax_repo.find_by_country.assert_called_once_with("DE")
 
-    def test_get_applicable_tax_returns_none_if_not_found(self, tax_service, mock_tax_repo):
+    def test_get_applicable_tax_returns_none_if_not_found(
+        self, tax_service, mock_tax_repo
+    ):
         """get_applicable_tax should return None if no tax configured."""
         mock_tax_repo.find_by_country.return_value = []
 
@@ -85,6 +88,7 @@ class TestTaxServiceCalculate:
     def tax_service(self, mock_tax_repo):
         """Create TaxService with mocked dependencies."""
         from src.services.tax_service import TaxService
+
         return TaxService(tax_repo=mock_tax_repo)
 
     def test_calculate_tax_for_amount(self, tax_service, mock_tax_repo):
@@ -102,7 +106,9 @@ class TestTaxServiceCalculate:
         assert result == Decimal("19.00")
         mock_tax_repo.find_by_code.assert_called_once_with("VAT_DE")
 
-    def test_calculate_tax_returns_zero_if_tax_not_found(self, tax_service, mock_tax_repo):
+    def test_calculate_tax_returns_zero_if_tax_not_found(
+        self, tax_service, mock_tax_repo
+    ):
         """calculate_tax should return zero if tax not found."""
         mock_tax_repo.find_by_code.return_value = None
 
@@ -124,7 +130,9 @@ class TestTaxServiceCalculate:
 
         assert result == Decimal("119.00")
 
-    def test_calculate_total_with_tax_returns_net_if_tax_not_found(self, tax_service, mock_tax_repo):
+    def test_calculate_total_with_tax_returns_net_if_tax_not_found(
+        self, tax_service, mock_tax_repo
+    ):
         """calculate_total_with_tax should return net if tax not found."""
         mock_tax_repo.find_by_code.return_value = None
 
@@ -145,6 +153,7 @@ class TestTaxServiceGetBreakdown:
     def tax_service(self, mock_tax_repo):
         """Create TaxService with mocked dependencies."""
         from src.services.tax_service import TaxService
+
         return TaxService(tax_repo=mock_tax_repo)
 
     def test_get_tax_breakdown_with_tax(self, tax_service, mock_tax_repo):

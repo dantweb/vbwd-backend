@@ -35,7 +35,9 @@ class UserCase(BaseModel):
             "id": self.id,
             "user_id": self.user_id,
             "description": self.description,
-            "date_started": self.date_started.isoformat() if self.date_started else None,
+            "date_started": self.date_started.isoformat()
+            if self.date_started
+            else None,
             "status": self.status.value,
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }

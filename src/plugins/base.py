@@ -7,6 +7,7 @@ from dataclasses import dataclass
 
 class PluginStatus(Enum):
     """Plugin status."""
+
     DISCOVERED = "discovered"
     REGISTERED = "registered"
     INITIALIZED = "initialized"
@@ -18,11 +19,12 @@ class PluginStatus(Enum):
 @dataclass
 class PluginMetadata:
     """Plugin metadata."""
+
     name: str
     version: str
     author: str
     description: str
-    dependencies: List[str] = None
+    dependencies: Optional[List[str]] = None
 
     def __post_init__(self):
         if self.dependencies is None:

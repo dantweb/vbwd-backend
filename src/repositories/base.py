@@ -31,12 +31,7 @@ class BaseRepository(Generic[T]):
 
     def find_all(self, limit: int = 100, offset: int = 0) -> List[T]:
         """Find all entities with pagination."""
-        return (
-            self._session.query(self._model)
-            .limit(limit)
-            .offset(offset)
-            .all()
-        )
+        return self._session.query(self._model).limit(limit).offset(offset).all()
 
     def count(self) -> int:
         """Count total entities."""

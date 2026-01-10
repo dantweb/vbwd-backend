@@ -16,7 +16,7 @@ class InvoiceResult:
         self,
         success: bool,
         invoice: Optional[UserInvoice] = None,
-        error: Optional[str] = None
+        error: Optional[str] = None,
     ):
         """
         Initialize invoice result.
@@ -50,7 +50,7 @@ class InvoiceService:
         tarif_plan_id: str,
         amount: Decimal,
         currency: str = "EUR",
-        due_days: int = 30
+        due_days: int = 30,
     ) -> InvoiceResult:
         """
         Create a new invoice.
@@ -69,14 +69,18 @@ class InvoiceService:
         try:
             invoice = UserInvoice(
                 user_id=UUID(user_id) if isinstance(user_id, str) else user_id,
-                subscription_id=UUID(subscription_id) if isinstance(subscription_id, str) else subscription_id,
-                tarif_plan_id=UUID(tarif_plan_id) if isinstance(tarif_plan_id, str) else tarif_plan_id,
+                subscription_id=UUID(subscription_id)
+                if isinstance(subscription_id, str)
+                else subscription_id,
+                tarif_plan_id=UUID(tarif_plan_id)
+                if isinstance(tarif_plan_id, str)
+                else tarif_plan_id,
                 invoice_number=UserInvoice.generate_invoice_number(),
                 amount=amount,
                 currency=currency,
                 status=InvoiceStatus.PENDING,
                 invoiced_at=datetime.utcnow(),
-                expires_at=datetime.utcnow() + timedelta(days=due_days)
+                expires_at=datetime.utcnow() + timedelta(days=due_days),
             )
 
             saved_invoice = self._repo.save(invoice)
@@ -122,10 +126,7 @@ class InvoiceService:
         return self._repo.find_by_subscription(subscription_id)
 
     def mark_paid(
-        self,
-        invoice_id: str,
-        payment_reference: str,
-        payment_method: str
+        self, invoice_id: str, payment_reference: str, payment_method: str
     ) -> InvoiceResult:
         """
         Mark invoice as paid.
@@ -149,7 +150,7 @@ class InvoiceService:
         if invoice.status != InvoiceStatus.PENDING:
             return InvoiceResult(
                 success=False,
-                error=f"Cannot mark as paid: invoice status is {invoice.status.value}"
+                error=f"Cannot mark as paid: invoice status is {invoice.status.value}",
             )
 
         invoice.mark_paid(payment_reference, payment_method)
@@ -194,11 +195,7 @@ class InvoiceService:
         saved_invoice = self._repo.save(invoice)
         return InvoiceResult(success=True, invoice=saved_invoice)
 
-    def mark_refunded(
-        self,
-        invoice_id: str,
-        refund_reference: str
-    ) -> InvoiceResult:
+    def mark_refunded(self, invoice_id: str, refund_reference: str) -> InvoiceResult:
         """
         Mark invoice as refunded.
 
@@ -216,8 +213,7 @@ class InvoiceService:
 
         if invoice.status != InvoiceStatus.PAID:
             return InvoiceResult(
-                success=False,
-                error="Cannot refund: invoice is not paid"
+                success=False, error="Cannot refund: invoice is not paid"
             )
 
         invoice.mark_refunded()

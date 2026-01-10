@@ -20,7 +20,6 @@ from src.services.password_reset_service import PasswordResetService
 from src.services.activity_logger import ActivityLogger
 
 from src.events.domain import DomainEventDispatcher
-from src.handlers.password_reset_handler import PasswordResetHandler
 
 
 class Container(containers.DeclarativeContainer):
@@ -47,102 +46,72 @@ class Container(containers.DeclarativeContainer):
     # Repositories
     # ==================
 
-    user_repository = providers.Factory(
-        UserRepository,
-        session=db_session
-    )
+    user_repository = providers.Factory(UserRepository, session=db_session)
 
     user_details_repository = providers.Factory(
-        UserDetailsRepository,
-        session=db_session
+        UserDetailsRepository, session=db_session
     )
 
     subscription_repository = providers.Factory(
-        SubscriptionRepository,
-        session=db_session
+        SubscriptionRepository, session=db_session
     )
 
-    tarif_plan_repository = providers.Factory(
-        TarifPlanRepository,
-        session=db_session
-    )
+    tarif_plan_repository = providers.Factory(TarifPlanRepository, session=db_session)
 
-    invoice_repository = providers.Factory(
-        InvoiceRepository,
-        session=db_session
-    )
+    invoice_repository = providers.Factory(InvoiceRepository, session=db_session)
 
-    currency_repository = providers.Factory(
-        CurrencyRepository,
-        session=db_session
-    )
+    currency_repository = providers.Factory(CurrencyRepository, session=db_session)
 
-    tax_repository = providers.Factory(
-        TaxRepository,
-        session=db_session
-    )
+    tax_repository = providers.Factory(TaxRepository, session=db_session)
 
     # ==================
     # Services
     # ==================
 
-    auth_service = providers.Factory(
-        AuthService,
-        user_repository=user_repository
-    )
+    auth_service = providers.Factory(AuthService, user_repository=user_repository)
 
     user_service = providers.Factory(
         UserService,
         user_repository=user_repository,
-        user_details_repository=user_details_repository
+        user_details_repository=user_details_repository,
     )
 
     subscription_service = providers.Factory(
         SubscriptionService,
         subscription_repo=subscription_repository,
-        tarif_plan_repo=tarif_plan_repository
+        tarif_plan_repo=tarif_plan_repository,
     )
 
     tarif_plan_service = providers.Factory(
-        TarifPlanService,
-        tarif_plan_repository=tarif_plan_repository
+        TarifPlanService, tarif_plan_repository=tarif_plan_repository
     )
 
     currency_service = providers.Factory(
-        CurrencyService,
-        currency_repository=currency_repository
+        CurrencyService, currency_repository=currency_repository
     )
 
-    tax_service = providers.Factory(
-        TaxService,
-        tax_repository=tax_repository
-    )
+    tax_service = providers.Factory(TaxService, tax_repository=tax_repository)
 
     # ==================
     # Password Reset
     # ==================
 
     password_reset_repository = providers.Factory(
-        PasswordResetRepository,
-        session=db_session
+        PasswordResetRepository, session=db_session
     )
 
-    activity_logger = providers.Singleton(
-        ActivityLogger
-    )
+    activity_logger = providers.Singleton(ActivityLogger)
 
     password_reset_service = providers.Factory(
         PasswordResetService,
         user_repository=user_repository,
-        reset_repository=password_reset_repository
+        reset_repository=password_reset_repository,
     )
 
     # ==================
     # Event System
     # ==================
 
-    event_dispatcher = providers.Singleton(
-        DomainEventDispatcher
-    )
+    event_dispatcher = providers.Singleton(DomainEventDispatcher)
 
     # Note: Handlers are registered in app.py after container is wired

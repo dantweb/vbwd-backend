@@ -17,7 +17,7 @@ class IdempotencyService:
 
     DEFAULT_TTL = 86400  # 24 hours
 
-    def __init__(self, redis_client: 'Redis'):
+    def __init__(self, redis_client: "Redis"):
         """
         Initialize idempotency service.
 
@@ -59,7 +59,9 @@ class IdempotencyService:
             return json.loads(cached)
         return None
 
-    def store(self, key: str, response: Dict[str, Any], ttl: Optional[int] = None) -> None:
+    def store(
+        self, key: str, response: Dict[str, Any], ttl: Optional[int] = None
+    ) -> None:
         """
         Store response with TTL.
 
@@ -69,9 +71,7 @@ class IdempotencyService:
             ttl: Time-to-live in seconds (default: 24 hours)
         """
         self._redis.setex(
-            f"idempotency:{key}",
-            ttl or self.DEFAULT_TTL,
-            json.dumps(response)
+            f"idempotency:{key}", ttl or self.DEFAULT_TTL, json.dumps(response)
         )
 
     def delete(self, key: str) -> None:

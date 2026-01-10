@@ -1,5 +1,6 @@
 """Price domain model."""
 from decimal import Decimal
+from typing import Optional
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from src.extensions import db
 from src.models.base import BaseModel
@@ -55,10 +56,11 @@ class Price(BaseModel):
             Tax amount
         """
         from decimal import ROUND_HALF_UP
-        tax = (self.net_amount * tax_rate / Decimal("100"))
+
+        tax = self.net_amount * tax_rate / Decimal("100")
         return tax.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
-    def update_from_net(self, net_amount: Decimal, tax_rate: Decimal = None):
+    def update_from_net(self, net_amount: Decimal, tax_rate: Optional[Decimal] = None):
         """
         Update price from net amount and calculate gross.
 

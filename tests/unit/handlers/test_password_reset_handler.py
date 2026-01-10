@@ -1,7 +1,7 @@
 """Tests for PasswordResetHandler - TDD First."""
 import pytest
 from datetime import datetime, timedelta
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock
 from uuid import uuid4
 
 
@@ -24,42 +24,50 @@ class TestPasswordResetHandler:
         return Mock()
 
     @pytest.fixture
-    def handler(self, mock_password_reset_service, mock_email_service, mock_activity_logger):
+    def handler(
+        self, mock_password_reset_service, mock_email_service, mock_activity_logger
+    ):
         """Create PasswordResetHandler with mocked dependencies."""
         from src.handlers.password_reset_handler import PasswordResetHandler
+
         return PasswordResetHandler(
             password_reset_service=mock_password_reset_service,
             email_service=mock_email_service,
             activity_logger=mock_activity_logger,
-            reset_url_base="https://app.example.com/reset-password"
+            reset_url_base="https://app.example.com/reset-password",
         )
 
     # --- Tests for handle_reset_request ---
 
-    def test_handle_reset_request_calls_service(self, handler, mock_password_reset_service):
+    def test_handle_reset_request_calls_service(
+        self, handler, mock_password_reset_service
+    ):
         """Handler calls service to create reset token."""
         # Arrange
         from src.events.security_events import PasswordResetRequestEvent
         from src.services.password_reset_service import ResetRequestResult
 
-        mock_password_reset_service.create_reset_token.return_value = ResetRequestResult(
-            success=True,
-            user_id=str(uuid4()),
-            email="test@example.com",
-            token="test_token_123",
-            expires_at=datetime.utcnow() + timedelta(hours=1)
+        mock_password_reset_service.create_reset_token.return_value = (
+            ResetRequestResult(
+                success=True,
+                user_id=str(uuid4()),
+                email="test@example.com",
+                token="test_token_123",
+                expires_at=datetime.utcnow() + timedelta(hours=1),
+            )
         )
 
         event = PasswordResetRequestEvent(
-            email="test@example.com",
-            request_ip="127.0.0.1"
+            email="test@example.com", request_ip="127.0.0.1"
         )
 
         # Act
         result = handler.handle_reset_request(event)
 
         # Assert
-        mock_password_reset_service.create_reset_token.assert_called_once_with("test@example.com")
+        mock_password_reset_service.create_reset_token.assert_called_once_with(
+            "test@example.com"
+        )
         assert result.success is True
 
     def test_handle_reset_request_sends_email_when_user_exists(
@@ -70,17 +78,18 @@ class TestPasswordResetHandler:
         from src.events.security_events import PasswordResetRequestEvent
         from src.services.password_reset_service import ResetRequestResult
 
-        mock_password_reset_service.create_reset_token.return_value = ResetRequestResult(
-            success=True,
-            user_id=str(uuid4()),
-            email="test@example.com",
-            token="test_token_123",
-            expires_at=datetime.utcnow() + timedelta(hours=1)
+        mock_password_reset_service.create_reset_token.return_value = (
+            ResetRequestResult(
+                success=True,
+                user_id=str(uuid4()),
+                email="test@example.com",
+                token="test_token_123",
+                expires_at=datetime.utcnow() + timedelta(hours=1),
+            )
         )
 
         event = PasswordResetRequestEvent(
-            email="test@example.com",
-            request_ip="127.0.0.1"
+            email="test@example.com", request_ip="127.0.0.1"
         )
 
         # Act
@@ -108,8 +117,7 @@ class TestPasswordResetHandler:
         )
 
         event = PasswordResetRequestEvent(
-            email="unknown@example.com",
-            request_ip="127.0.0.1"
+            email="unknown@example.com", request_ip="127.0.0.1"
         )
 
         # Act
@@ -128,17 +136,18 @@ class TestPasswordResetHandler:
         from src.services.password_reset_service import ResetRequestResult
 
         user_id = str(uuid4())
-        mock_password_reset_service.create_reset_token.return_value = ResetRequestResult(
-            success=True,
-            user_id=user_id,
-            email="test@example.com",
-            token="test_token_123",
-            expires_at=datetime.utcnow() + timedelta(hours=1)
+        mock_password_reset_service.create_reset_token.return_value = (
+            ResetRequestResult(
+                success=True,
+                user_id=user_id,
+                email="test@example.com",
+                token="test_token_123",
+                expires_at=datetime.utcnow() + timedelta(hours=1),
+            )
         )
 
         event = PasswordResetRequestEvent(
-            email="test@example.com",
-            request_ip="192.168.1.1"
+            email="test@example.com", request_ip="192.168.1.1"
         )
 
         # Act
@@ -151,19 +160,20 @@ class TestPasswordResetHandler:
         assert call_args.kwargs["user_id"] == user_id
         assert call_args.kwargs["metadata"]["ip"] == "192.168.1.1"
 
-    def test_handle_reset_request_always_returns_success(self, handler, mock_password_reset_service):
+    def test_handle_reset_request_always_returns_success(
+        self, handler, mock_password_reset_service
+    ):
         """Always return success to not reveal if email exists."""
         # Arrange
         from src.events.security_events import PasswordResetRequestEvent
         from src.services.password_reset_service import ResetRequestResult
 
-        mock_password_reset_service.create_reset_token.return_value = ResetRequestResult(
-            success=True  # User not found but still success
+        mock_password_reset_service.create_reset_token.return_value = (
+            ResetRequestResult(success=True)  # User not found but still success
         )
 
         event = PasswordResetRequestEvent(
-            email="unknown@example.com",
-            request_ip="127.0.0.1"
+            email="unknown@example.com", request_ip="127.0.0.1"
         )
 
         # Act
@@ -174,29 +184,29 @@ class TestPasswordResetHandler:
 
     # --- Tests for handle_reset_execute ---
 
-    def test_handle_reset_execute_calls_service(self, handler, mock_password_reset_service):
+    def test_handle_reset_execute_calls_service(
+        self, handler, mock_password_reset_service
+    ):
         """Handler calls service to reset password."""
         # Arrange
         from src.events.security_events import PasswordResetExecuteEvent
         from src.services.password_reset_service import ResetResult
 
         mock_password_reset_service.reset_password.return_value = ResetResult(
-            success=True,
-            user_id=str(uuid4()),
-            email="test@example.com"
+            success=True, user_id=str(uuid4()), email="test@example.com"
         )
 
         event = PasswordResetExecuteEvent(
-            token="valid_token",
-            new_password="NewPassword123!",
-            reset_ip="127.0.0.1"
+            token="valid_token", new_password="NewPassword123!", reset_ip="127.0.0.1"
         )
 
         # Act
         result = handler.handle_reset_execute(event)
 
         # Assert
-        mock_password_reset_service.reset_password.assert_called_once_with("valid_token", "NewPassword123!")
+        mock_password_reset_service.reset_password.assert_called_once_with(
+            "valid_token", "NewPassword123!"
+        )
         assert result.success is True
 
     def test_handle_reset_execute_sends_confirmation_email(
@@ -208,15 +218,11 @@ class TestPasswordResetHandler:
         from src.services.password_reset_service import ResetResult
 
         mock_password_reset_service.reset_password.return_value = ResetResult(
-            success=True,
-            user_id=str(uuid4()),
-            email="test@example.com"
+            success=True, user_id=str(uuid4()), email="test@example.com"
         )
 
         event = PasswordResetExecuteEvent(
-            token="valid_token",
-            new_password="NewPassword123!",
-            reset_ip="127.0.0.1"
+            token="valid_token", new_password="NewPassword123!", reset_ip="127.0.0.1"
         )
 
         # Act
@@ -238,15 +244,11 @@ class TestPasswordResetHandler:
 
         user_id = str(uuid4())
         mock_password_reset_service.reset_password.return_value = ResetResult(
-            success=True,
-            user_id=user_id,
-            email="test@example.com"
+            success=True, user_id=user_id, email="test@example.com"
         )
 
         event = PasswordResetExecuteEvent(
-            token="valid_token",
-            new_password="NewPassword123!",
-            reset_ip="192.168.1.1"
+            token="valid_token", new_password="NewPassword123!", reset_ip="192.168.1.1"
         )
 
         # Act
@@ -267,15 +269,11 @@ class TestPasswordResetHandler:
         from src.services.password_reset_service import ResetResult
 
         mock_password_reset_service.reset_password.return_value = ResetResult(
-            success=False,
-            error="Token expired",
-            failure_reason="expired"
+            success=False, error="Token expired", failure_reason="expired"
         )
 
         event = PasswordResetExecuteEvent(
-            token="expired_token",
-            new_password="NewPassword123!",
-            reset_ip="127.0.0.1"
+            token="expired_token", new_password="NewPassword123!", reset_ip="127.0.0.1"
         )
 
         # Act
@@ -295,15 +293,13 @@ class TestPasswordResetHandler:
         from src.services.password_reset_service import ResetResult
 
         mock_password_reset_service.reset_password.return_value = ResetResult(
-            success=False,
-            error="Invalid token",
-            failure_reason="invalid"
+            success=False, error="Invalid token", failure_reason="invalid"
         )
 
         event = PasswordResetExecuteEvent(
             token="invalid_token_12345678",
             new_password="NewPassword123!",
-            reset_ip="192.168.1.1"
+            reset_ip="192.168.1.1",
         )
 
         # Act

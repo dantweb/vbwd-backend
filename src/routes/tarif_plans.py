@@ -68,11 +68,16 @@ def list_plans():
             }
             result.append(plan_data)
 
-    return jsonify({
-        "plans": result,
-        "currency": currency_code,
-        "country": country_code,
-    }), 200
+    return (
+        jsonify(
+            {
+                "plans": result,
+                "currency": currency_code,
+                "country": country_code,
+            }
+        ),
+        200,
+    )
 
 
 @tarif_plans_bp.route("/<slug>", methods=["GET"])
@@ -123,12 +128,17 @@ def get_plan(slug: str):
         )
         return jsonify(plan_data), 200
     except ValueError as e:
-        return jsonify({
-            "error": str(e),
-            "plan": {
-                "id": str(plan.id),
-                "name": plan.name,
-                "slug": plan.slug,
-                "price": plan.price_float,
-            }
-        }), 400
+        return (
+            jsonify(
+                {
+                    "error": str(e),
+                    "plan": {
+                        "id": str(plan.id),
+                        "name": plan.name,
+                        "slug": plan.slug,
+                        "price": plan.price_float,
+                    },
+                }
+            ),
+            400,
+        )

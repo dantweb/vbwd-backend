@@ -1,5 +1,4 @@
 """Tests for Flask application factory."""
-import pytest
 
 
 class TestAppFactory:
@@ -15,12 +14,14 @@ class TestAppFactory:
         from src.app import create_app
         from src.config import get_database_url
 
-        app = create_app({
-            "TESTING": True,
-            "DEBUG": False,
-            "SQLALCHEMY_DATABASE_URI": get_database_url(),
-            "SQLALCHEMY_TRACK_MODIFICATIONS": False
-        })
+        app = create_app(
+            {
+                "TESTING": True,
+                "DEBUG": False,
+                "SQLALCHEMY_DATABASE_URI": get_database_url(),
+                "SQLALCHEMY_TRACK_MODIFICATIONS": False,
+            }
+        )
 
         assert app.config["TESTING"] is True
         assert app.config["DEBUG"] is False
@@ -57,14 +58,14 @@ class TestContainerWiring:
 
     def test_app_has_container(self, app):
         """Application should have container attribute."""
-        assert hasattr(app, 'container')
+        assert hasattr(app, "container")
 
     def test_container_has_db_session_override(self, app, client):
         """Container should have db_session properly configured."""
         from src.extensions import db
 
         # Make a request to trigger before_request hook
-        client.get('/api/v1/health')
+        client.get("/api/v1/health")
 
         # Now container should be able to provide services
         with app.app_context():
@@ -109,17 +110,20 @@ class TestEventHandlerRegistration:
         caplog.set_level(logging.WARNING)
 
         # Create app - this should not produce dependency errors
-        app = create_app({
-            "TESTING": True,
-            "SQLALCHEMY_DATABASE_URI": get_database_url(),
-            "SQLALCHEMY_TRACK_MODIFICATIONS": False,
-            "RATELIMIT_ENABLED": False,
-        })
+        create_app(
+            {
+                "TESTING": True,
+                "SQLALCHEMY_DATABASE_URI": get_database_url(),
+                "SQLALCHEMY_TRACK_MODIFICATIONS": False,
+                "RATELIMIT_ENABLED": False,
+            }
+        )
 
         # Check that no dependency errors were logged
         dependency_errors = [
-            record for record in caplog.records
-            if 'Dependency' in record.message and 'not defined' in record.message
+            record
+            for record in caplog.records
+            if "Dependency" in record.message and "not defined" in record.message
         ]
 
         assert len(dependency_errors) == 0, (
@@ -132,12 +136,14 @@ class TestEventHandlerRegistration:
         from src.app import create_app
         from src.config import get_database_url
 
-        app = create_app({
-            "TESTING": True,
-            "SQLALCHEMY_DATABASE_URI": get_database_url(),
-            "SQLALCHEMY_TRACK_MODIFICATIONS": False,
-            "RATELIMIT_ENABLED": False,
-        })
+        app = create_app(
+            {
+                "TESTING": True,
+                "SQLALCHEMY_DATABASE_URI": get_database_url(),
+                "SQLALCHEMY_TRACK_MODIFICATIONS": False,
+                "RATELIMIT_ENABLED": False,
+            }
+        )
 
         dispatcher = app.container.event_dispatcher()
 

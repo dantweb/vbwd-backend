@@ -17,7 +17,7 @@ class EnhancedEventDispatcher:
     Supports event propagation control and context passing.
     """
 
-    def __init__(self, context: Optional['EventContext'] = None):
+    def __init__(self, context: Optional["EventContext"] = None):
         """
         Initialize dispatcher.
 
@@ -25,10 +25,10 @@ class EnhancedEventDispatcher:
             context: Optional shared context for handlers
         """
         # Dict[event_name, List[Tuple[priority, handler]]]
-        self._handlers: Dict[str, List[Tuple[int, 'IEventHandler']]] = {}
+        self._handlers: Dict[str, List[Tuple[int, "IEventHandler"]]] = {}
         self._context = context
 
-    def register(self, handler: 'IEventHandler') -> None:
+    def register(self, handler: "IEventHandler") -> None:
         """
         Register handler (sorted by priority).
 
@@ -42,14 +42,14 @@ class EnhancedEventDispatcher:
             self._handlers[event_class] = []
 
         # Set context on handler if it has the attribute
-        if hasattr(handler, '_context') and self._context:
+        if hasattr(handler, "_context") and self._context:
             handler._context = self._context
 
         # Insert maintaining sorted order (descending priority)
         self._handlers[event_class].append((priority, handler))
         self._handlers[event_class].sort(key=lambda x: x[0], reverse=True)
 
-    def unregister(self, handler: 'IEventHandler') -> None:
+    def unregister(self, handler: "IEventHandler") -> None:
         """
         Unregister handler.
 
@@ -59,8 +59,7 @@ class EnhancedEventDispatcher:
         event_class = handler.get_handled_event_class()
         if event_class in self._handlers:
             self._handlers[event_class] = [
-                (p, h) for p, h in self._handlers[event_class]
-                if h is not handler
+                (p, h) for p, h in self._handlers[event_class] if h is not handler
             ]
 
     def has_handlers(self, event_name: str) -> bool:
@@ -75,7 +74,7 @@ class EnhancedEventDispatcher:
         """
         return event_name in self._handlers and len(self._handlers[event_name]) > 0
 
-    def dispatch(self, event: 'EventInterface') -> EventResult:
+    def dispatch(self, event: "EventInterface") -> EventResult:
         """
         Dispatch event to registered handlers.
 
@@ -103,17 +102,18 @@ class EnhancedEventDispatcher:
                     result = handler.handle(event)
                     results.append(result)
             except Exception as e:
-                results.append(EventResult.error_result(
-                    error=str(e),
-                    error_type='handler_exception'
-                ))
+                results.append(
+                    EventResult.error_result(
+                        error=str(e), error_type="handler_exception"
+                    )
+                )
 
         if not results:
             return EventResult.no_handler()
 
         return EventResult.combine(results)
 
-    def get_handlers(self, event_name: str) -> List['IEventHandler']:
+    def get_handlers(self, event_name: str) -> List["IEventHandler"]:
         """
         Get all handlers for event.
 
