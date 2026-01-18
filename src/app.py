@@ -15,6 +15,8 @@ def _register_event_handlers(app: Flask, container) -> None:
         container: DI container
     """
     from src.handlers.password_reset_handler import PasswordResetHandler
+    from src.handlers.checkout_handler import CheckoutHandler
+    from src.handlers.payment_handler import PaymentCapturedHandler
 
     try:
         dispatcher = container.event_dispatcher()
@@ -41,6 +43,18 @@ def _register_event_handlers(app: Flask, container) -> None:
         # Register handlers for security events
         dispatcher.register("security.password_reset.request", password_reset_handler)
         dispatcher.register("security.password_reset.execute", password_reset_handler)
+
+        # Create checkout handler with container for request-scoped repos
+        checkout_handler = CheckoutHandler(container)
+
+        # Register checkout handler
+        dispatcher.register("checkout.requested", checkout_handler)
+
+        # Create payment handler with container for request-scoped repos
+        payment_handler = PaymentCapturedHandler(container)
+
+        # Register payment handler
+        dispatcher.register("payment.captured", payment_handler)
 
         logger.info("Event handlers registered successfully")
 
@@ -93,8 +107,14 @@ def create_app(config: Optional[Dict[str, Any]] = None) -> Flask:
         admin_plans_bp,
         admin_analytics_bp,
         admin_profile_bp,
+        admin_token_bundles_bp,
+        admin_addons_bp,
+        admin_settings_bp,
     )
     from src.routes.config import config_bp
+    from src.routes.addons import addons_bp
+    from src.routes.token_bundles import token_bundles_bp
+    from src.routes.webhooks import webhooks_bp
 
     csrf.exempt(auth_bp)
     csrf.exempt(user_bp)
@@ -108,7 +128,13 @@ def create_app(config: Optional[Dict[str, Any]] = None) -> Flask:
     csrf.exempt(admin_plans_bp)
     csrf.exempt(admin_analytics_bp)
     csrf.exempt(admin_profile_bp)
+    csrf.exempt(admin_token_bundles_bp)
+    csrf.exempt(admin_addons_bp)
+    csrf.exempt(admin_settings_bp)
+    csrf.exempt(addons_bp)
+    csrf.exempt(token_bundles_bp)
     csrf.exempt(config_bp)
+    csrf.exempt(webhooks_bp)
 
     # Initialize DI container
     from src.container import Container
@@ -146,7 +172,13 @@ def create_app(config: Optional[Dict[str, Any]] = None) -> Flask:
     app.register_blueprint(admin_plans_bp)
     app.register_blueprint(admin_analytics_bp)
     app.register_blueprint(admin_profile_bp)
+    app.register_blueprint(admin_token_bundles_bp)
+    app.register_blueprint(admin_addons_bp)
+    app.register_blueprint(admin_settings_bp)
+    app.register_blueprint(addons_bp)
+    app.register_blueprint(token_bundles_bp)
     app.register_blueprint(config_bp)
+    app.register_blueprint(webhooks_bp)
 
     # Health check endpoint
     @app.route("/api/v1/health")

@@ -62,12 +62,21 @@ def create_plan():
         return jsonify({"error": "Price is required"}), 400
 
     try:
+        # Generate slug if not provided
+        import re
+        slug = data.get("slug")
+        if not slug:
+            slug = re.sub(r"[^a-z0-9]+", "-", data["name"].lower()).strip("-")
+
+        price_decimal = Decimal(str(data["price"]))
         plan = TarifPlan(
             name=data["name"],
+            slug=slug,
             description=data.get("description", ""),
-            price=Decimal(str(data["price"])),
+            price=price_decimal,
+            price_float=float(price_decimal),
             currency=data.get("currency", "EUR"),
-            billing_period=data.get("billing_period", "monthly"),
+            billing_period=data.get("billing_period", "MONTHLY").upper(),
             features=data.get("features", {}),
             is_active=data.get("is_active", True),
         )

@@ -43,16 +43,17 @@ def list_subscriptions():
 @require_auth
 def get_active_subscription():
     """
-    Get user's active subscription.
+    Get user's active subscription with plan details.
 
     GET /api/v1/user/subscriptions/active
     Authorization: Bearer <token>
 
     Returns:
-        200: Active subscription or None
+        200: Active subscription with plan details or None
     """
     # Initialize services
     subscription_repo = SubscriptionRepository(db.session)
+    tarif_plan_repo = TarifPlanRepository(db.session)
     subscription_service = SubscriptionService(subscription_repo=subscription_repo)
 
     # Get active subscription
@@ -61,10 +62,35 @@ def get_active_subscription():
     if not subscription:
         return jsonify({"subscription": None}), 200
 
+    # Build response with plan details
+    subscription_data = subscription.to_dict()
+
+    # Add plan details if available
+    if subscription.tarif_plan_id:
+        plan = tarif_plan_repo.find_by_id(subscription.tarif_plan_id)
+        if plan:
+            subscription_data["plan"] = {
+                "id": str(plan.id),
+                "name": plan.name,
+                "slug": plan.slug,
+                "price": float(plan.price) if plan.price else 0,
+                "billing_period": plan.billing_period.value if plan.billing_period else "monthly",
+            }
+
+    # Add pending plan details if available
+    if subscription.pending_plan_id:
+        pending_plan = tarif_plan_repo.find_by_id(subscription.pending_plan_id)
+        if pending_plan:
+            subscription_data["pending_plan"] = {
+                "id": str(pending_plan.id),
+                "name": pending_plan.name,
+                "slug": pending_plan.slug,
+            }
+
     return (
         jsonify(
             {
-                "subscription": subscription.to_dict(),
+                "subscription": subscription_data,
             }
         ),
         200,

@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import Optional, Dict, Any
 from uuid import UUID
+from src.events.domain import DomainEvent
 
 
 @dataclass
@@ -25,21 +26,30 @@ class CheckoutInitiatedEvent:
 
 
 @dataclass
-class PaymentCapturedEvent:
+class PaymentCapturedEvent(DomainEvent):
     """Payment successfully captured.
 
-    Emitted when payment provider confirms successful payment.
-    Handler should activate subscription and mark invoice as paid.
+    Emitted when payment is confirmed (webhook or admin action).
+    Handler activates all pending items on the invoice:
+    - Subscription → active
+    - Token bundles → tokens credited
+    - Add-ons → active
     """
 
-    subscription_id: UUID
-    user_id: UUID
-    transaction_id: str
-    amount: Decimal
-    currency: str
-    provider: str
+    invoice_id: UUID = None
+    payment_reference: str = None
+    amount: str = None
+    currency: str = "USD"
+    # Legacy fields for backward compatibility
+    subscription_id: Optional[UUID] = None
+    user_id: Optional[UUID] = None
+    transaction_id: Optional[str] = None
+    provider: Optional[str] = None
     metadata: Dict[str, Any] = field(default_factory=dict)
-    name: str = field(default="payment.captured", init=False)
+
+    def __post_init__(self):
+        self.name = "payment.captured"
+        super().__post_init__()
 
 
 @dataclass

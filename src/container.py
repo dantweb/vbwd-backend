@@ -6,9 +6,15 @@ from src.repositories.user_details_repository import UserDetailsRepository
 from src.repositories.subscription_repository import SubscriptionRepository
 from src.repositories.tarif_plan_repository import TarifPlanRepository
 from src.repositories.invoice_repository import InvoiceRepository
+from src.repositories.invoice_line_item_repository import InvoiceLineItemRepository
 from src.repositories.currency_repository import CurrencyRepository
 from src.repositories.tax_repository import TaxRepository
 from src.repositories.password_reset_repository import PasswordResetRepository
+from src.repositories.token_bundle_repository import TokenBundleRepository
+from src.repositories.token_bundle_purchase_repository import TokenBundlePurchaseRepository
+from src.repositories.addon_repository import AddOnRepository
+from src.repositories.addon_subscription_repository import AddOnSubscriptionRepository
+from src.repositories.token_repository import TokenBalanceRepository, TokenTransactionRepository
 
 from src.services.auth_service import AuthService
 from src.services.user_service import UserService
@@ -59,6 +65,30 @@ class Container(containers.DeclarativeContainer):
     tarif_plan_repository = providers.Factory(TarifPlanRepository, session=db_session)
 
     invoice_repository = providers.Factory(InvoiceRepository, session=db_session)
+
+    invoice_line_item_repository = providers.Factory(
+        InvoiceLineItemRepository, session=db_session
+    )
+
+    token_bundle_repository = providers.Factory(TokenBundleRepository, session=db_session)
+
+    token_bundle_purchase_repository = providers.Factory(
+        TokenBundlePurchaseRepository, session=db_session
+    )
+
+    addon_repository = providers.Factory(AddOnRepository, session=db_session)
+
+    addon_subscription_repository = providers.Factory(
+        AddOnSubscriptionRepository, session=db_session
+    )
+
+    token_balance_repository = providers.Factory(
+        TokenBalanceRepository, session=db_session
+    )
+
+    token_transaction_repository = providers.Factory(
+        TokenTransactionRepository, session=db_session
+    )
 
     currency_repository = providers.Factory(CurrencyRepository, session=db_session)
 

@@ -57,3 +57,30 @@ class UserCaseStatus(enum.Enum):
     ACTIVE = "active"
     COMPLETED = "completed"
     ARCHIVED = "archived"
+
+
+class PurchaseStatus(enum.Enum):
+    """Token bundle purchase status."""
+
+    PENDING = "pending"
+    COMPLETED = "completed"
+    REFUNDED = "refunded"
+    CANCELLED = "cancelled"
+
+
+class LineItemType(enum.Enum):
+    """Invoice line item type."""
+
+    SUBSCRIPTION = "subscription"
+    TOKEN_BUNDLE = "token_bundle"
+    ADD_ON = "add_on"
+
+
+class TokenTransactionType(enum.Enum):
+    """Token transaction type."""
+
+    PURCHASE = "purchase"
+    USAGE = "usage"
+    REFUND = "refund"
+    BONUS = "bonus"
+    ADJUSTMENT = "adjustment"

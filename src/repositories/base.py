@@ -64,7 +64,11 @@ class BaseRepository(Generic[T]):
                 )
 
         try:
-            if not entity.id:
+            # Add entity to session if it's not already tracked
+            from sqlalchemy.orm import object_session
+            from sqlalchemy.inspection import inspect
+
+            if object_session(entity) is None or inspect(entity).transient:
                 self._session.add(entity)
             self._session.commit()
             self._session.refresh(entity)

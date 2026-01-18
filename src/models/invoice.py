@@ -46,8 +46,11 @@ class UserInvoice(BaseModel):
         default=InvoiceStatus.PENDING,
         index=True,
     )
-    payment_method = db.Column(db.String(50))  # "stripe", "paypal", etc.
+    payment_method = db.Column(db.String(50))  # "stripe", "paypal", "basic", etc.
     payment_ref = db.Column(db.String(255))  # External payment reference
+    subtotal = db.Column(db.Numeric(10, 2), nullable=True)  # Before tax
+    tax_amount = db.Column(db.Numeric(10, 2), nullable=True, default=0)
+    total_amount = db.Column(db.Numeric(10, 2), nullable=True)  # After tax
     invoiced_at = db.Column(
         db.DateTime,
         nullable=False,
@@ -55,6 +58,14 @@ class UserInvoice(BaseModel):
     )
     paid_at = db.Column(db.DateTime)
     expires_at = db.Column(db.DateTime)
+
+    # Relationships
+    line_items = db.relationship(
+        "InvoiceLineItem",
+        backref="invoice",
+        lazy="joined",
+        cascade="all, delete-orphan",
+    )
 
     @property
     def is_payable(self) -> bool:
@@ -104,17 +115,21 @@ class UserInvoice(BaseModel):
     def to_dict(self) -> dict:
         """Convert to dictionary."""
         return {
-            "id": self.id,
-            "user_id": self.user_id,
-            "tarif_plan_id": self.tarif_plan_id,
-            "subscription_id": self.subscription_id,
+            "id": str(self.id),
+            "user_id": str(self.user_id),
+            "tarif_plan_id": str(self.tarif_plan_id) if self.tarif_plan_id else None,
+            "subscription_id": str(self.subscription_id) if self.subscription_id else None,
             "invoice_number": self.invoice_number,
             "amount": str(self.amount),
+            "subtotal": str(self.subtotal) if self.subtotal else str(self.amount),
+            "tax_amount": str(self.tax_amount) if self.tax_amount else "0.00",
+            "total_amount": str(self.total_amount) if self.total_amount else str(self.amount),
             "currency": self.currency,
             "status": self.status.value,
             "payment_method": self.payment_method,
             "payment_ref": self.payment_ref,
             "is_payable": self.is_payable,
+            "line_items": [item.to_dict() for item in self.line_items] if self.line_items else [],
             "invoiced_at": self.invoiced_at.isoformat() if self.invoiced_at else None,
             "paid_at": self.paid_at.isoformat() if self.paid_at else None,
             "expires_at": self.expires_at.isoformat() if self.expires_at else None,

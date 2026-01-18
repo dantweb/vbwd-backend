@@ -1,6 +1,7 @@
 """User management routes."""
-from flask import Blueprint, request, jsonify, g
+from flask import Blueprint, request, jsonify, g, current_app
 from marshmallow import ValidationError
+from uuid import UUID
 from src.middleware.auth import require_auth
 from src.schemas.user_schemas import (
     UserSchema,
@@ -13,6 +14,7 @@ from src.services.auth_service import AuthService
 from src.repositories.user_repository import UserRepository
 from src.repositories.user_details_repository import UserDetailsRepository
 from src.extensions import db
+from src.events.checkout_events import CheckoutRequestedEvent
 
 # Create blueprint
 user_bp = Blueprint("user", __name__, url_prefix="/api/v1/user")
@@ -186,3 +188,216 @@ def change_password():
     user_repo.save(user)
 
     return jsonify({"success": True}), 200
+
+
+@user_bp.route("/checkout", methods=["POST"])
+@require_auth
+def checkout():
+    """Create checkout with subscription and optional items.
+
+    Requires: Bearer token in Authorization header
+
+    Request body:
+        {
+            "plan_id": "uuid-here",
+            "token_bundle_ids": ["uuid-1", "uuid-2"],  # optional
+            "add_on_ids": ["uuid-1", "uuid-2"],        # optional
+            "currency": "USD"                           # optional, defaults to USD
+        }
+
+    Returns:
+        200: {
+            "subscription": {...},
+            "invoice": {...},
+            "token_bundles": [...],
+            "add_ons": [...],
+            "message": "Checkout created. Awaiting payment."
+        }
+        400: If validation fails
+        404: If plan/bundle/addon not found
+    """
+    user_id = g.user_id
+    data = request.get_json() or {}
+
+    # Validate required fields
+    plan_id = data.get("plan_id")
+    if not plan_id:
+        return jsonify({"error": "plan_id is required"}), 400
+
+    # Parse UUIDs
+    try:
+        plan_uuid = UUID(plan_id) if isinstance(plan_id, str) else plan_id
+    except (ValueError, TypeError):
+        return jsonify({"error": "Invalid plan_id format"}), 400
+
+    # Parse optional token bundle IDs
+    token_bundle_ids = []
+    for bundle_id in data.get("token_bundle_ids", []):
+        try:
+            token_bundle_ids.append(
+                UUID(bundle_id) if isinstance(bundle_id, str) else bundle_id
+            )
+        except (ValueError, TypeError):
+            return jsonify({"error": f"Invalid token_bundle_id: {bundle_id}"}), 400
+
+    # Parse optional add-on IDs
+    add_on_ids = []
+    for addon_id in data.get("add_on_ids", []):
+        try:
+            add_on_ids.append(
+                UUID(addon_id) if isinstance(addon_id, str) else addon_id
+            )
+        except (ValueError, TypeError):
+            return jsonify({"error": f"Invalid add_on_id: {addon_id}"}), 400
+
+    # Get currency
+    currency = data.get("currency", "USD")
+
+    # Create checkout event
+    event = CheckoutRequestedEvent(
+        user_id=UUID(user_id) if isinstance(user_id, str) else user_id,
+        plan_id=plan_uuid,
+        token_bundle_ids=token_bundle_ids,
+        add_on_ids=add_on_ids,
+        currency=currency,
+    )
+
+    # Dispatch event
+    container = current_app.container
+    dispatcher = container.event_dispatcher()
+    result = dispatcher.emit(event)
+
+    if result.success:
+        # Unwrap single-item list from EventResult.combine()
+        data = result.data
+        if isinstance(data, list) and len(data) == 1:
+            data = data[0]
+        return jsonify(data), 201
+    else:
+        # Map error types to HTTP status codes
+        # Return 400 for validation errors (not found, not active, etc.)
+        # Return 500 only for system errors
+        status_code = 400
+        if result.error_type == "no_handler":
+            status_code = 500
+
+        return jsonify({"error": result.error}), status_code
+
+
+@user_bp.route("/tokens/balance", methods=["GET"])
+@require_auth
+def get_token_balance():
+    """
+    Get current user's token balance.
+
+    Requires: Bearer token in Authorization header
+
+    Returns:
+        200: {"balance": 1000, "transactions": [...]}
+    """
+    user_id = g.user_id
+    container = current_app.container
+
+    # Get balance
+    balance_repo = container.token_balance_repository()
+    balance = balance_repo.find_by_user_id(
+        UUID(user_id) if isinstance(user_id, str) else user_id
+    )
+
+    return jsonify({
+        "balance": balance.balance if balance else 0,
+    }), 200
+
+
+@user_bp.route("/tokens/transactions", methods=["GET"])
+@require_auth
+def get_token_transactions():
+    """
+    Get current user's token transaction history.
+
+    Requires: Bearer token in Authorization header
+
+    Query params:
+        - limit: int (default 50)
+        - offset: int (default 0)
+
+    Returns:
+        200: {"transactions": [...], "total": 10}
+    """
+    user_id = g.user_id
+    limit = request.args.get("limit", 50, type=int)
+    offset = request.args.get("offset", 0, type=int)
+
+    container = current_app.container
+    transaction_repo = container.token_transaction_repository()
+
+    transactions = transaction_repo.find_by_user_id(
+        UUID(user_id) if isinstance(user_id, str) else user_id,
+        limit=limit,
+        offset=offset,
+    )
+
+    return jsonify({
+        "transactions": [t.to_dict() for t in transactions],
+    }), 200
+
+
+@user_bp.route("/invoices/<invoice_id>/pay", methods=["POST"])
+@require_auth
+def pay_invoice(invoice_id):
+    """
+    Pay an invoice for the current user.
+
+    This endpoint simulates payment processing. In production, this would
+    redirect to or integrate with an external payment provider.
+
+    Requires: Bearer token in Authorization header
+
+    Returns:
+        200: {"invoice": {...}, "message": "Payment successful"}
+        400: {"error": "Invoice already paid"}
+        403: {"error": "Access denied"}
+        404: {"error": "Invoice not found"}
+    """
+    from src.events.payment_events import PaymentCapturedEvent
+
+    user_id = g.user_id
+
+    container = current_app.container
+    invoice_service = container.invoice_service()
+
+    # Get the invoice and verify ownership
+    invoice = invoice_service.get_by_id(invoice_id)
+    if not invoice:
+        return jsonify({"error": "Invoice not found"}), 404
+
+    # Verify the invoice belongs to the current user
+    if str(invoice.user_id) != str(user_id):
+        return jsonify({"error": "Access denied"}), 403
+
+    # Check if already paid
+    if invoice.status == "paid":
+        return jsonify({"error": "Invoice already paid"}), 400
+
+    # Dispatch payment event to trigger full payment flow
+    # (marks invoice paid, activates subscription, credits tokens, etc.)
+    event = PaymentCapturedEvent(
+        invoice_id=UUID(invoice_id) if isinstance(invoice_id, str) else invoice_id,
+        payment_reference=f"user-payment-{invoice_id[:8]}",
+        amount=str(invoice.amount),
+        currency=invoice.currency or "USD",
+    )
+
+    dispatcher = container.event_dispatcher()
+    result = dispatcher.emit(event)
+
+    if not result.success:
+        return jsonify({"error": result.error or "Payment failed"}), 400
+
+    # Get updated invoice
+    updated_invoice = invoice_service.get_by_id(invoice_id)
+
+    return jsonify({
+        "invoice": updated_invoice.to_dict() if updated_invoice else {},
+        "message": "Payment successful"
+    }), 200
