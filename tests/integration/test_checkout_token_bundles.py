@@ -74,7 +74,9 @@ class TestCheckoutWithTokenBundles:
     @pytest.fixture
     def test_token_bundle(self, admin_headers) -> Optional[Dict]:
         """Create a test token bundle."""
-        bundle = create_test_token_bundle(admin_headers, token_amount=1000, price="10.00")
+        bundle = create_test_token_bundle(
+            admin_headers, token_amount=1000, price="10.00"
+        )
         if not bundle:
             pytest.skip("Could not create test token bundle")
         return bundle
@@ -82,7 +84,9 @@ class TestCheckoutWithTokenBundles:
     @pytest.fixture
     def test_token_bundle_large(self, admin_headers) -> Optional[Dict]:
         """Create a large test token bundle."""
-        bundle = create_test_token_bundle(admin_headers, token_amount=5000, price="45.00")
+        bundle = create_test_token_bundle(
+            admin_headers, token_amount=5000, price="45.00"
+        )
         if not bundle:
             pytest.skip("Could not create large test token bundle")
         return bundle
@@ -95,7 +99,9 @@ class TestCheckoutWithTokenBundles:
             pytest.skip("Could not create inactive token bundle")
         return bundle
 
-    def test_checkout_with_single_bundle(self, auth_headers, test_plan, test_token_bundle):
+    def test_checkout_with_single_bundle(
+        self, auth_headers, test_plan, test_token_bundle
+    ):
         """Can add single token bundle to checkout."""
         response = requests.post(
             f"{BASE_URL}/user/checkout",
@@ -106,7 +112,9 @@ class TestCheckoutWithTokenBundles:
             headers=auth_headers,
             timeout=10,
         )
-        assert response.status_code == 201, f"Got {response.status_code}: {response.text}"
+        assert (
+            response.status_code == 201
+        ), f"Got {response.status_code}: {response.text}"
         data = response.json()
         assert "token_bundles" in data
         assert len(data["token_bundles"]) == 1

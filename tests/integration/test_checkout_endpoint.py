@@ -106,8 +106,8 @@ class TestCheckoutEndpointValidation:
             pytest.skip("Could not create inactive plan")
         return plan
 
-    def test_checkout_requires_plan_id(self, auth_headers):
-        """Missing plan_id returns 400."""
+    def test_checkout_empty_request_returns_400(self, auth_headers):
+        """Empty request with no items returns 400."""
         response = requests.post(
             f"{BASE_URL}/user/checkout",
             json={},
@@ -115,7 +115,7 @@ class TestCheckoutEndpointValidation:
             timeout=10,
         )
         assert response.status_code == 400
-        assert "plan_id" in response.json().get("error", "").lower()
+        assert "item" in response.json().get("error", "").lower()
 
     def test_checkout_invalid_plan_id_format(self, auth_headers):
         """Invalid UUID format returns 400."""
@@ -206,7 +206,9 @@ class TestCheckoutEndpointSuccess:
             headers=auth_headers,
             timeout=10,
         )
-        assert response.status_code == 201, f"Got {response.status_code}: {response.text}"
+        assert (
+            response.status_code == 201
+        ), f"Got {response.status_code}: {response.text}"
         data = response.json()
         assert "subscription" in data
         assert data["subscription"]["status"] == "pending"
@@ -236,7 +238,10 @@ class TestCheckoutEndpointSuccess:
         assert response.status_code == 201
         data = response.json()
         assert "message" in data
-        assert "awaiting payment" in data["message"].lower() or "pending" in data["message"].lower()
+        assert (
+            "awaiting payment" in data["message"].lower()
+            or "pending" in data["message"].lower()
+        )
 
     def test_checkout_invoice_has_subscription_line_item(self, auth_headers, test_plan):
         """Invoice contains subscription as line item."""
@@ -266,3 +271,86 @@ class TestCheckoutEndpointSuccess:
         # The subscription should reference the invoice or vice versa
         assert data["subscription"]["id"] is not None
         assert data["invoice"]["id"] is not None
+
+
+class TestCheckoutWithoutPlan:
+    """Tests for checkout without a plan (cart-based checkout)."""
+
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        """Verify backend is reachable."""
+        try:
+            response = requests.get(f"{BASE_URL}/health", timeout=5)
+            if response.status_code != 200:
+                pytest.skip("Backend not healthy")
+        except requests.exceptions.ConnectionError:
+            pytest.skip("Backend not reachable")
+
+    @pytest.fixture
+    def user_token(self) -> Optional[str]:
+        """Get user auth token."""
+        token = get_user_token()
+        if not token:
+            pytest.fail("Failed to get user token")
+        return token
+
+    @pytest.fixture
+    def auth_headers(self, user_token) -> Dict[str, str]:
+        """Get authorization headers."""
+        return {
+            "Authorization": f"Bearer {user_token}",
+            "Content-Type": "application/json",
+        }
+
+    @pytest.fixture
+    def admin_headers(self) -> Dict[str, str]:
+        """Get admin authorization headers."""
+        token = get_admin_token()
+        if not token:
+            pytest.fail("Failed to get admin token")
+        return {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+        }
+
+    def test_checkout_without_plan_with_bundles_returns_201(self, auth_headers, admin_headers):
+        """Checkout with only token bundles (no plan) returns 201."""
+        from tests.fixtures.checkout_fixtures import create_test_token_bundle
+
+        bundle = create_test_token_bundle(admin_headers)
+        if not bundle:
+            pytest.skip("Could not create test token bundle")
+
+        response = requests.post(
+            f"{BASE_URL}/user/checkout",
+            json={"token_bundle_ids": [bundle["id"]]},
+            headers=auth_headers,
+            timeout=10,
+        )
+        assert response.status_code == 201, f"Got {response.status_code}: {response.text}"
+        data = response.json()
+        assert "invoice" in data
+        assert data["invoice"]["status"] == "pending"
+        # No subscription should be created
+        assert "subscription" not in data
+
+    def test_checkout_payment_method_code_stored_on_invoice(self, auth_headers, admin_headers):
+        """Payment method code is stored on the created invoice."""
+        from tests.fixtures.checkout_fixtures import create_test_token_bundle
+
+        bundle = create_test_token_bundle(admin_headers, token_amount=500, price="5.00")
+        if not bundle:
+            pytest.skip("Could not create test token bundle")
+
+        response = requests.post(
+            f"{BASE_URL}/user/checkout",
+            json={
+                "token_bundle_ids": [bundle["id"]],
+                "payment_method_code": "paypal",
+            },
+            headers=auth_headers,
+            timeout=10,
+        )
+        assert response.status_code == 201, f"Got {response.status_code}: {response.text}"
+        data = response.json()
+        assert data["invoice"]["payment_method"] == "paypal"

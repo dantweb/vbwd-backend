@@ -7,9 +7,7 @@ from src.repositories.addon_repository import AddOnRepository
 from src.extensions import db
 from src.models import AddOn
 
-admin_addons_bp = Blueprint(
-    "admin_addons", __name__, url_prefix="/api/v1/admin/addons"
-)
+admin_addons_bp = Blueprint("admin_addons", __name__, url_prefix="/api/v1/admin/addons")
 
 
 def generate_slug(name: str) -> str:
@@ -17,13 +15,13 @@ def generate_slug(name: str) -> str:
     # Convert to lowercase
     slug = name.lower()
     # Replace spaces and underscores with hyphens
-    slug = re.sub(r'[\s_]+', '-', slug)
+    slug = re.sub(r"[\s_]+", "-", slug)
     # Remove any characters that aren't alphanumeric or hyphens
-    slug = re.sub(r'[^a-z0-9-]', '', slug)
+    slug = re.sub(r"[^a-z0-9-]", "", slug)
     # Remove multiple consecutive hyphens
-    slug = re.sub(r'-+', '-', slug)
+    slug = re.sub(r"-+", "-", slug)
     # Strip leading/trailing hyphens
-    slug = slug.strip('-')
+    slug = slug.strip("-")
     return slug
 
 
@@ -56,13 +54,18 @@ def list_addons():
         include_inactive=include_inactive,
     )
 
-    return jsonify({
-        "items": [addon.to_dict() for addon in addons],
-        "total": total,
-        "page": page,
-        "per_page": per_page,
-        "pages": (total + per_page - 1) // per_page if total > 0 else 0,
-    }), 200
+    return (
+        jsonify(
+            {
+                "items": [addon.to_dict() for addon in addons],
+                "total": total,
+                "page": page,
+                "per_page": per_page,
+                "pages": (total + per_page - 1) // per_page if total > 0 else 0,
+            }
+        ),
+        200,
+    )
 
 
 @admin_addons_bp.route("/", methods=["POST"])
@@ -125,10 +128,15 @@ def create_addon():
 
         saved_addon = addon_repo.save(addon)
 
-        return jsonify({
-            "addon": saved_addon.to_dict(),
-            "message": "Add-on created successfully"
-        }), 201
+        return (
+            jsonify(
+                {
+                    "addon": saved_addon.to_dict(),
+                    "message": "Add-on created successfully",
+                }
+            ),
+            201,
+        )
 
     except Exception as e:
         return jsonify({"error": str(e)}), 400
@@ -304,10 +312,7 @@ def activate_addon(addon_id):
     addon.is_active = True
     saved_addon = addon_repo.save(addon)
 
-    return jsonify({
-        "addon": saved_addon.to_dict(),
-        "message": "Add-on activated"
-    }), 200
+    return jsonify({"addon": saved_addon.to_dict(), "message": "Add-on activated"}), 200
 
 
 @admin_addons_bp.route("/<addon_id>/deactivate", methods=["POST"])
@@ -333,7 +338,7 @@ def deactivate_addon(addon_id):
     addon.is_active = False
     saved_addon = addon_repo.save(addon)
 
-    return jsonify({
-        "addon": saved_addon.to_dict(),
-        "message": "Add-on deactivated"
-    }), 200
+    return (
+        jsonify({"addon": saved_addon.to_dict(), "message": "Add-on deactivated"}),
+        200,
+    )

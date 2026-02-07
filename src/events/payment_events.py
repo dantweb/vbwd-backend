@@ -70,6 +70,28 @@ class PaymentFailedEvent:
 
 
 @dataclass
+class PaymentRefundedEvent(DomainEvent):
+    """Payment refunded.
+
+    Emitted when a refund is completed (admin action or webhook).
+    Handler reverses all activated items on the invoice:
+    - Subscription → cancelled
+    - Token bundles → tokens debited
+    - Add-ons → cancelled
+    """
+
+    invoice_id: UUID = None
+    refund_reference: str = None
+    amount: str = None
+    currency: str = "USD"
+    metadata: Dict[str, Any] = field(default_factory=dict)
+
+    def __post_init__(self):
+        self.name = "payment.refunded"
+        super().__post_init__()
+
+
+@dataclass
 class RefundRequestedEvent:
     """Refund requested.
 

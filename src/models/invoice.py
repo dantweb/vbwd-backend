@@ -25,7 +25,7 @@ class UserInvoice(BaseModel):
     tarif_plan_id = db.Column(
         UUID(as_uuid=True),
         db.ForeignKey("tarif_plan.id"),
-        nullable=False,
+        nullable=True,
     )
     subscription_id = db.Column(
         UUID(as_uuid=True),
@@ -118,18 +118,24 @@ class UserInvoice(BaseModel):
             "id": str(self.id),
             "user_id": str(self.user_id),
             "tarif_plan_id": str(self.tarif_plan_id) if self.tarif_plan_id else None,
-            "subscription_id": str(self.subscription_id) if self.subscription_id else None,
+            "subscription_id": str(self.subscription_id)
+            if self.subscription_id
+            else None,
             "invoice_number": self.invoice_number,
             "amount": str(self.amount),
             "subtotal": str(self.subtotal) if self.subtotal else str(self.amount),
             "tax_amount": str(self.tax_amount) if self.tax_amount else "0.00",
-            "total_amount": str(self.total_amount) if self.total_amount else str(self.amount),
+            "total_amount": str(self.total_amount)
+            if self.total_amount
+            else str(self.amount),
             "currency": self.currency,
             "status": self.status.value,
             "payment_method": self.payment_method,
             "payment_ref": self.payment_ref,
             "is_payable": self.is_payable,
-            "line_items": [item.to_dict() for item in self.line_items] if self.line_items else [],
+            "line_items": [item.to_dict() for item in self.line_items]
+            if self.line_items
+            else [],
             "invoiced_at": self.invoiced_at.isoformat() if self.invoiced_at else None,
             "paid_at": self.paid_at.isoformat() if self.paid_at else None,
             "expires_at": self.expires_at.isoformat() if self.expires_at else None,

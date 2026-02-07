@@ -103,11 +103,17 @@ def create_test_token_bundle(
         timeout=10,
     )
     if response.status_code in [200, 201]:
-        return response.json().get("bundle") or response.json().get("token_bundle") or response.json()
+        return (
+            response.json().get("bundle")
+            or response.json().get("token_bundle")
+            or response.json()
+        )
     return None
 
 
-def create_inactive_token_bundle(admin_headers: Dict[str, str]) -> Optional[Dict[str, Any]]:
+def create_inactive_token_bundle(
+    admin_headers: Dict[str, str]
+) -> Optional[Dict[str, Any]]:
     """Create an inactive token bundle."""
     bundle_data = {
         "name": f"Inactive Bundle {uuid4().hex[:6]}",
@@ -122,7 +128,11 @@ def create_inactive_token_bundle(admin_headers: Dict[str, str]) -> Optional[Dict
         timeout=10,
     )
     if response.status_code in [200, 201]:
-        return response.json().get("bundle") or response.json().get("token_bundle") or response.json()
+        return (
+            response.json().get("bundle")
+            or response.json().get("token_bundle")
+            or response.json()
+        )
     return None
 
 

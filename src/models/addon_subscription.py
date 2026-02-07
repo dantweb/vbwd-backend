@@ -31,7 +31,7 @@ class AddOnSubscription(BaseModel):
     subscription_id = db.Column(
         UUID(as_uuid=True),
         db.ForeignKey("subscription.id"),
-        nullable=False,
+        nullable=True,
         index=True,
     )
     invoice_id = db.Column(
@@ -88,15 +88,19 @@ class AddOnSubscription(BaseModel):
             "id": str(self.id),
             "user_id": str(self.user_id),
             "addon_id": str(self.addon_id),
-            "subscription_id": str(self.subscription_id),
+            "subscription_id": str(self.subscription_id) if self.subscription_id else None,
             "invoice_id": str(self.invoice_id) if self.invoice_id else None,
             "status": self.status.value,
             "is_valid": self.is_valid,
             "starts_at": self.starts_at.isoformat() if self.starts_at else None,
             "expires_at": self.expires_at.isoformat() if self.expires_at else None,
-            "cancelled_at": self.cancelled_at.isoformat() if self.cancelled_at else None,
+            "cancelled_at": self.cancelled_at.isoformat()
+            if self.cancelled_at
+            else None,
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }
 
     def __repr__(self) -> str:
-        return f"<AddOnSubscription(addon_id={self.addon_id}, status={self.status.value})>"
+        return (
+            f"<AddOnSubscription(addon_id={self.addon_id}, status={self.status.value})>"
+        )

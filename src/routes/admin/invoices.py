@@ -1,9 +1,12 @@
 """Admin invoice management routes."""
-from flask import Blueprint, jsonify, request
+from uuid import UUID
+
+from flask import Blueprint, current_app, jsonify, request
 from src.middleware.auth import require_auth, require_admin
 from src.repositories.invoice_repository import InvoiceRepository
 from src.repositories.user_repository import UserRepository
 from src.services.invoice_service import InvoiceService
+from src.events.payment_events import PaymentCapturedEvent, PaymentRefundedEvent
 from src.extensions import db
 
 admin_invoices_bp = Blueprint(
@@ -96,14 +99,15 @@ def get_invoice(invoice_id):
         )
 
     # Enrich with tariff plan info
-    plan = plan_repo.find_by_id(str(invoice.tarif_plan_id))
-    if plan:
-        inv_dict["plan_name"] = plan.name
-        inv_dict["plan_description"] = plan.description
-        inv_dict["plan_billing_period"] = (
-            plan.billing_period.value if plan.billing_period else None
-        )
-        inv_dict["plan_price"] = str(plan.price) if plan.price else None
+    if invoice.tarif_plan_id:
+        plan = plan_repo.find_by_id(str(invoice.tarif_plan_id))
+        if plan:
+            inv_dict["plan_name"] = plan.name
+            inv_dict["plan_description"] = plan.description
+            inv_dict["plan_billing_period"] = (
+                plan.billing_period.value if plan.billing_period else None
+            )
+            inv_dict["plan_price"] = str(plan.price) if plan.price else None
 
     # Enrich with subscription info
     if invoice.subscription_id:
@@ -120,16 +124,6 @@ def get_invoice(invoice_id):
             )
             inv_dict["subscription_is_trial"] = False  # No trial flag in current model
             inv_dict["subscription_trial_end"] = None
-
-    # Add line items (for now, generate from invoice data)
-    inv_dict["line_items"] = [
-        {
-            "description": inv_dict.get("plan_name", "Subscription"),
-            "quantity": 1,
-            "unit_price": float(invoice.amount),
-            "amount": float(invoice.amount),
-        }
-    ]
 
     # Add due_date and created_at
     inv_dict["due_date"] = (
@@ -231,6 +225,16 @@ def mark_paid(invoice_id):
             return jsonify({"error": result.error}), 404
         return jsonify({"error": result.error}), 400
 
+    # Dispatch PaymentCapturedEvent to activate subscription, credit tokens, etc.
+    event = PaymentCapturedEvent(
+        invoice_id=UUID(str(result.invoice.id)),
+        payment_reference=payment_reference,
+        amount=str(result.invoice.amount),
+        currency=result.invoice.currency or "USD",
+    )
+    dispatcher = current_app.container.event_dispatcher()
+    dispatcher.emit(event)
+
     return (
         jsonify(
             {"invoice": result.invoice.to_dict(), "message": "Invoice marked as paid"}
@@ -276,6 +280,9 @@ def refund_invoice(invoice_id):
     """
     Refund a paid invoice.
 
+    Emits PaymentRefundedEvent; the handler delegates to RefundService
+    which marks the invoice as refunded and reverses all line items.
+
     Args:
         invoice_id: UUID of the invoice
 
@@ -290,20 +297,30 @@ def refund_invoice(invoice_id):
     data = request.get_json() or {}
     refund_reference = data.get("refund_reference", "ADMIN_REFUND")
 
-    invoice_repo = InvoiceRepository(db.session)
-    invoice_service = InvoiceService(invoice_repository=invoice_repo)
+    event = PaymentRefundedEvent(
+        invoice_id=UUID(invoice_id),
+        refund_reference=refund_reference,
+    )
+    dispatcher = current_app.container.event_dispatcher()
+    result = dispatcher.emit(event)
 
-    result = invoice_service.mark_refunded(invoice_id, refund_reference)
-
-    if not result.success:
-        if "not found" in result.error.lower():
+    if result.success:
+        data = result.data
+        if isinstance(data, list) and len(data) == 1:
+            data = data[0]
+        return (
+            jsonify(
+                {
+                    "invoice": data.get("invoice", {}) if isinstance(data, dict) else {},
+                    "message": "Invoice refunded",
+                }
+            ),
+            200,
+        )
+    else:
+        if result.error and "not found" in result.error.lower():
             return jsonify({"error": result.error}), 404
         return jsonify({"error": result.error}), 400
-
-    return (
-        jsonify({"invoice": result.invoice.to_dict(), "message": "Invoice refunded"}),
-        200,
-    )
 
 
 @admin_invoices_bp.route("/<invoice_id>/pdf", methods=["GET"])

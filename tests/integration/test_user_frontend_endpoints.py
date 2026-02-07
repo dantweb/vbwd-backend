@@ -73,7 +73,9 @@ class TestUserSubscriptionEndpoint:
             timeout=10,
         )
 
-        assert response.status_code == 200, f"Got {response.status_code}: {response.text}"
+        assert (
+            response.status_code == 200
+        ), f"Got {response.status_code}: {response.text}"
         data = response.json()
         assert "subscription" in data
 
@@ -151,9 +153,9 @@ class TestUserSubscriptionEndpoint:
             pytest.skip("User has no active subscription")
 
         valid_statuses = ["active", "cancelled", "cancelling", "paused", "expired"]
-        assert subscription["status"] in valid_statuses, (
-            f"Invalid status: {subscription['status']}"
-        )
+        assert (
+            subscription["status"] in valid_statuses
+        ), f"Invalid status: {subscription['status']}"
 
     def test_subscription_data_is_consistent_on_reload(self, auth_headers):
         """
@@ -238,7 +240,9 @@ class TestUserInvoicesEndpoint:
             timeout=10,
         )
 
-        assert response.status_code == 200, f"Got {response.status_code}: {response.text}"
+        assert (
+            response.status_code == 200
+        ), f"Got {response.status_code}: {response.text}"
         data = response.json()
         assert "invoices" in data
         assert isinstance(data["invoices"], list)
@@ -314,9 +318,9 @@ class TestUserInvoicesEndpoint:
         invoice = invoices[0]
         invoice_number = invoice.get("invoice_number", "")
 
-        assert invoice_number.startswith("INV-"), (
-            f"Invoice number should start with 'INV-', got: {invoice_number}"
-        )
+        assert invoice_number.startswith(
+            "INV-"
+        ), f"Invoice number should start with 'INV-', got: {invoice_number}"
         assert len(invoice_number) > 10, "Invoice number seems too short"
 
     def test_invoice_status_is_valid_enum(self, auth_headers):
@@ -338,9 +342,9 @@ class TestUserInvoicesEndpoint:
 
         valid_statuses = ["pending", "paid", "failed", "cancelled", "refunded"]
         for invoice in invoices:
-            assert invoice["status"] in valid_statuses, (
-                f"Invalid invoice status: {invoice['status']}"
-            )
+            assert (
+                invoice["status"] in valid_statuses
+            ), f"Invalid invoice status: {invoice['status']}"
 
     def test_invoice_amount_is_numeric(self, auth_headers):
         """
@@ -390,9 +394,9 @@ class TestUserInvoicesEndpoint:
         data2 = response2.json()
 
         # Data should be consistent
-        assert len(data1["invoices"]) == len(data2["invoices"]), (
-            "Invoice count should be consistent across requests"
-        )
+        assert len(data1["invoices"]) == len(
+            data2["invoices"]
+        ), "Invoice count should be consistent across requests"
 
         # Invoice IDs should match
         ids1 = [inv["id"] for inv in data1["invoices"]]
@@ -471,7 +475,9 @@ class TestUserInvoiceDetailEndpoint:
             timeout=10,
         )
 
-        assert response.status_code == 200, f"Got {response.status_code}: {response.text}"
+        assert (
+            response.status_code == 200
+        ), f"Got {response.status_code}: {response.text}"
         data = response.json()
         assert "invoice" in data
 
@@ -489,7 +495,9 @@ class TestUserInvoiceDetailEndpoint:
             timeout=10,
         )
         list_invoices = list_response.json().get("invoices", [])
-        list_invoice = next((inv for inv in list_invoices if inv["id"] == invoice_id), None)
+        list_invoice = next(
+            (inv for inv in list_invoices if inv["id"] == invoice_id), None
+        )
 
         # Get detail
         detail_response = requests.get(
@@ -521,9 +529,10 @@ class TestUserInvoiceDetailEndpoint:
         )
 
         # Should be 403 or 404
-        assert response.status_code in [403, 404], (
-            f"Expected 403 or 404, got {response.status_code}"
-        )
+        assert response.status_code in [
+            403,
+            404,
+        ], f"Expected 403 or 404, got {response.status_code}"
 
 
 class TestDataConsistency:
@@ -600,13 +609,12 @@ class TestDataConsistency:
         # At least one invoice should match the subscription's plan
         subscription_plan_id = subscription.get("tarif_plan_id")
         matching_invoices = [
-            inv for inv in invoices
-            if inv.get("tarif_plan_id") == subscription_plan_id
+            inv for inv in invoices if inv.get("tarif_plan_id") == subscription_plan_id
         ]
 
-        assert len(matching_invoices) > 0, (
-            "At least one invoice should be for the current subscription plan"
-        )
+        assert (
+            len(matching_invoices) > 0
+        ), "At least one invoice should be for the current subscription plan"
 
     def test_user_id_is_consistent(self, auth_headers):
         """
@@ -637,6 +645,4 @@ class TestDataConsistency:
         for inv in invoices:
             user_ids.add(inv.get("user_id"))
 
-        assert len(user_ids) == 1, (
-            f"User IDs should be consistent, found: {user_ids}"
-        )
+        assert len(user_ids) == 1, f"User IDs should be consistent, found: {user_ids}"

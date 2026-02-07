@@ -11,10 +11,15 @@ from src.repositories.currency_repository import CurrencyRepository
 from src.repositories.tax_repository import TaxRepository
 from src.repositories.password_reset_repository import PasswordResetRepository
 from src.repositories.token_bundle_repository import TokenBundleRepository
-from src.repositories.token_bundle_purchase_repository import TokenBundlePurchaseRepository
+from src.repositories.token_bundle_purchase_repository import (
+    TokenBundlePurchaseRepository,
+)
 from src.repositories.addon_repository import AddOnRepository
 from src.repositories.addon_subscription_repository import AddOnSubscriptionRepository
-from src.repositories.token_repository import TokenBalanceRepository, TokenTransactionRepository
+from src.repositories.token_repository import (
+    TokenBalanceRepository,
+    TokenTransactionRepository,
+)
 
 from src.services.auth_service import AuthService
 from src.services.user_service import UserService
@@ -24,6 +29,9 @@ from src.services.currency_service import CurrencyService
 from src.services.tax_service import TaxService
 from src.services.password_reset_service import PasswordResetService
 from src.services.activity_logger import ActivityLogger
+from src.services.token_service import TokenService
+from src.services.invoice_service import InvoiceService
+from src.services.refund_service import RefundService
 
 from src.events.domain import DomainEventDispatcher
 
@@ -70,7 +78,9 @@ class Container(containers.DeclarativeContainer):
         InvoiceLineItemRepository, session=db_session
     )
 
-    token_bundle_repository = providers.Factory(TokenBundleRepository, session=db_session)
+    token_bundle_repository = providers.Factory(
+        TokenBundleRepository, session=db_session
+    )
 
     token_bundle_purchase_repository = providers.Factory(
         TokenBundlePurchaseRepository, session=db_session
@@ -121,6 +131,27 @@ class Container(containers.DeclarativeContainer):
     )
 
     tax_service = providers.Factory(TaxService, tax_repository=tax_repository)
+
+    token_service = providers.Factory(
+        TokenService,
+        balance_repo=token_balance_repository,
+        transaction_repo=token_transaction_repository,
+        purchase_repo=token_bundle_purchase_repository,
+    )
+
+    invoice_service = providers.Factory(
+        InvoiceService,
+        invoice_repository=invoice_repository,
+    )
+
+    refund_service = providers.Factory(
+        RefundService,
+        invoice_repo=invoice_repository,
+        subscription_repo=subscription_repository,
+        token_service=token_service,
+        purchase_repo=token_bundle_purchase_repository,
+        addon_sub_repo=addon_subscription_repository,
+    )
 
     # ==================
     # Password Reset

@@ -71,6 +71,52 @@ make clean        # Clean up
 - **Clean Architecture**: Separation of concerns
 - **Event-Driven**: Domain events with handlers
 
+## Plugin System
+
+Extensible plugin architecture with auto-discovery, DB persistence, and dynamic route registration.
+
+### Creating a Plugin
+
+```python
+# src/plugins/providers/my_plugin.py
+from src.plugins.base import BasePlugin, PluginMetadata
+
+class MyPlugin(BasePlugin):
+    @property
+    def metadata(self) -> PluginMetadata:
+        return PluginMetadata(name="my-plugin", version="1.0.0", description="...")
+
+    def on_enable(self):
+        pass  # Called when plugin is enabled
+
+    def on_disable(self):
+        pass  # Called when plugin is disabled
+
+    def get_blueprint(self):
+        """Optional: return Flask blueprint for API routes."""
+        from src.routes.plugins.my_routes import my_bp
+        return my_bp
+
+    def get_url_prefix(self):
+        return "/api/v1/plugins/my-plugin"
+```
+
+### Plugin Features
+
+- **Auto-discovery**: `PluginManager.discover()` scans `src/plugins/providers/` for `BasePlugin` subclasses
+- **Dynamic routes**: Plugins declare blueprints via `get_blueprint()`, registered by `app.py` in a loop
+- **DB persistence**: Plugin enable/disable state stored in `plugin_config` table, restored on startup
+- **CLI commands**: `flask plugins list|enable|disable|info`
+
+### CLI
+
+```bash
+docker compose exec api flask plugins list       # List all plugins with status
+docker compose exec api flask plugins enable analytics
+docker compose exec api flask plugins disable analytics
+docker compose exec api flask plugins info analytics
+```
+
 ## Tests
 
 ```bash

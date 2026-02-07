@@ -22,6 +22,4 @@ def list_active_bundles():
     bundle_repo = TokenBundleRepository(db.session)
     bundles = bundle_repo.find_active()
 
-    return jsonify({
-        "bundles": [bundle.to_dict() for bundle in bundles]
-    }), 200
+    return jsonify({"bundles": [bundle.to_dict() for bundle in bundles]}), 200

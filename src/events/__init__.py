@@ -1,5 +1,10 @@
 """Event system for plugin communication."""
-from src.events.domain import DomainEvent, EventResult, IEventHandler, DomainEventDispatcher
+from src.events.domain import (
+    DomainEvent,
+    EventResult,
+    IEventHandler,
+    DomainEventDispatcher,
+)
 from src.events.checkout_events import (
     CheckoutRequestedEvent,
     CheckoutCompletedEvent,

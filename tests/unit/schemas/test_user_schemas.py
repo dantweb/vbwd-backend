@@ -20,6 +20,8 @@ class TestUserDetailsSchema:
             first_name="John",
             last_name="Doe",
             phone="+1234567890",
+            company="Acme Corp",
+            tax_number="DE123456789",
             address_line_1="123 Main St",
             address_line_2="Apt 4B",
             city="New York",
@@ -34,6 +36,7 @@ class TestUserDetailsSchema:
 
         assert result["first_name"] == "John"
         assert result["last_name"] == "Doe"
+        assert result["company"] == "Acme Corp"
         assert result["address_line_1"] == "123 Main St"
         assert result["address_line_2"] == "Apt 4B"
         assert result["city"] == "New York"
@@ -48,6 +51,8 @@ class TestUserDetailsSchema:
             first_name=None,
             last_name=None,
             phone=None,
+            company=None,
+            tax_number=None,
             address_line_1=None,
             address_line_2=None,
             city=None,
@@ -65,13 +70,17 @@ class TestUserDetailsSchema:
         assert result["address_line_2"] is None
 
     def test_does_not_have_removed_fields(self):
-        """UserDetailsSchema should not have address, company, vat_number fields."""
+        """UserDetailsSchema should not have legacy address or vat_number fields."""
         schema = UserDetailsSchema()
         field_names = set(schema.fields.keys())
 
         assert "address" not in field_names
-        assert "company" not in field_names
         assert "vat_number" not in field_names
+
+    def test_has_company_field(self):
+        """UserDetailsSchema should include company field."""
+        schema = UserDetailsSchema()
+        assert "company" in schema.fields
 
 
 class TestUserDetailsUpdateSchema:
@@ -109,13 +118,34 @@ class TestUserDetailsUpdateSchema:
         assert "country" in exc_info.value.messages
 
     def test_does_not_have_removed_fields(self):
-        """UserDetailsUpdateSchema should not have address, company, vat_number fields."""
+        """UserDetailsUpdateSchema should not have legacy address or vat_number fields."""
         schema = UserDetailsUpdateSchema()
         field_names = set(schema.fields.keys())
 
         assert "address" not in field_names
-        assert "company" not in field_names
         assert "vat_number" not in field_names
+
+    def test_has_company_field(self):
+        """UserDetailsUpdateSchema should include company field."""
+        schema = UserDetailsUpdateSchema()
+        assert "company" in schema.fields
+
+    def test_has_tax_number_field(self):
+        """UserDetailsUpdateSchema should include tax_number field."""
+        schema = UserDetailsUpdateSchema()
+        assert "tax_number" in schema.fields
+
+    def test_loads_optional_fields(self):
+        """UserDetailsUpdateSchema should accept company and tax_number as optional."""
+        schema = UserDetailsUpdateSchema()
+        data = {
+            "first_name": "Jane",
+            "company": "Acme Corp",
+            "tax_number": "DE123456789",
+        }
+        result = schema.load(data)
+        assert result["company"] == "Acme Corp"
+        assert result["tax_number"] == "DE123456789"
 
 
 class TestUserProfileSchema:
@@ -138,6 +168,8 @@ class TestUserProfileSchema:
             first_name="Test",
             last_name="User",
             phone=None,
+            company=None,
+            tax_number=None,
             address_line_1="123 Main St",
             address_line_2=None,
             city="New York",

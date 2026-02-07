@@ -82,7 +82,9 @@ class TestCheckoutWithAddons:
     @pytest.fixture
     def test_addon_premium(self, admin_headers) -> Optional[Dict]:
         """Create a premium test add-on."""
-        addon = create_test_addon(admin_headers, name="Premium Analytics", price="25.00")
+        addon = create_test_addon(
+            admin_headers, name="Premium Analytics", price="25.00"
+        )
         if not addon:
             pytest.skip("Could not create premium test add-on")
         return addon
@@ -106,7 +108,9 @@ class TestCheckoutWithAddons:
             headers=auth_headers,
             timeout=10,
         )
-        assert response.status_code == 201, f"Got {response.status_code}: {response.text}"
+        assert (
+            response.status_code == 201
+        ), f"Got {response.status_code}: {response.text}"
         data = response.json()
         assert "add_ons" in data
         assert len(data["add_ons"]) == 1
@@ -129,7 +133,9 @@ class TestCheckoutWithAddons:
         data = response.json()
         assert len(data["add_ons"]) == 2
 
-    def test_checkout_addon_appears_in_invoice(self, auth_headers, test_plan, test_addon):
+    def test_checkout_addon_appears_in_invoice(
+        self, auth_headers, test_plan, test_addon
+    ):
         """Add-on appears as invoice line item."""
         response = requests.post(
             f"{BASE_URL}/user/checkout",
@@ -189,7 +195,9 @@ class TestCheckoutWithAddons:
         )
         assert response.status_code == 400
 
-    def test_checkout_addon_has_pending_status(self, auth_headers, test_plan, test_addon):
+    def test_checkout_addon_has_pending_status(
+        self, auth_headers, test_plan, test_addon
+    ):
         """Add-on has pending status until payment."""
         response = requests.post(
             f"{BASE_URL}/user/checkout",

@@ -64,6 +64,7 @@ def create_plan():
     try:
         # Generate slug if not provided
         import re
+
         slug = data.get("slug")
         if not slug:
             slug = re.sub(r"[^a-z0-9]+", "-", data["name"].lower()).strip("-")

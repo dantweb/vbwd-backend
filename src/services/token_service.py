@@ -4,8 +4,13 @@ from typing import List, Optional
 from uuid import UUID, uuid4
 from src.models.user_token_balance import UserTokenBalance, TokenTransaction
 from src.models.enums import TokenTransactionType, PurchaseStatus
-from src.repositories.token_repository import TokenBalanceRepository, TokenTransactionRepository
-from src.repositories.token_bundle_purchase_repository import TokenBundlePurchaseRepository
+from src.repositories.token_repository import (
+    TokenBalanceRepository,
+    TokenTransactionRepository,
+)
+from src.repositories.token_bundle_purchase_repository import (
+    TokenBundlePurchaseRepository,
+)
 
 
 class TokenService:
@@ -149,6 +154,38 @@ class TokenService:
             reference_id=purchase_id,
             description=f"Token bundle purchase: {purchase.token_amount} tokens",
         )
+
+    def refund_tokens(
+        self,
+        user_id: UUID,
+        amount: int,
+        reference_id: Optional[UUID] = None,
+        description: Optional[str] = None,
+    ) -> int:
+        """
+        Debit tokens for a refund, clamping to 0 if balance insufficient.
+
+        Returns actual amount debited.
+        """
+        balance = self._balance_repo.find_by_user_id(user_id)
+        if not balance or balance.balance <= 0:
+            return 0
+
+        actual_debit = min(amount, balance.balance)
+        balance.balance -= actual_debit
+        self._balance_repo.save(balance)
+
+        transaction = TokenTransaction(
+            id=uuid4(),
+            user_id=user_id,
+            amount=-actual_debit,
+            transaction_type=TokenTransactionType.REFUND,
+            reference_id=reference_id,
+            description=description,
+        )
+        self._transaction_repo.create(transaction)
+
+        return actual_debit
 
     def get_transactions(
         self, user_id: UUID, limit: int = 50, offset: int = 0

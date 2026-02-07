@@ -74,7 +74,9 @@ class TestInvoiceTotalCalculation:
     @pytest.fixture
     def test_token_bundle(self, admin_headers) -> Optional[Dict]:
         """Create a test token bundle ($10.00)."""
-        bundle = create_test_token_bundle(admin_headers, token_amount=1000, price="10.00")
+        bundle = create_test_token_bundle(
+            admin_headers, token_amount=1000, price="10.00"
+        )
         if not bundle:
             pytest.skip("Could not create test token bundle")
         return bundle
@@ -95,7 +97,9 @@ class TestInvoiceTotalCalculation:
             headers=auth_headers,
             timeout=10,
         )
-        assert response.status_code == 201, f"Got {response.status_code}: {response.text}"
+        assert (
+            response.status_code == 201
+        ), f"Got {response.status_code}: {response.text}"
         data = response.json()
 
         # Total should equal the plan price (29.00)
@@ -103,7 +107,9 @@ class TestInvoiceTotalCalculation:
         plan_price = Decimal("29.00")  # From create_test_plan fixture
         assert invoice_total == plan_price
 
-    def test_invoice_total_with_bundle(self, auth_headers, test_plan, test_token_bundle):
+    def test_invoice_total_with_bundle(
+        self, auth_headers, test_plan, test_token_bundle
+    ):
         """Invoice total includes bundle price."""
         response = requests.post(
             f"{BASE_URL}/user/checkout",

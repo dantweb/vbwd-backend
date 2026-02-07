@@ -48,4 +48,6 @@ class InvoiceLineItem(BaseModel):
         }
 
     def __repr__(self) -> str:
-        return f"<InvoiceLineItem(type={self.item_type.value}, amount={self.total_price})>"
+        return (
+            f"<InvoiceLineItem(type={self.item_type.value}, amount={self.total_price})>"
+        )

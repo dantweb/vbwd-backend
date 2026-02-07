@@ -70,10 +70,7 @@ def payment_webhook():
             data = result.data
             if isinstance(data, list) and len(data) == 1:
                 data = data[0]
-            return jsonify({
-                "status": "success",
-                **data
-            }), 200
+            return jsonify({"status": "success", **data}), 200
         else:
             return jsonify({"error": result.error}), 400
 
@@ -89,7 +86,4 @@ def payment_test_webhook():
     Returns:
         200: {"status": "ok", "message": "Webhook endpoint is reachable"}
     """
-    return jsonify({
-        "status": "ok",
-        "message": "Webhook endpoint is reachable"
-    }), 200
+    return jsonify({"status": "ok", "message": "Webhook endpoint is reachable"}), 200

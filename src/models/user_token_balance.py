@@ -62,7 +62,9 @@ class TokenTransaction(BaseModel):
     description = db.Column(db.String(255), nullable=True)
 
     # Relationship
-    user = db.relationship("User", backref=db.backref("token_transactions", lazy="dynamic"))
+    user = db.relationship(
+        "User", backref=db.backref("token_transactions", lazy="dynamic")
+    )
 
     def to_dict(self) -> dict:
         """Convert to dictionary."""
@@ -70,7 +72,9 @@ class TokenTransaction(BaseModel):
             "id": str(self.id),
             "user_id": str(self.user_id),
             "amount": self.amount,
-            "transaction_type": self.transaction_type.value if self.transaction_type else None,
+            "transaction_type": self.transaction_type.value
+            if self.transaction_type
+            else None,
             "reference_id": str(self.reference_id) if self.reference_id else None,
             "description": self.description,
             "created_at": self.created_at.isoformat() if self.created_at else None,

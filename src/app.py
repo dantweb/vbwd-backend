@@ -17,6 +17,7 @@ def _register_event_handlers(app: Flask, container) -> None:
     from src.handlers.password_reset_handler import PasswordResetHandler
     from src.handlers.checkout_handler import CheckoutHandler
     from src.handlers.payment_handler import PaymentCapturedHandler
+    from src.handlers.refund_handler import PaymentRefundedHandler
 
     try:
         dispatcher = container.event_dispatcher()
@@ -55,6 +56,10 @@ def _register_event_handlers(app: Flask, container) -> None:
 
         # Register payment handler
         dispatcher.register("payment.captured", payment_handler)
+
+        # Create and register refund handler
+        refund_handler = PaymentRefundedHandler(container)
+        dispatcher.register("payment.refunded", refund_handler)
 
         logger.info("Event handlers registered successfully")
 
@@ -110,12 +115,14 @@ def create_app(config: Optional[Dict[str, Any]] = None) -> Flask:
         admin_token_bundles_bp,
         admin_addons_bp,
         admin_settings_bp,
+        admin_payment_methods_bp,
+        admin_countries_bp,
     )
     from src.routes.config import config_bp
     from src.routes.addons import addons_bp
+    from src.routes.settings import settings_bp
     from src.routes.token_bundles import token_bundles_bp
     from src.routes.webhooks import webhooks_bp
-
     csrf.exempt(auth_bp)
     csrf.exempt(user_bp)
     csrf.exempt(tarif_plans_bp)
@@ -131,9 +138,12 @@ def create_app(config: Optional[Dict[str, Any]] = None) -> Flask:
     csrf.exempt(admin_token_bundles_bp)
     csrf.exempt(admin_addons_bp)
     csrf.exempt(admin_settings_bp)
+    csrf.exempt(admin_payment_methods_bp)
+    csrf.exempt(admin_countries_bp)
     csrf.exempt(addons_bp)
     csrf.exempt(token_bundles_bp)
     csrf.exempt(config_bp)
+    csrf.exempt(settings_bp)
     csrf.exempt(webhooks_bp)
 
     # Initialize DI container
@@ -159,6 +169,27 @@ def create_app(config: Optional[Dict[str, Any]] = None) -> Flask:
     with app.app_context():
         _register_event_handlers(app, container)
 
+    # Initialize plugin system
+    from src.plugins.manager import PluginManager
+    from src.repositories.plugin_config_repository import PluginConfigRepository
+
+    config_repo = PluginConfigRepository(db.session)
+    plugin_manager = PluginManager(config_repo=config_repo)
+    app.plugin_manager = plugin_manager
+
+    # Auto-discover plugins from providers package
+    plugin_manager.discover("src.plugins.providers")
+
+    # Load persisted state from DB; default-enable analytics on first run
+    plugin_manager.load_persisted_state()
+    if not plugin_manager.get_enabled_plugins():
+        plugin_manager.enable_plugin("analytics")
+
+    # Register plugin blueprints dynamically
+    for bp, prefix in plugin_manager.get_plugin_blueprints():
+        csrf.exempt(bp)
+        app.register_blueprint(bp, url_prefix=prefix)
+
     # Register blueprints (already imported above for CSRF exemption)
     app.register_blueprint(auth_bp)
     app.register_blueprint(user_bp)
@@ -175,9 +206,12 @@ def create_app(config: Optional[Dict[str, Any]] = None) -> Flask:
     app.register_blueprint(admin_token_bundles_bp)
     app.register_blueprint(admin_addons_bp)
     app.register_blueprint(admin_settings_bp)
+    app.register_blueprint(admin_payment_methods_bp)
+    app.register_blueprint(admin_countries_bp)
     app.register_blueprint(addons_bp)
     app.register_blueprint(token_bundles_bp)
     app.register_blueprint(config_bp)
+    app.register_blueprint(settings_bp)
     app.register_blueprint(webhooks_bp)
 
     # Health check endpoint
@@ -240,8 +274,12 @@ def create_app(config: Optional[Dict[str, Any]] = None) -> Flask:
 
     # Register CLI commands
     from src.cli.test_data import seed_test_data_command, cleanup_test_data_command
+    from src.cli.reset_demo import reset_demo_command
+    from src.cli.plugins import plugins_cli
 
     app.cli.add_command(seed_test_data_command)
     app.cli.add_command(cleanup_test_data_command)
+    app.cli.add_command(reset_demo_command)
+    app.cli.add_command(plugins_cli)
 
     return app

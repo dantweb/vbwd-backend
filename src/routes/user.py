@@ -219,20 +219,25 @@ def checkout():
     user_id = g.user_id
     data = request.get_json() or {}
 
-    # Validate required fields
+    # Validate: at least one item required
     plan_id = data.get("plan_id")
-    if not plan_id:
-        return jsonify({"error": "plan_id is required"}), 400
+    token_bundle_ids_raw = data.get("token_bundle_ids", [])
+    add_on_ids_raw = data.get("add_on_ids", [])
 
-    # Parse UUIDs
-    try:
-        plan_uuid = UUID(plan_id) if isinstance(plan_id, str) else plan_id
-    except (ValueError, TypeError):
-        return jsonify({"error": "Invalid plan_id format"}), 400
+    if not plan_id and not token_bundle_ids_raw and not add_on_ids_raw:
+        return jsonify({"error": "At least one item required (plan_id, token_bundle_ids, or add_on_ids)"}), 400
+
+    # Parse plan UUID (optional now)
+    plan_uuid = None
+    if plan_id:
+        try:
+            plan_uuid = UUID(plan_id) if isinstance(plan_id, str) else plan_id
+        except (ValueError, TypeError):
+            return jsonify({"error": "Invalid plan_id format"}), 400
 
     # Parse optional token bundle IDs
     token_bundle_ids = []
-    for bundle_id in data.get("token_bundle_ids", []):
+    for bundle_id in token_bundle_ids_raw:
         try:
             token_bundle_ids.append(
                 UUID(bundle_id) if isinstance(bundle_id, str) else bundle_id
@@ -242,16 +247,15 @@ def checkout():
 
     # Parse optional add-on IDs
     add_on_ids = []
-    for addon_id in data.get("add_on_ids", []):
+    for addon_id in add_on_ids_raw:
         try:
-            add_on_ids.append(
-                UUID(addon_id) if isinstance(addon_id, str) else addon_id
-            )
+            add_on_ids.append(UUID(addon_id) if isinstance(addon_id, str) else addon_id)
         except (ValueError, TypeError):
             return jsonify({"error": f"Invalid add_on_id: {addon_id}"}), 400
 
-    # Get currency
+    # Get currency and payment method
     currency = data.get("currency", "USD")
+    payment_method_code = data.get("payment_method_code")
 
     # Create checkout event
     event = CheckoutRequestedEvent(
@@ -260,6 +264,7 @@ def checkout():
         token_bundle_ids=token_bundle_ids,
         add_on_ids=add_on_ids,
         currency=currency,
+        payment_method_code=payment_method_code,
     )
 
     # Dispatch event
@@ -304,9 +309,14 @@ def get_token_balance():
         UUID(user_id) if isinstance(user_id, str) else user_id
     )
 
-    return jsonify({
-        "balance": balance.balance if balance else 0,
-    }), 200
+    return (
+        jsonify(
+            {
+                "balance": balance.balance if balance else 0,
+            }
+        ),
+        200,
+    )
 
 
 @user_bp.route("/tokens/transactions", methods=["GET"])
@@ -337,9 +347,14 @@ def get_token_transactions():
         offset=offset,
     )
 
-    return jsonify({
-        "transactions": [t.to_dict() for t in transactions],
-    }), 200
+    return (
+        jsonify(
+            {
+                "transactions": [t.to_dict() for t in transactions],
+            }
+        ),
+        200,
+    )
 
 
 @user_bp.route("/invoices/<invoice_id>/pay", methods=["POST"])
@@ -397,7 +412,12 @@ def pay_invoice(invoice_id):
     # Get updated invoice
     updated_invoice = invoice_service.get_by_id(invoice_id)
 
-    return jsonify({
-        "invoice": updated_invoice.to_dict() if updated_invoice else {},
-        "message": "Payment successful"
-    }), 200
+    return (
+        jsonify(
+            {
+                "invoice": updated_invoice.to_dict() if updated_invoice else {},
+                "message": "Payment successful",
+            }
+        ),
+        200,
+    )

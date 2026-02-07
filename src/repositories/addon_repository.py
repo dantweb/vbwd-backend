@@ -13,11 +13,7 @@ class AddOnRepository(BaseRepository[AddOn]):
 
     def find_by_slug(self, slug: str) -> Optional[AddOn]:
         """Find add-on by slug."""
-        return (
-            self._session.query(AddOn)
-            .filter(AddOn.slug == slug)
-            .first()
-        )
+        return self._session.query(AddOn).filter(AddOn.slug == slug).first()
 
     def find_active(self) -> List[AddOn]:
         """Find all active add-ons ordered by sort_order."""
@@ -79,8 +75,4 @@ class AddOnRepository(BaseRepository[AddOn]):
 
     def count_active(self) -> int:
         """Count active add-ons."""
-        return (
-            self._session.query(AddOn)
-            .filter(AddOn.is_active.is_(True))
-            .count()
-        )
+        return self._session.query(AddOn).filter(AddOn.is_active.is_(True)).count()

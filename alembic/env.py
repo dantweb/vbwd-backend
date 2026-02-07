@@ -9,7 +9,7 @@ from sqlalchemy import pool
 from alembic import context
 
 # Add parent directory to path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 # Import config and models
 from src.config import get_database_url
@@ -17,8 +17,16 @@ from src.extensions import db
 
 # Import all models so Alembic can detect them
 from src.models import (
-    User, UserDetails, UserCase, Currency, Tax, TaxRate,
-    Price, TarifPlan, Subscription, UserInvoice
+    User,
+    UserDetails,
+    UserCase,
+    Currency,
+    Tax,
+    TaxRate,
+    Price,
+    TarifPlan,
+    Subscription,
+    UserInvoice,
 )
 
 # this is the Alembic Config object
@@ -29,7 +37,7 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 # Set SQLAlchemy URL from environment
-config.set_main_option('sqlalchemy.url', get_database_url())
+config.set_main_option("sqlalchemy.url", get_database_url())
 
 # Add your model's MetaData object here for 'autogenerate' support
 target_metadata = db.Model.metadata
@@ -78,10 +86,7 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection,
-            target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()

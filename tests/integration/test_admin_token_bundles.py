@@ -93,7 +93,7 @@ class TestAdminTokenBundles:
             "token_amount": 1000,
             "price": "10.00",
             "is_active": True,
-            "sort_order": 0
+            "sort_order": 0,
         }
 
     @pytest.fixture
@@ -103,7 +103,7 @@ class TestAdminTokenBundles:
             f"{self.BASE_URL}/admin/token-bundles/",
             json=test_bundle_data,
             headers=admin_headers,
-            timeout=10
+            timeout=10,
         )
         assert response.status_code == 201, f"Failed to create bundle: {response.text}"
         return response.json()["bundle"]
@@ -117,10 +117,7 @@ class TestAdminTokenBundles:
         Test: GET /api/v1/admin/token-bundles without auth
         Expected: 401 Unauthorized
         """
-        response = requests.get(
-            f"{self.BASE_URL}/admin/token-bundles/",
-            timeout=5
-        )
+        response = requests.get(f"{self.BASE_URL}/admin/token-bundles/", timeout=5)
         assert response.status_code == 401
 
     def test_list_requires_admin_role(self, user_headers):
@@ -129,9 +126,7 @@ class TestAdminTokenBundles:
         Expected: 403 Forbidden
         """
         response = requests.get(
-            f"{self.BASE_URL}/admin/token-bundles/",
-            headers=user_headers,
-            timeout=5
+            f"{self.BASE_URL}/admin/token-bundles/", headers=user_headers, timeout=5
         )
         assert response.status_code == 403
 
@@ -145,9 +140,7 @@ class TestAdminTokenBundles:
         Expected: 200 with paginated list
         """
         response = requests.get(
-            f"{self.BASE_URL}/admin/token-bundles/",
-            headers=admin_headers,
-            timeout=5
+            f"{self.BASE_URL}/admin/token-bundles/", headers=admin_headers, timeout=5
         )
         assert response.status_code == 200
         data = response.json()
@@ -165,7 +158,7 @@ class TestAdminTokenBundles:
         response = requests.get(
             f"{self.BASE_URL}/admin/token-bundles/?page=1&per_page=5",
             headers=admin_headers,
-            timeout=5
+            timeout=5,
         )
         assert response.status_code == 200
         data = response.json()
@@ -182,14 +175,14 @@ class TestAdminTokenBundles:
         requests.post(
             f"{self.BASE_URL}/admin/token-bundles/{created_bundle['id']}/deactivate",
             headers=admin_headers,
-            timeout=5
+            timeout=5,
         )
 
         # List with include_inactive=true
         response = requests.get(
             f"{self.BASE_URL}/admin/token-bundles/?include_inactive=true",
             headers=admin_headers,
-            timeout=5
+            timeout=5,
         )
         assert response.status_code == 200
         data = response.json()
@@ -210,7 +203,7 @@ class TestAdminTokenBundles:
             f"{self.BASE_URL}/admin/token-bundles/",
             json=test_bundle_data,
             headers=admin_headers,
-            timeout=10
+            timeout=10,
         )
         assert response.status_code == 201
         data = response.json()
@@ -228,7 +221,7 @@ class TestAdminTokenBundles:
             f"{self.BASE_URL}/admin/token-bundles/",
             json={"token_amount": 100, "price": "10.00"},
             headers=admin_headers,
-            timeout=10
+            timeout=10,
         )
         assert response.status_code == 400
         assert "name" in response.json()["error"].lower()
@@ -242,7 +235,7 @@ class TestAdminTokenBundles:
             f"{self.BASE_URL}/admin/token-bundles/",
             json={"name": "Test", "price": "10.00"},
             headers=admin_headers,
-            timeout=10
+            timeout=10,
         )
         assert response.status_code == 400
         assert "token" in response.json()["error"].lower()
@@ -256,7 +249,7 @@ class TestAdminTokenBundles:
             f"{self.BASE_URL}/admin/token-bundles/",
             json={"name": "Test", "token_amount": 100},
             headers=admin_headers,
-            timeout=10
+            timeout=10,
         )
         assert response.status_code == 400
         assert "price" in response.json()["error"].lower()
@@ -270,7 +263,7 @@ class TestAdminTokenBundles:
             f"{self.BASE_URL}/admin/token-bundles/",
             json={"name": "Test", "token_amount": 0, "price": "10.00"},
             headers=admin_headers,
-            timeout=10
+            timeout=10,
         )
         assert response.status_code == 400
 
@@ -283,7 +276,7 @@ class TestAdminTokenBundles:
             f"{self.BASE_URL}/admin/token-bundles/",
             json={"name": "Test", "token_amount": 100, "price": "-10.00"},
             headers=admin_headers,
-            timeout=10
+            timeout=10,
         )
         assert response.status_code == 400
 
@@ -299,7 +292,7 @@ class TestAdminTokenBundles:
         response = requests.get(
             f"{self.BASE_URL}/admin/token-bundles/{created_bundle['id']}",
             headers=admin_headers,
-            timeout=5
+            timeout=5,
         )
         assert response.status_code == 200
         data = response.json()
@@ -314,7 +307,7 @@ class TestAdminTokenBundles:
         response = requests.get(
             f"{self.BASE_URL}/admin/token-bundles/{uuid4()}",
             headers=admin_headers,
-            timeout=5
+            timeout=5,
         )
         assert response.status_code == 404
 
@@ -331,7 +324,7 @@ class TestAdminTokenBundles:
             f"{self.BASE_URL}/admin/token-bundles/{created_bundle['id']}",
             json={"name": "Updated Bundle Name", "token_amount": 2000},
             headers=admin_headers,
-            timeout=10
+            timeout=10,
         )
         assert response.status_code == 200
         data = response.json()
@@ -347,7 +340,7 @@ class TestAdminTokenBundles:
             f"{self.BASE_URL}/admin/token-bundles/{uuid4()}",
             json={"name": "Test"},
             headers=admin_headers,
-            timeout=10
+            timeout=10,
         )
         assert response.status_code == 404
 
@@ -360,7 +353,7 @@ class TestAdminTokenBundles:
             f"{self.BASE_URL}/admin/token-bundles/{created_bundle['id']}",
             json={"name": ""},
             headers=admin_headers,
-            timeout=10
+            timeout=10,
         )
         assert response.status_code == 400
 
@@ -376,7 +369,7 @@ class TestAdminTokenBundles:
         response = requests.post(
             f"{self.BASE_URL}/admin/token-bundles/{created_bundle['id']}/deactivate",
             headers=admin_headers,
-            timeout=5
+            timeout=5,
         )
         assert response.status_code == 200
         data = response.json()
@@ -391,14 +384,14 @@ class TestAdminTokenBundles:
         requests.post(
             f"{self.BASE_URL}/admin/token-bundles/{created_bundle['id']}/deactivate",
             headers=admin_headers,
-            timeout=5
+            timeout=5,
         )
 
         # Then activate
         response = requests.post(
             f"{self.BASE_URL}/admin/token-bundles/{created_bundle['id']}/activate",
             headers=admin_headers,
-            timeout=5
+            timeout=5,
         )
         assert response.status_code == 200
         data = response.json()
@@ -416,7 +409,7 @@ class TestAdminTokenBundles:
         response = requests.delete(
             f"{self.BASE_URL}/admin/token-bundles/{created_bundle['id']}",
             headers=admin_headers,
-            timeout=5
+            timeout=5,
         )
         assert response.status_code == 200
 
@@ -424,7 +417,7 @@ class TestAdminTokenBundles:
         get_response = requests.get(
             f"{self.BASE_URL}/admin/token-bundles/{created_bundle['id']}",
             headers=admin_headers,
-            timeout=5
+            timeout=5,
         )
         assert get_response.status_code == 404
 
@@ -436,6 +429,6 @@ class TestAdminTokenBundles:
         response = requests.delete(
             f"{self.BASE_URL}/admin/token-bundles/{uuid4()}",
             headers=admin_headers,
-            timeout=5
+            timeout=5,
         )
         assert response.status_code == 404

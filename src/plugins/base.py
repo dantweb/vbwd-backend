@@ -1,8 +1,11 @@
 """Plugin base classes and interfaces."""
 from abc import ABC, abstractmethod
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, TYPE_CHECKING
 from enum import Enum
 from dataclasses import dataclass
+
+if TYPE_CHECKING:
+    from flask import Blueprint
 
 
 class PluginStatus(Enum):
@@ -85,6 +88,14 @@ class BasePlugin(ABC):
     def on_disable(self) -> None:
         """Hook called when plugin is disabled."""
         pass
+
+    def get_blueprint(self) -> Optional["Blueprint"]:
+        """Return Flask blueprint for this plugin's routes. None if no routes."""
+        return None
+
+    def get_url_prefix(self) -> Optional[str]:
+        """Return URL prefix for this plugin's blueprint."""
+        return None
 
     def get_config(self, key: str, default: Any = None) -> Any:
         """Get configuration value."""

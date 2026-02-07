@@ -74,7 +74,9 @@ def get_active_subscription():
                 "name": plan.name,
                 "slug": plan.slug,
                 "price": float(plan.price) if plan.price else 0,
-                "billing_period": plan.billing_period.value if plan.billing_period else "monthly",
+                "billing_period": plan.billing_period.value
+                if plan.billing_period
+                else "monthly",
             }
 
     # Add pending plan details if available

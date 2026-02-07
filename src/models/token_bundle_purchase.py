@@ -77,7 +77,9 @@ class TokenBundlePurchase(BaseModel):
             "token_amount": self.token_amount,
             "price": str(self.price),
             "created_at": self.created_at.isoformat() if self.created_at else None,
-            "completed_at": self.completed_at.isoformat() if self.completed_at else None,
+            "completed_at": self.completed_at.isoformat()
+            if self.completed_at
+            else None,
         }
 
     def __repr__(self) -> str:

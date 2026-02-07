@@ -17,6 +17,8 @@ from src.models.token_bundle_purchase import TokenBundlePurchase
 from src.models.addon import AddOn
 from src.models.addon_subscription import AddOnSubscription
 from src.models.user_token_balance import UserTokenBalance, TokenTransaction
+from src.models.payment_method import PaymentMethod, PaymentMethodTranslation
+from src.models.country import Country
 from src.models.enums import (
     UserStatus,
     UserRole,
@@ -52,6 +54,9 @@ __all__ = [
     "AddOnSubscription",
     "UserTokenBalance",
     "TokenTransaction",
+    "PaymentMethod",
+    "PaymentMethodTranslation",
+    "Country",
     # Association tables
     "role_permissions",
     "user_roles",

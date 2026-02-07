@@ -74,44 +74,49 @@ class CheckoutHandler(IEventHandler):
             # Get fresh repositories for current request session
             repos = self._get_repos()
 
-            # 1. Validate plan exists and is active
-            plan = repos["tarif_plan"].find_by_id(event.plan_id)
-            if not plan:
-                return EventResult.error_result("Plan not found")
-            if not plan.is_active:
-                return EventResult.error_result("Plan is not active")
-
-            # Get plan price
-            if plan.price_obj:
-                plan_price = plan.price_obj.price_decimal
-            elif plan.price:
-                plan_price = plan.price
-            else:
-                plan_price = Decimal(str(plan.price_float))
-
             line_items_data: List[Dict[str, Any]] = []
             total_amount = Decimal("0.00")
+            subscription = None
+            plan = None
 
-            # 2. Create PENDING subscription
-            subscription = Subscription(
-                id=uuid4(),
-                user_id=event.user_id,
-                tarif_plan_id=event.plan_id,
-                status=SubscriptionStatus.PENDING,
-            )
-            repos["subscription"].save(subscription)
+            # 1. If plan_id provided, validate plan and create subscription
+            if event.plan_id:
+                plan = repos["tarif_plan"].find_by_id(event.plan_id)
+                if not plan:
+                    return EventResult.error_result("Plan not found")
+                if not plan.is_active:
+                    return EventResult.error_result("Plan is not active")
 
-            # Add subscription line item
-            line_items_data.append({
-                "type": LineItemType.SUBSCRIPTION,
-                "item_id": subscription.id,
-                "description": plan.name,
-                "unit_price": plan_price,
-                "total_price": plan_price,
-            })
-            total_amount += plan_price
+                # Get plan price
+                if plan.price_obj:
+                    plan_price = plan.price_obj.price_decimal
+                elif plan.price:
+                    plan_price = plan.price
+                else:
+                    plan_price = Decimal(str(plan.price_float))
 
-            # 3. Create PENDING token bundle purchases
+                # Create PENDING subscription
+                subscription = Subscription(
+                    id=uuid4(),
+                    user_id=event.user_id,
+                    tarif_plan_id=event.plan_id,
+                    status=SubscriptionStatus.PENDING,
+                )
+                repos["subscription"].save(subscription)
+
+                # Add subscription line item
+                line_items_data.append(
+                    {
+                        "type": LineItemType.SUBSCRIPTION,
+                        "item_id": subscription.id,
+                        "description": plan.name,
+                        "unit_price": plan_price,
+                        "total_price": plan_price,
+                    }
+                )
+                total_amount += plan_price
+
+            # 2. Create PENDING token bundle purchases
             bundle_purchases: List[TokenBundlePurchase] = []
             for bundle_id in event.token_bundle_ids:
                 bundle = repos["token_bundle"].find_by_id(bundle_id)
@@ -137,16 +142,18 @@ class CheckoutHandler(IEventHandler):
                 bundle_purchases.append(purchase)
 
                 # Add bundle line item
-                line_items_data.append({
-                    "type": LineItemType.TOKEN_BUNDLE,
-                    "item_id": purchase.id,
-                    "description": bundle.name,
-                    "unit_price": bundle.price,
-                    "total_price": bundle.price,
-                })
+                line_items_data.append(
+                    {
+                        "type": LineItemType.TOKEN_BUNDLE,
+                        "item_id": purchase.id,
+                        "description": bundle.name,
+                        "unit_price": bundle.price,
+                        "total_price": bundle.price,
+                    }
+                )
                 total_amount += bundle.price
 
-            # 4. Create PENDING add-on subscriptions
+            # 3. Create PENDING add-on subscriptions
             addon_subscriptions: List[AddOnSubscription] = []
             for addon_id in event.add_on_ids:
                 addon = repos["addon"].find_by_id(addon_id)
@@ -161,38 +168,41 @@ class CheckoutHandler(IEventHandler):
                     id=uuid4(),
                     user_id=event.user_id,
                     addon_id=addon_id,
-                    subscription_id=subscription.id,
+                    subscription_id=subscription.id if subscription else None,
                     status=SubscriptionStatus.PENDING,
                 )
                 repos["addon_subscription"].create(addon_sub)
                 addon_subscriptions.append(addon_sub)
 
                 # Add add-on line item
-                line_items_data.append({
-                    "type": LineItemType.ADD_ON,
-                    "item_id": addon_sub.id,
-                    "description": addon.name,
-                    "unit_price": addon.price,
-                    "total_price": addon.price,
-                })
+                line_items_data.append(
+                    {
+                        "type": LineItemType.ADD_ON,
+                        "item_id": addon_sub.id,
+                        "description": addon.name,
+                        "unit_price": addon.price,
+                        "total_price": addon.price,
+                    }
+                )
                 total_amount += addon.price
 
-            # 5. Create invoice with all line items
+            # 4. Create invoice with all line items
             invoice = UserInvoice(
                 id=uuid4(),
                 user_id=event.user_id,
                 tarif_plan_id=event.plan_id,
-                subscription_id=subscription.id,
+                subscription_id=subscription.id if subscription else None,
                 invoice_number=UserInvoice.generate_invoice_number(),
                 amount=total_amount,
                 subtotal=total_amount,
                 total_amount=total_amount,
                 currency=event.currency,
                 status=InvoiceStatus.PENDING,
+                payment_method=event.payment_method_code,
             )
             repos["invoice"].save(invoice)
 
-            # 6. Create line items
+            # 5. Create line items
             for item_data in line_items_data:
                 line_item = InvoiceLineItem(
                     id=uuid4(),
@@ -206,7 +216,7 @@ class CheckoutHandler(IEventHandler):
                 )
                 repos["invoice_line_item"].create(line_item)
 
-            # 7. Update purchases and addon subscriptions with invoice_id
+            # 6. Update purchases and addon subscriptions with invoice_id
             for purchase in bundle_purchases:
                 purchase.invoice_id = invoice.id
                 repos["token_bundle_purchase"].save(purchase)
@@ -218,14 +228,18 @@ class CheckoutHandler(IEventHandler):
             # Reload invoice to get line items
             invoice = repos["invoice"].find_by_id(invoice.id)
 
-            # Return success with all created items
-            return EventResult.success_result({
-                "subscription": self._subscription_to_dict(subscription, plan),
+            # Build response
+            result_data: Dict[str, Any] = {
                 "invoice": invoice.to_dict(),
                 "token_bundles": [p.to_dict() for p in bundle_purchases],
                 "add_ons": [a.to_dict() for a in addon_subscriptions],
                 "message": "Checkout created. Awaiting payment.",
-            })
+            }
+
+            if subscription and plan:
+                result_data["subscription"] = self._subscription_to_dict(subscription, plan)
+
+            return EventResult.success_result(result_data)
 
         except Exception as e:
             return EventResult.error_result(str(e))

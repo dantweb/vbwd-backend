@@ -19,6 +19,7 @@ class CheckoutRequestedEvent(DomainEvent):
     token_bundle_ids: List[UUID] = field(default_factory=list)
     add_on_ids: List[UUID] = field(default_factory=list)
     currency: str = "USD"
+    payment_method_code: str = None
 
     def __post_init__(self):
         self.name = "checkout.requested"

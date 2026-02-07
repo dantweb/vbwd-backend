@@ -67,14 +67,14 @@ class PaymentCapturedHandler(IEventHandler):
             if not invoice:
                 return EventResult.error_result(f"Invoice {event.invoice_id} not found")
 
-            if invoice.status.value == "paid":
-                return EventResult.error_result("Invoice already paid")
-
-            # 2. Mark invoice as paid
-            invoice.status = invoice.status.__class__("paid")
-            invoice.payment_ref = event.payment_reference
-            invoice.paid_at = datetime.utcnow()
-            repos["invoice"].save(invoice)
+            # Invoice may already be marked paid by the route/service that
+            # dispatched this event — that's expected. Only update payment
+            # metadata if it hasn't been set yet.
+            if invoice.status.value != "paid":
+                invoice.status = invoice.status.__class__("paid")
+                invoice.payment_ref = event.payment_reference
+                invoice.paid_at = datetime.utcnow()
+                repos["invoice"].save(invoice)
 
             items_activated = {
                 "subscription": None,
@@ -86,25 +86,45 @@ class PaymentCapturedHandler(IEventHandler):
             # 3. Process each line item
             for line_item in invoice.line_items:
                 if line_item.item_type == LineItemType.SUBSCRIPTION:
-                    # Activate subscription
+                    # Activate subscription (cancel any existing active one first)
                     subscription = repos["subscription"].find_by_id(line_item.item_id)
-                    if subscription and subscription.status == SubscriptionStatus.PENDING:
+                    if (
+                        subscription
+                        and subscription.status == SubscriptionStatus.PENDING
+                    ):
+                        # Cancel previous active subscription for this user
+                        prev = repos["subscription"].find_active_by_user(
+                            invoice.user_id
+                        )
+                        if prev and str(prev.id) != str(subscription.id):
+                            prev.status = SubscriptionStatus.CANCELLED
+                            prev.cancelled_at = datetime.utcnow()
+                            repos["subscription"].save(prev)
+
                         subscription.status = SubscriptionStatus.ACTIVE
                         subscription.starts_at = datetime.utcnow()
                         # Calculate expiration based on plan
                         if subscription.tarif_plan:
-                            from src.services.subscription_service import SubscriptionService
+                            from src.services.subscription_service import (
+                                SubscriptionService,
+                            )
+
                             period_days = SubscriptionService.PERIOD_DAYS.get(
                                 subscription.tarif_plan.billing_period, 30
                             )
                             from datetime import timedelta
-                            subscription.expires_at = datetime.utcnow() + timedelta(days=period_days)
+
+                            subscription.expires_at = datetime.utcnow() + timedelta(
+                                days=period_days
+                            )
                         repos["subscription"].save(subscription)
                         items_activated["subscription"] = str(subscription.id)
 
                 elif line_item.item_type == LineItemType.TOKEN_BUNDLE:
                     # Complete token bundle purchase and credit tokens
-                    purchase = repos["token_bundle_purchase"].find_by_id(line_item.item_id)
+                    purchase = repos["token_bundle_purchase"].find_by_id(
+                        line_item.item_id
+                    )
                     if purchase and purchase.status == PurchaseStatus.PENDING:
                         # Mark purchase as completed
                         purchase.status = PurchaseStatus.COMPLETED
@@ -113,7 +133,10 @@ class PaymentCapturedHandler(IEventHandler):
                         repos["token_bundle_purchase"].save(purchase)
 
                         # Credit tokens to user balance
-                        from src.models.user_token_balance import UserTokenBalance, TokenTransaction
+                        from src.models.user_token_balance import (
+                            UserTokenBalance,
+                            TokenTransaction,
+                        )
                         from src.models.enums import TokenTransactionType
                         from uuid import uuid4
 
@@ -143,19 +166,23 @@ class PaymentCapturedHandler(IEventHandler):
 
                 elif line_item.item_type == LineItemType.ADD_ON:
                     # Activate add-on subscription
-                    addon_sub = repos["addon_subscription"].find_by_id(line_item.item_id)
+                    addon_sub = repos["addon_subscription"].find_by_id(
+                        line_item.item_id
+                    )
                     if addon_sub and addon_sub.status == SubscriptionStatus.PENDING:
                         addon_sub.status = SubscriptionStatus.ACTIVE
                         addon_sub.activated_at = datetime.utcnow()
                         repos["addon_subscription"].save(addon_sub)
                         items_activated["add_ons"].append(str(addon_sub.id))
 
-            return EventResult.success_result({
-                "invoice_id": str(invoice.id),
-                "status": "paid",
-                "payment_reference": event.payment_reference,
-                "items_activated": items_activated,
-            })
+            return EventResult.success_result(
+                {
+                    "invoice_id": str(invoice.id),
+                    "status": "paid",
+                    "payment_reference": event.payment_reference,
+                    "items_activated": items_activated,
+                }
+            )
 
         except Exception as e:
             return EventResult.error_result(str(e))

@@ -3,9 +3,7 @@ from flask import Blueprint, jsonify
 from src.repositories.addon_repository import AddOnRepository
 from src.extensions import db
 
-addons_bp = Blueprint(
-    "addons", __name__, url_prefix="/api/v1/addons"
-)
+addons_bp = Blueprint("addons", __name__, url_prefix="/api/v1/addons")
 
 
 @addons_bp.route("/", methods=["GET"])
@@ -22,6 +20,4 @@ def list_active_addons():
     addon_repo = AddOnRepository(db.session)
     addons = addon_repo.find_active()
 
-    return jsonify({
-        "addons": [addon.to_dict() for addon in addons]
-    }), 200
+    return jsonify({"addons": [addon.to_dict() for addon in addons]}), 200

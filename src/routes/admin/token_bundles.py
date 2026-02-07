@@ -40,13 +40,18 @@ def list_token_bundles():
         include_inactive=include_inactive,
     )
 
-    return jsonify({
-        "items": [bundle.to_dict() for bundle in bundles],
-        "total": total,
-        "page": page,
-        "per_page": per_page,
-        "pages": (total + per_page - 1) // per_page,
-    }), 200
+    return (
+        jsonify(
+            {
+                "items": [bundle.to_dict() for bundle in bundles],
+                "total": total,
+                "page": page,
+                "per_page": per_page,
+                "pages": (total + per_page - 1) // per_page,
+            }
+        ),
+        200,
+    )
 
 
 @admin_token_bundles_bp.route("/", methods=["POST"])
@@ -105,10 +110,15 @@ def create_token_bundle():
         bundle_repo = TokenBundleRepository(db.session)
         saved_bundle = bundle_repo.save(bundle)
 
-        return jsonify({
-            "bundle": saved_bundle.to_dict(),
-            "message": "Token bundle created successfully"
-        }), 201
+        return (
+            jsonify(
+                {
+                    "bundle": saved_bundle.to_dict(),
+                    "message": "Token bundle created successfully",
+                }
+            ),
+            201,
+        )
 
     except Exception as e:
         return jsonify({"error": str(e)}), 400
@@ -253,10 +263,12 @@ def activate_token_bundle(bundle_id):
     bundle.is_active = True
     saved_bundle = bundle_repo.save(bundle)
 
-    return jsonify({
-        "bundle": saved_bundle.to_dict(),
-        "message": "Token bundle activated"
-    }), 200
+    return (
+        jsonify(
+            {"bundle": saved_bundle.to_dict(), "message": "Token bundle activated"}
+        ),
+        200,
+    )
 
 
 @admin_token_bundles_bp.route("/<bundle_id>/deactivate", methods=["POST"])
@@ -282,7 +294,9 @@ def deactivate_token_bundle(bundle_id):
     bundle.is_active = False
     saved_bundle = bundle_repo.save(bundle)
 
-    return jsonify({
-        "bundle": saved_bundle.to_dict(),
-        "message": "Token bundle deactivated"
-    }), 200
+    return (
+        jsonify(
+            {"bundle": saved_bundle.to_dict(), "message": "Token bundle deactivated"}
+        ),
+        200,
+    )

@@ -24,9 +24,7 @@ class AddOn(BaseModel):
     price = db.Column(db.Numeric(10, 2), nullable=False, default=0)
     currency = db.Column(db.String(3), nullable=False, default="EUR")
     billing_period = db.Column(
-        db.String(50),
-        nullable=False,
-        default=BillingPeriod.MONTHLY.value
+        db.String(50), nullable=False, default=BillingPeriod.MONTHLY.value
     )
 
     # Flexible configuration (like tarif_plan.features)

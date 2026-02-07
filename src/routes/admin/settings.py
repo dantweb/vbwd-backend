@@ -3,9 +3,7 @@ from flask import Blueprint, jsonify, request
 from src.middleware.auth import require_auth, require_admin
 from src.extensions import db
 
-admin_settings_bp = Blueprint(
-    "admin_settings", __name__, url_prefix="/api/v1/admin"
-)
+admin_settings_bp = Blueprint("admin_settings", __name__, url_prefix="/api/v1/admin")
 
 # In-memory settings store (in production, use database or config service)
 _settings = {
@@ -56,10 +54,10 @@ def update_settings():
         if key in data:
             _settings[key] = data[key]
 
-    return jsonify({
-        "settings": _settings,
-        "message": "Settings updated successfully"
-    }), 200
+    return (
+        jsonify({"settings": _settings, "message": "Settings updated successfully"}),
+        200,
+    )
 
 
 # Payment methods (placeholder - can be expanded later)

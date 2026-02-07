@@ -98,10 +98,10 @@ class TestAdminAddOns:
                 "type": "support",
                 "response_time_hours": 4,
                 "channels": ["email", "chat", "phone"],
-                "24x7": True
+                "24x7": True,
             },
             "is_active": True,
-            "sort_order": 0
+            "sort_order": 0,
         }
 
     @pytest.fixture
@@ -111,7 +111,7 @@ class TestAdminAddOns:
             f"{self.BASE_URL}/admin/addons/",
             json=test_addon_data,
             headers=admin_headers,
-            timeout=10
+            timeout=10,
         )
         assert response.status_code == 201, f"Failed to create addon: {response.text}"
         return response.json()["addon"]
@@ -125,10 +125,7 @@ class TestAdminAddOns:
         Test: GET /api/v1/admin/addons without auth
         Expected: 401 Unauthorized
         """
-        response = requests.get(
-            f"{self.BASE_URL}/admin/addons/",
-            timeout=5
-        )
+        response = requests.get(f"{self.BASE_URL}/admin/addons/", timeout=5)
         assert response.status_code == 401
 
     def test_list_requires_admin_role(self, user_headers):
@@ -137,9 +134,7 @@ class TestAdminAddOns:
         Expected: 403 Forbidden
         """
         response = requests.get(
-            f"{self.BASE_URL}/admin/addons/",
-            headers=user_headers,
-            timeout=5
+            f"{self.BASE_URL}/admin/addons/", headers=user_headers, timeout=5
         )
         assert response.status_code == 403
 
@@ -153,9 +148,7 @@ class TestAdminAddOns:
         Expected: 200 with paginated list
         """
         response = requests.get(
-            f"{self.BASE_URL}/admin/addons/",
-            headers=admin_headers,
-            timeout=5
+            f"{self.BASE_URL}/admin/addons/", headers=admin_headers, timeout=5
         )
         assert response.status_code == 200
         data = response.json()
@@ -172,7 +165,7 @@ class TestAdminAddOns:
         response = requests.get(
             f"{self.BASE_URL}/admin/addons/?page=1&per_page=5",
             headers=admin_headers,
-            timeout=5
+            timeout=5,
         )
         assert response.status_code == 200
         data = response.json()
@@ -193,7 +186,7 @@ class TestAdminAddOns:
             f"{self.BASE_URL}/admin/addons/",
             json=test_addon_data,
             headers=admin_headers,
-            timeout=10
+            timeout=10,
         )
         assert response.status_code == 201
         data = response.json()
@@ -212,7 +205,7 @@ class TestAdminAddOns:
             f"{self.BASE_URL}/admin/addons/",
             json={"price": "10.00", "billing_period": "monthly"},
             headers=admin_headers,
-            timeout=10
+            timeout=10,
         )
         assert response.status_code == 400
         assert "name" in response.json()["error"].lower()
@@ -226,7 +219,7 @@ class TestAdminAddOns:
             f"{self.BASE_URL}/admin/addons/",
             json={"name": "Test Addon", "billing_period": "monthly"},
             headers=admin_headers,
-            timeout=10
+            timeout=10,
         )
         assert response.status_code == 400
         assert "price" in response.json()["error"].lower()
@@ -241,10 +234,10 @@ class TestAdminAddOns:
             json={
                 "name": "Premium Support Feature",
                 "price": "25.00",
-                "billing_period": "monthly"
+                "billing_period": "monthly",
             },
             headers=admin_headers,
-            timeout=10
+            timeout=10,
         )
         assert response.status_code == 201
         data = response.json()
@@ -262,10 +255,10 @@ class TestAdminAddOns:
                 "name": "Another Addon",
                 "slug": created_addon["slug"],  # Duplicate slug
                 "price": "10.00",
-                "billing_period": "monthly"
+                "billing_period": "monthly",
             },
             headers=admin_headers,
-            timeout=10
+            timeout=10,
         )
         assert response.status_code == 400
         assert "slug" in response.json()["error"].lower()
@@ -277,12 +270,9 @@ class TestAdminAddOns:
         """
         config = {
             "type": "storage",
-            "limits": {
-                "storage_gb": 100,
-                "bandwidth_gb": 500
-            },
+            "limits": {"storage_gb": 100, "bandwidth_gb": 500},
             "features": ["cdn", "backup"],
-            "enabled": True
+            "enabled": True,
         }
         response = requests.post(
             f"{self.BASE_URL}/admin/addons/",
@@ -290,10 +280,10 @@ class TestAdminAddOns:
                 "name": f"Storage Addon {uuid4().hex[:6]}",
                 "price": "20.00",
                 "billing_period": "monthly",
-                "config": config
+                "config": config,
             },
             headers=admin_headers,
-            timeout=10
+            timeout=10,
         )
         assert response.status_code == 201
         data = response.json()
@@ -311,10 +301,10 @@ class TestAdminAddOns:
                 "name": f"Setup Fee {uuid4().hex[:6]}",
                 "price": "50.00",
                 "billing_period": "one_time",
-                "config": {"type": "fee"}
+                "config": {"type": "fee"},
             },
             headers=admin_headers,
-            timeout=10
+            timeout=10,
         )
         assert response.status_code == 201
         data = response.json()
@@ -333,7 +323,7 @@ class TestAdminAddOns:
         response = requests.get(
             f"{self.BASE_URL}/admin/addons/{created_addon['id']}",
             headers=admin_headers,
-            timeout=5
+            timeout=5,
         )
         assert response.status_code == 200
         data = response.json()
@@ -346,9 +336,7 @@ class TestAdminAddOns:
         Expected: 404 Not Found
         """
         response = requests.get(
-            f"{self.BASE_URL}/admin/addons/{uuid4()}",
-            headers=admin_headers,
-            timeout=5
+            f"{self.BASE_URL}/admin/addons/{uuid4()}", headers=admin_headers, timeout=5
         )
         assert response.status_code == 404
 
@@ -360,7 +348,7 @@ class TestAdminAddOns:
         response = requests.get(
             f"{self.BASE_URL}/admin/addons/slug/{created_addon['slug']}",
             headers=admin_headers,
-            timeout=5
+            timeout=5,
         )
         assert response.status_code == 200
         data = response.json()
@@ -380,10 +368,10 @@ class TestAdminAddOns:
             json={
                 "name": "Updated Addon Name",
                 "price": "25.00",
-                "config": {"updated": True}
+                "config": {"updated": True},
             },
             headers=admin_headers,
-            timeout=10
+            timeout=10,
         )
         assert response.status_code == 200
         data = response.json()
@@ -400,11 +388,13 @@ class TestAdminAddOns:
             f"{self.BASE_URL}/admin/addons/{uuid4()}",
             json={"name": "Test"},
             headers=admin_headers,
-            timeout=10
+            timeout=10,
         )
         assert response.status_code == 404
 
-    def test_update_addon_duplicate_slug_fails(self, admin_headers, created_addon, test_addon_data):
+    def test_update_addon_duplicate_slug_fails(
+        self, admin_headers, created_addon, test_addon_data
+    ):
         """
         Test: PUT /api/v1/admin/addons/{id} with duplicate slug
         Expected: 400 Bad Request
@@ -416,7 +406,7 @@ class TestAdminAddOns:
             f"{self.BASE_URL}/admin/addons/",
             json=test_addon_data,
             headers=admin_headers,
-            timeout=10
+            timeout=10,
         )
         another_addon = response.json()["addon"]
 
@@ -425,7 +415,7 @@ class TestAdminAddOns:
             f"{self.BASE_URL}/admin/addons/{another_addon['id']}",
             json={"slug": created_addon["slug"]},  # Duplicate
             headers=admin_headers,
-            timeout=10
+            timeout=10,
         )
         assert response.status_code == 400
 
@@ -441,7 +431,7 @@ class TestAdminAddOns:
         response = requests.post(
             f"{self.BASE_URL}/admin/addons/{created_addon['id']}/deactivate",
             headers=admin_headers,
-            timeout=5
+            timeout=5,
         )
         assert response.status_code == 200
         data = response.json()
@@ -456,14 +446,14 @@ class TestAdminAddOns:
         requests.post(
             f"{self.BASE_URL}/admin/addons/{created_addon['id']}/deactivate",
             headers=admin_headers,
-            timeout=5
+            timeout=5,
         )
 
         # Then activate
         response = requests.post(
             f"{self.BASE_URL}/admin/addons/{created_addon['id']}/activate",
             headers=admin_headers,
-            timeout=5
+            timeout=5,
         )
         assert response.status_code == 200
         data = response.json()
@@ -481,7 +471,7 @@ class TestAdminAddOns:
         response = requests.delete(
             f"{self.BASE_URL}/admin/addons/{created_addon['id']}",
             headers=admin_headers,
-            timeout=5
+            timeout=5,
         )
         assert response.status_code == 200
 
@@ -489,7 +479,7 @@ class TestAdminAddOns:
         get_response = requests.get(
             f"{self.BASE_URL}/admin/addons/{created_addon['id']}",
             headers=admin_headers,
-            timeout=5
+            timeout=5,
         )
         assert get_response.status_code == 404
 
@@ -499,9 +489,7 @@ class TestAdminAddOns:
         Expected: 404 Not Found
         """
         response = requests.delete(
-            f"{self.BASE_URL}/admin/addons/{uuid4()}",
-            headers=admin_headers,
-            timeout=5
+            f"{self.BASE_URL}/admin/addons/{uuid4()}", headers=admin_headers, timeout=5
         )
         assert response.status_code == 404
 
@@ -514,10 +502,7 @@ class TestAdminAddOns:
         Test: GET /api/v1/addons (public endpoint for users)
         Expected: 200 with only active add-ons
         """
-        response = requests.get(
-            f"{self.BASE_URL}/addons/",
-            timeout=5
-        )
+        response = requests.get(f"{self.BASE_URL}/addons/", timeout=5)
         assert response.status_code == 200
         data = response.json()
         assert "addons" in data
