@@ -5,7 +5,7 @@ from decimal import Decimal
 from src.middleware.auth import require_auth, require_admin
 from src.repositories.addon_repository import AddOnRepository
 from src.extensions import db
-from src.models import AddOn
+from src.models import AddOn, TarifPlan
 
 admin_addons_bp = Blueprint("admin_addons", __name__, url_prefix="/api/v1/admin/addons")
 
@@ -113,6 +113,16 @@ def create_addon():
     if addon_repo.slug_exists(slug):
         return jsonify({"error": "Slug already exists"}), 400
 
+    # Resolve tarif_plan_ids to TarifPlan objects
+    tarif_plan_ids = data.get("tarif_plan_ids", [])
+    tarif_plans = []
+    if tarif_plan_ids:
+        tarif_plans = (
+            db.session.query(TarifPlan).filter(TarifPlan.id.in_(tarif_plan_ids)).all()
+        )
+        if len(tarif_plans) != len(tarif_plan_ids):
+            return jsonify({"error": "One or more tariff plan IDs are invalid"}), 400
+
     try:
         addon = AddOn(
             name=data["name"],
@@ -125,6 +135,7 @@ def create_addon():
             is_active=data.get("is_active", True),
             sort_order=data.get("sort_order", 0),
         )
+        addon.tarif_plans = tarif_plans
 
         saved_addon = addon_repo.save(addon)
 
@@ -258,6 +269,23 @@ def update_addon(addon_id):
 
     if "sort_order" in data:
         addon.sort_order = int(data.get("sort_order", 0))
+
+    if "tarif_plan_ids" in data:
+        tarif_plan_ids = data["tarif_plan_ids"]
+        if tarif_plan_ids:
+            tarif_plans = (
+                db.session.query(TarifPlan)
+                .filter(TarifPlan.id.in_(tarif_plan_ids))
+                .all()
+            )
+            if len(tarif_plans) != len(tarif_plan_ids):
+                return (
+                    jsonify({"error": "One or more tariff plan IDs are invalid"}),
+                    400,
+                )
+            addon.tarif_plans = tarif_plans
+        else:
+            addon.tarif_plans = []
 
     saved_addon = addon_repo.save(addon)
 

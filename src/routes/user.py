@@ -289,6 +289,143 @@ def checkout():
         return jsonify({"error": result.error}), status_code
 
 
+@user_bp.route("/addons", methods=["GET"])
+@require_auth
+def get_user_addons():
+    """Get current user's add-on subscriptions with addon details.
+
+    Requires: Bearer token in Authorization header
+
+    Returns:
+        200: {"addon_subscriptions": [...]}
+    """
+    user_id = g.user_id
+    container = current_app.container
+
+    addon_sub_repo = container.addon_subscription_repository()
+
+    addon_subs = addon_sub_repo.find_by_user(
+        UUID(user_id) if isinstance(user_id, str) else user_id
+    )
+
+    result = []
+    for addon_sub in addon_subs:
+        data = addon_sub.to_dict()
+        # Addon details are eager-loaded via relationship
+        if addon_sub.addon:
+            data["addon"] = {
+                "name": addon_sub.addon.name,
+                "slug": addon_sub.addon.slug,
+                "description": addon_sub.addon.description,
+                "price": str(addon_sub.addon.price) if addon_sub.addon.price else None,
+                "billing_period": addon_sub.addon.billing_period
+                if addon_sub.addon.billing_period
+                else None,
+            }
+        result.append(data)
+
+    return jsonify({"addon_subscriptions": result}), 200
+
+
+@user_bp.route("/addons/<addon_sub_id>", methods=["GET"])
+@require_auth
+def get_addon_detail(addon_sub_id):
+    """Get addon subscription detail with addon and invoice info.
+
+    Requires: Bearer token in Authorization header
+
+    Args:
+        addon_sub_id: UUID of the addon subscription
+
+    Returns:
+        200: Addon subscription with addon and invoice details
+        403: Access denied (not owner)
+        404: Addon subscription not found
+    """
+    user_id = g.user_id
+    container = current_app.container
+
+    addon_sub_repo = container.addon_subscription_repository()
+    addon_sub = addon_sub_repo.find_by_id(addon_sub_id)
+
+    if not addon_sub:
+        return jsonify({"error": "Add-on subscription not found"}), 404
+
+    if str(addon_sub.user_id) != str(user_id):
+        return jsonify({"error": "Access denied"}), 403
+
+    data = addon_sub.to_dict()
+
+    # Add addon details
+    if addon_sub.addon:
+        data["addon"] = {
+            "name": addon_sub.addon.name,
+            "slug": addon_sub.addon.slug,
+            "description": addon_sub.addon.description,
+            "price": str(addon_sub.addon.price) if addon_sub.addon.price else None,
+            "billing_period": addon_sub.addon.billing_period
+            if addon_sub.addon.billing_period
+            else None,
+        }
+
+    # Add invoice details
+    if addon_sub.invoice_id:
+        invoice_repo = container.invoice_repository()
+        invoice = invoice_repo.find_by_id(addon_sub.invoice_id)
+        if invoice:
+            data["invoice"] = {
+                "id": str(invoice.id),
+                "invoice_number": invoice.invoice_number,
+                "status": invoice.status.value,
+                "amount": str(invoice.amount),
+                "currency": invoice.currency,
+            }
+
+    return jsonify({"addon_subscription": data}), 200
+
+
+@user_bp.route("/addons/<addon_sub_id>/cancel", methods=["POST"])
+@require_auth
+def cancel_addon(addon_sub_id):
+    """Cancel an addon subscription.
+
+    Requires: Bearer token in Authorization header
+
+    Args:
+        addon_sub_id: UUID of the addon subscription
+
+    Returns:
+        200: Updated addon subscription
+        400: Cannot cancel (already cancelled/expired)
+        403: Access denied (not owner)
+        404: Addon subscription not found
+    """
+    from src.models.enums import SubscriptionStatus
+
+    user_id = g.user_id
+    container = current_app.container
+
+    addon_sub_repo = container.addon_subscription_repository()
+    addon_sub = addon_sub_repo.find_by_id(addon_sub_id)
+
+    if not addon_sub:
+        return jsonify({"error": "Add-on subscription not found"}), 404
+
+    if str(addon_sub.user_id) != str(user_id):
+        return jsonify({"error": "Access denied"}), 403
+
+    if addon_sub.status not in (SubscriptionStatus.ACTIVE, SubscriptionStatus.PENDING):
+        return jsonify({"error": "Add-on subscription cannot be cancelled"}), 400
+
+    addon_sub.cancel()
+    db.session.commit()
+
+    return jsonify({
+        "addon_subscription": addon_sub.to_dict(),
+        "message": "Add-on cancelled successfully",
+    }), 200
+
+
 @user_bp.route("/tokens/balance", methods=["GET"])
 @require_auth
 def get_token_balance():

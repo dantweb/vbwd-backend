@@ -14,25 +14,44 @@ subscriptions_bp = Blueprint("subscriptions", __name__)
 @require_auth
 def list_subscriptions():
     """
-    List user's subscriptions.
+    List user's subscriptions enriched with plan names.
 
     GET /api/v1/user/subscriptions
     Authorization: Bearer <token>
 
     Returns:
-        200: List of all user subscriptions
+        200: List of all user subscriptions with plan details
     """
     # Initialize services
     subscription_repo = SubscriptionRepository(db.session)
+    tarif_plan_repo = TarifPlanRepository(db.session)
     subscription_service = SubscriptionService(subscription_repo=subscription_repo)
 
     # Get user subscriptions
     subscriptions = subscription_service.get_user_subscriptions(g.user_id)
 
+    result = []
+    for sub in subscriptions:
+        data = sub.to_dict()
+        # Enrich with plan details
+        if sub.tarif_plan_id:
+            plan = tarif_plan_repo.find_by_id(sub.tarif_plan_id)
+            if plan:
+                data["plan"] = {
+                    "id": str(plan.id),
+                    "name": plan.name,
+                    "slug": plan.slug,
+                    "price": float(plan.price) if plan.price else 0,
+                    "billing_period": plan.billing_period.value
+                    if plan.billing_period
+                    else None,
+                }
+        result.append(data)
+
     return (
         jsonify(
             {
-                "subscriptions": [s.to_dict() for s in subscriptions],
+                "subscriptions": result,
             }
         ),
         200,

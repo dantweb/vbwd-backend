@@ -14,7 +14,7 @@ from src.models.role import Role, Permission, role_permissions, user_roles
 from src.models.feature_usage import FeatureUsage
 from src.models.token_bundle import TokenBundle
 from src.models.token_bundle_purchase import TokenBundlePurchase
-from src.models.addon import AddOn
+from src.models.addon import AddOn, addon_tarif_plans
 from src.models.addon_subscription import AddOnSubscription
 from src.models.user_token_balance import UserTokenBalance, TokenTransaction
 from src.models.payment_method import PaymentMethod, PaymentMethodTranslation
@@ -60,6 +60,7 @@ __all__ = [
     # Association tables
     "role_permissions",
     "user_roles",
+    "addon_tarif_plans",
     # Enums
     "UserStatus",
     "UserRole",

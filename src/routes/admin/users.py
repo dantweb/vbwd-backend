@@ -1,5 +1,6 @@
 """Admin user management routes."""
 import bcrypt
+from uuid import UUID
 from flask import Blueprint, jsonify, request, current_app
 from src.middleware.auth import require_auth, require_admin
 from src.repositories.user_repository import UserRepository
@@ -379,3 +380,62 @@ def activate_user(user_id):
         ),
         200,
     )
+
+
+@admin_users_bp.route("/<user_id>/addons", methods=["GET"])
+@require_auth
+@require_admin
+def get_user_addons(user_id):
+    """
+    Get user's add-on subscriptions with invoice data.
+
+    Args:
+        user_id: UUID of the user
+
+    Returns:
+        200: List of addon subscriptions with invoice info
+        404: User not found
+    """
+    user_repo = UserRepository(db.session)
+    user = user_repo.find_by_id(user_id)
+
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    container = current_app.container
+    addon_sub_repo = container.addon_subscription_repository()
+    invoice_repo = container.invoice_repository()
+
+    addon_subs = addon_sub_repo.find_by_user(
+        UUID(user_id) if isinstance(user_id, str) else user_id
+    )
+
+    result = []
+    for addon_sub in addon_subs:
+        data = {
+            "id": str(addon_sub.id),
+            "addon_name": addon_sub.addon.name if addon_sub.addon else "Unknown",
+            "status": addon_sub.status.value,
+            "starts_at": addon_sub.starts_at.isoformat() if addon_sub.starts_at else None,
+            "expires_at": addon_sub.expires_at.isoformat() if addon_sub.expires_at else None,
+            "created_at": addon_sub.created_at.isoformat() if addon_sub.created_at else None,
+            "invoice_status": None,
+            "first_invoice": None,
+            "last_invoice": None,
+        }
+
+        if addon_sub.invoice_id:
+            invoice = invoice_repo.find_by_id(addon_sub.invoice_id)
+            if invoice:
+                invoice_data = {
+                    "id": str(invoice.id),
+                    "invoice_number": invoice.invoice_number,
+                    "created_at": invoice.invoiced_at.isoformat() if invoice.invoiced_at else None,
+                }
+                data["invoice_status"] = invoice.status.value
+                data["first_invoice"] = invoice_data
+                data["last_invoice"] = invoice_data
+
+        result.append(data)
+
+    return jsonify({"addon_subscriptions": result}), 200

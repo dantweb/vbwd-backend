@@ -1,8 +1,10 @@
 """AddOn repository implementation."""
 from typing import Optional, List, Tuple
 from uuid import UUID
+from sqlalchemy import or_, and_
 from src.repositories.base import BaseRepository
 from src.models import AddOn
+from src.models.addon import addon_tarif_plans
 
 
 class AddOnRepository(BaseRepository[AddOn]):
@@ -20,6 +22,44 @@ class AddOnRepository(BaseRepository[AddOn]):
         return (
             self._session.query(AddOn)
             .filter(AddOn.is_active.is_(True))
+            .order_by(AddOn.sort_order, AddOn.name)
+            .all()
+        )
+
+    def find_available_for_plan(self, plan_id: Optional[UUID]) -> List[AddOn]:
+        """
+        Find active add-ons available for a given tariff plan.
+
+        Returns:
+            - All independent add-ons (those with no plan bindings)
+            - Plus plan-specific add-ons bound to the given plan_id (if provided)
+
+        Args:
+            plan_id: UUID of the user's active tariff plan, or None for no subscription.
+        """
+        # Subquery: addon IDs that have at least one plan binding
+        bound_addon_ids = (
+            self._session.query(addon_tarif_plans.c.addon_id).distinct().subquery()
+        )
+
+        # Independent add-ons: not in the junction table at all
+        independent_filter = AddOn.id.notin_(bound_addon_ids)
+
+        if plan_id:
+            # Plan-specific add-ons: have a binding to this specific plan
+            plan_specific_ids = (
+                self._session.query(addon_tarif_plans.c.addon_id)
+                .filter(addon_tarif_plans.c.tarif_plan_id == plan_id)
+                .subquery()
+            )
+            condition = or_(independent_filter, AddOn.id.in_(plan_specific_ids))
+        else:
+            # No subscription — only independent add-ons
+            condition = independent_filter
+
+        return (
+            self._session.query(AddOn)
+            .filter(and_(AddOn.is_active.is_(True), condition))
             .order_by(AddOn.sort_order, AddOn.name)
             .all()
         )

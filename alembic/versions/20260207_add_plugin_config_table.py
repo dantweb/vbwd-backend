@@ -1,7 +1,7 @@
 """add_plugin_config_table
 
-Revision ID: e5f6g7h8i9j0
-Revises: d4e5f6g7h8i9
+Revision ID: e5f6g7h8i9j1
+Revises: e5f6g7h8i9j0
 Create Date: 2026-02-07 10:00:00.000000+00:00
 
 """
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = "e5f6g7h8i9j0"
-down_revision: Union[str, None] = "d4e5f6g7h8i9"
+revision: str = "e5f6g7h8i9j1"
+down_revision: Union[str, None] = "e5f6g7h8i9j0"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
