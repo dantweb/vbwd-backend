@@ -109,6 +109,30 @@ def login():
         return jsonify(auth_response_schema.dump(result)), 401
 
 
+@auth_bp.route("/check-email", methods=["GET"])
+@limiter.limit("5000 per minute")
+def check_email():
+    """Check if an email address is already registered.
+
+    ---
+    Query params:
+        email: Email address to check
+
+    Returns:
+        200: {"exists": true/false}
+        400: {"error": "Email required"}
+    """
+    email = request.args.get("email", "").strip().lower()
+
+    if not email:
+        return jsonify({"error": "Email required"}), 400
+
+    user_repo = UserRepository(db.session)
+    user = user_repo.find_by_email(email)
+
+    return jsonify({"exists": user is not None})
+
+
 @auth_bp.route("/forgot-password", methods=["POST"])
 @limiter.limit("5000 per minute")
 def forgot_password():

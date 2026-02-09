@@ -58,23 +58,3 @@ def update_settings():
         jsonify({"settings": _settings, "message": "Settings updated successfully"}),
         200,
     )
-
-
-# Payment methods (placeholder - can be expanded later)
-_payment_methods = [
-    {"id": "1", "name": "Bank Transfer", "is_active": True},
-    {"id": "2", "name": "Credit Card", "is_active": False},
-]
-
-
-@admin_settings_bp.route("/payment-methods", methods=["GET"])
-@require_auth
-@require_admin
-def get_payment_methods():
-    """
-    Get available payment methods.
-
-    Returns:
-        200: List of payment methods
-    """
-    return jsonify({"payment_methods": _payment_methods}), 200
