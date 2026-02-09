@@ -1,4 +1,5 @@
 """Tariff plan routes."""
+import uuid
 from flask import Blueprint, request, jsonify
 from src.extensions import db
 from src.repositories.tarif_plan_repository import TarifPlanRepository
@@ -80,15 +81,16 @@ def list_plans():
     )
 
 
-@tarif_plans_bp.route("/<slug>", methods=["GET"])
-def get_plan(slug: str):
+@tarif_plans_bp.route("/<slug_or_id>", methods=["GET"])
+def get_plan(slug_or_id: str):
     """
-    Get single tariff plan by slug.
+    Get single tariff plan by slug or UUID.
 
     GET /api/v1/tarif-plans/pro?currency=USD&country=DE
+    GET /api/v1/tarif-plans/<uuid>?currency=USD&country=DE
 
     Path params:
-        slug: Plan URL slug
+        slug_or_id: Plan URL slug or UUID
 
     Query params:
         currency: Currency code for pricing (default: EUR)
@@ -114,18 +116,26 @@ def get_plan(slug: str):
         tax_service=tax_service,
     )
 
-    # Get plan
-    plan = tarif_plan_service.get_plan_by_slug(slug)
+    # Get plan by UUID or slug
+    plan = None
+    try:
+        uuid.UUID(slug_or_id)
+        plan = plan_repo.find_by_id(slug_or_id)
+    except ValueError:
+        plan = tarif_plan_service.get_plan_by_slug(slug_or_id)
+
     if not plan:
         return jsonify({"error": "Plan not found"}), 404
 
-    # Add pricing info
+    # Add pricing info, merge with full plan data
     try:
-        plan_data = tarif_plan_service.get_plan_with_pricing(
+        plan_data = plan.to_dict()
+        pricing = tarif_plan_service.get_plan_with_pricing(
             plan,
             currency_code=currency_code,
             country_code=country_code,
         )
+        plan_data.update(pricing)
         return jsonify(plan_data), 200
     except ValueError as e:
         return (

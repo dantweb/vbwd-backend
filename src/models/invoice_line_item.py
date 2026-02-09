@@ -10,6 +10,9 @@ class InvoiceLineItem(BaseModel):
     Invoice line item model.
 
     Tracks individual items on an invoice (subscription, token bundle, add-on).
+    item_id references the purchase record (subscription, token_bundle_purchase,
+    addon_subscription). catalog_item_id resolves to the actual catalog entity
+    (tarif_plan, token_bundle, addon).
     """
 
     __tablename__ = "invoice_line_item"
@@ -34,9 +37,29 @@ class InvoiceLineItem(BaseModel):
     unit_price = db.Column(db.Numeric(10, 2), nullable=False)
     total_price = db.Column(db.Numeric(10, 2), nullable=False)
 
+    def _resolve_catalog_item_id(self) -> str | None:
+        """Resolve the catalog item ID from the purchase record."""
+        from src.models.subscription import Subscription
+        from src.models.token_bundle_purchase import TokenBundlePurchase
+        from src.models.addon_subscription import AddOnSubscription
+
+        try:
+            if self.item_type == LineItemType.SUBSCRIPTION:
+                sub = db.session.get(Subscription, self.item_id)
+                return str(sub.tarif_plan_id) if sub else None
+            elif self.item_type == LineItemType.TOKEN_BUNDLE:
+                purchase = db.session.get(TokenBundlePurchase, self.item_id)
+                return str(purchase.bundle_id) if purchase else None
+            elif self.item_type == LineItemType.ADD_ON:
+                addon_sub = db.session.get(AddOnSubscription, self.item_id)
+                return str(addon_sub.addon_id) if addon_sub else None
+        except Exception:
+            pass
+        return None
+
     def to_dict(self) -> dict:
         """Convert to dictionary."""
-        return {
+        result = {
             "id": str(self.id),
             "invoice_id": str(self.invoice_id),
             "type": self.item_type.value,
@@ -46,6 +69,10 @@ class InvoiceLineItem(BaseModel):
             "unit_price": str(self.unit_price),
             "amount": str(self.total_price),
         }
+        catalog_id = self._resolve_catalog_item_id()
+        if catalog_id:
+            result["catalog_item_id"] = catalog_id
+        return result
 
     def __repr__(self) -> str:
         return (
