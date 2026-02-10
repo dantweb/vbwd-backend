@@ -5,6 +5,7 @@ import logging
 import pkgutil
 from typing import Dict, List, Optional, Tuple
 from src.plugins.base import BasePlugin, PluginStatus
+from src.plugins.config_store import PluginConfigStore
 from src.events.dispatcher import EventDispatcher, Event
 
 logger = logging.getLogger(__name__)
@@ -17,7 +18,7 @@ class PluginManager:
     Handles plugin discovery, registration, lifecycle, and dependencies.
     """
 
-    def __init__(self, event_dispatcher: Optional[EventDispatcher] = None, config_repo=None):
+    def __init__(self, event_dispatcher: Optional[EventDispatcher] = None, config_repo: Optional[PluginConfigStore] = None):
         self._plugins: Dict[str, BasePlugin] = {}
         self._event_dispatcher = event_dispatcher or EventDispatcher()
         self._config_repo = config_repo

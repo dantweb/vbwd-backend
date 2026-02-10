@@ -10,6 +10,7 @@ from src.routes.admin.addons import admin_addons_bp
 from src.routes.admin.settings import admin_settings_bp
 from src.routes.admin.payment_methods import admin_payment_methods_bp
 from src.routes.admin.countries import admin_countries_bp
+from src.routes.admin.plugins import admin_plugins_bp
 
 __all__ = [
     "admin_users_bp",
@@ -23,4 +24,5 @@ __all__ = [
     "admin_settings_bp",
     "admin_payment_methods_bp",
     "admin_countries_bp",
+    "admin_plugins_bp",
 ]

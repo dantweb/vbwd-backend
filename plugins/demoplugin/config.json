@@ -1,0 +1,12 @@
+{
+  "greeting": {
+    "type": "string",
+    "default": "Hello from demo plugin!",
+    "description": "Response greeting message"
+  },
+  "requireAdmin": {
+    "type": "boolean",
+    "default": false,
+    "description": "Require admin role for access"
+  }
+}

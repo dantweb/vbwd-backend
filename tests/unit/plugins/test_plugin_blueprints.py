@@ -3,7 +3,7 @@ import pytest
 from unittest.mock import MagicMock
 from src.plugins.base import BasePlugin, PluginMetadata
 from src.plugins.manager import PluginManager
-from src.plugins.providers.analytics_plugin import AnalyticsPlugin
+from plugins.analytics import AnalyticsPlugin
 
 
 class MockPluginNoBlueprint(BasePlugin):

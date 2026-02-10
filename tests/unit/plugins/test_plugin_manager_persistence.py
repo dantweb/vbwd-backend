@@ -3,6 +3,7 @@ import pytest
 from unittest.mock import MagicMock
 from src.plugins.manager import PluginManager
 from src.plugins.base import BasePlugin, PluginMetadata, PluginStatus
+from src.plugins.config_store import PluginConfigStore, PluginConfigEntry
 
 
 class MockPlugin(BasePlugin):
@@ -22,12 +23,45 @@ class MockPlugin(BasePlugin):
         )
 
 
-class MockPluginConfig:
-    """Mimics PluginConfig model row."""
+class MockConfigStore(PluginConfigStore):
+    """In-memory PluginConfigStore for testing."""
 
-    def __init__(self, plugin_name, status="enabled"):
-        self.plugin_name = plugin_name
-        self.status = status
+    def __init__(self):
+        self._plugins = {}
+        self._configs = {}
+
+    def get_enabled(self):
+        return [
+            PluginConfigEntry(plugin_name=n, status="enabled", config=self._configs.get(n, {}))
+            for n, s in self._plugins.items()
+            if s == "enabled"
+        ]
+
+    def save(self, plugin_name, status, config=None):
+        self._plugins[plugin_name] = status
+        if config is not None:
+            self._configs[plugin_name] = config
+
+    def get_by_name(self, plugin_name):
+        if plugin_name not in self._plugins:
+            return None
+        return PluginConfigEntry(
+            plugin_name=plugin_name,
+            status=self._plugins[plugin_name],
+            config=self._configs.get(plugin_name, {}),
+        )
+
+    def get_all(self):
+        return [
+            PluginConfigEntry(plugin_name=n, status=s, config=self._configs.get(n, {}))
+            for n, s in self._plugins.items()
+        ]
+
+    def get_config(self, plugin_name):
+        return self._configs.get(plugin_name, {})
+
+    def save_config(self, plugin_name, config):
+        self._configs[plugin_name] = config
 
 
 class TestPluginManagerPersistence:
@@ -35,7 +69,7 @@ class TestPluginManagerPersistence:
 
     @pytest.fixture
     def config_repo(self):
-        return MagicMock()
+        return MagicMock(spec=PluginConfigStore)
 
     def test_enable_persists_to_repo(self, config_repo):
         """enable_plugin calls config_repo.save with 'enabled'."""
@@ -62,8 +96,10 @@ class TestPluginManagerPersistence:
         config_repo.save.assert_called_once_with("test", "disabled", plugin._config)
 
     def test_load_persisted_state_enables_plugins(self, config_repo):
-        """load_persisted_state enables plugins that are 'enabled' in DB."""
-        config_repo.get_enabled.return_value = [MockPluginConfig("test", "enabled")]
+        """load_persisted_state enables plugins that are 'enabled' in store."""
+        config_repo.get_enabled.return_value = [
+            PluginConfigEntry(plugin_name="test", status="enabled")
+        ]
 
         manager = PluginManager(config_repo=config_repo)
         plugin = MockPlugin("test")
@@ -76,7 +112,9 @@ class TestPluginManagerPersistence:
 
     def test_load_persisted_state_skips_unknown_plugins(self, config_repo):
         """load_persisted_state skips plugins not in registry."""
-        config_repo.get_enabled.return_value = [MockPluginConfig("unknown", "enabled")]
+        config_repo.get_enabled.return_value = [
+            PluginConfigEntry(plugin_name="unknown", status="enabled")
+        ]
 
         manager = PluginManager(config_repo=config_repo)
         # No plugins registered
@@ -99,3 +137,22 @@ class TestPluginManagerPersistence:
 
         # load_persisted_state is a no-op
         manager.load_persisted_state()
+
+    def test_round_trip_with_mock_store(self):
+        """Full round-trip: enable, disable, load_persisted_state."""
+        store = MockConfigStore()
+        manager = PluginManager(config_repo=store)
+
+        plugin = MockPlugin("test")
+        manager.register_plugin(plugin)
+        manager.initialize_plugin("test")
+        manager.enable_plugin("test")
+
+        # New manager loading same store
+        manager2 = PluginManager(config_repo=store)
+        plugin2 = MockPlugin("test")
+        manager2.register_plugin(plugin2)
+        manager2.initialize_plugin("test")
+        manager2.load_persisted_state()
+
+        assert plugin2.status == PluginStatus.ENABLED

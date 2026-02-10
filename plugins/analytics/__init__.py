@@ -10,8 +10,8 @@ class AnalyticsPlugin(BasePlugin):
     """
     Analytics plugin providing active sessions count.
 
-    Designed to validate the plugin system end-to-end.
     Count function is injected via config (DI principle).
+    Routes and business logic live in src/ subdirectory.
     """
 
     def __init__(self):
@@ -30,7 +30,7 @@ class AnalyticsPlugin(BasePlugin):
         )
 
     def get_blueprint(self) -> Optional["Blueprint"]:
-        from src.routes.plugins.analytics import analytics_plugin_bp
+        from plugins.analytics.src.routes import analytics_plugin_bp
         return analytics_plugin_bp
 
     def get_url_prefix(self) -> Optional[str]:

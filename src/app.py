@@ -1,4 +1,5 @@
 """Flask application factory."""
+import os
 from flask import Flask, jsonify, make_response
 from typing import Optional, Dict, Any
 import logging
@@ -117,6 +118,7 @@ def create_app(config: Optional[Dict[str, Any]] = None) -> Flask:
         admin_settings_bp,
         admin_payment_methods_bp,
         admin_countries_bp,
+        admin_plugins_bp,
     )
     from src.routes.config import config_bp
     from src.routes.addons import addons_bp
@@ -140,6 +142,7 @@ def create_app(config: Optional[Dict[str, Any]] = None) -> Flask:
     csrf.exempt(admin_settings_bp)
     csrf.exempt(admin_payment_methods_bp)
     csrf.exempt(admin_countries_bp)
+    csrf.exempt(admin_plugins_bp)
     csrf.exempt(addons_bp)
     csrf.exempt(token_bundles_bp)
     csrf.exempt(config_bp)
@@ -171,24 +174,31 @@ def create_app(config: Optional[Dict[str, Any]] = None) -> Flask:
 
     # Initialize plugin system
     from src.plugins.manager import PluginManager
-    from src.repositories.plugin_config_repository import PluginConfigRepository
+    from src.plugins.json_config_store import JsonFilePluginConfigStore
+    from src.plugins.config_schema import PluginConfigSchemaReader
 
-    config_repo = PluginConfigRepository(db.session)
-    plugin_manager = PluginManager(config_repo=config_repo)
+    plugins_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "plugins")
+    config_store = JsonFilePluginConfigStore(plugins_dir)
+    schema_reader = PluginConfigSchemaReader([plugins_dir])
+    plugin_manager = PluginManager(config_repo=config_store)
     app.plugin_manager = plugin_manager
+    app.config_store = config_store
+    app.schema_reader = schema_reader
 
-    # Auto-discover plugins from providers package
-    plugin_manager.discover("src.plugins.providers")
+    # Auto-discover plugins from user plugins dir
+    plugin_manager.discover("plugins")
 
     # Load persisted state from DB; default-enable analytics on first run
     plugin_manager.load_persisted_state()
     if not plugin_manager.get_enabled_plugins():
         plugin_manager.enable_plugin("analytics")
 
-    # Register plugin blueprints dynamically
-    for bp, prefix in plugin_manager.get_plugin_blueprints():
-        csrf.exempt(bp)
-        app.register_blueprint(bp, url_prefix=prefix)
+    # Register ALL plugin blueprints at startup (route handlers check enabled status)
+    for plugin in plugin_manager.get_all_plugins():
+        bp = plugin.get_blueprint()
+        if bp:
+            csrf.exempt(bp)
+            app.register_blueprint(bp, url_prefix=plugin.get_url_prefix())
 
     # Register blueprints (already imported above for CSRF exemption)
     app.register_blueprint(auth_bp)
@@ -208,6 +218,7 @@ def create_app(config: Optional[Dict[str, Any]] = None) -> Flask:
     app.register_blueprint(admin_settings_bp)
     app.register_blueprint(admin_payment_methods_bp)
     app.register_blueprint(admin_countries_bp)
+    app.register_blueprint(admin_plugins_bp)
     app.register_blueprint(addons_bp)
     app.register_blueprint(token_bundles_bp)
     app.register_blueprint(config_bp)

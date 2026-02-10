@@ -1,0 +1,21 @@
+{
+  "tabs": [
+    {
+      "id": "general",
+      "label": "General",
+      "fields": [
+        {
+          "key": "greeting",
+          "label": "Greeting Message",
+          "component": "input",
+          "inputType": "text"
+        },
+        {
+          "key": "requireAdmin",
+          "label": "Require Admin Access",
+          "component": "checkbox"
+        }
+      ]
+    }
+  ]
+}

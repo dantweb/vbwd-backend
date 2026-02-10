@@ -3,6 +3,7 @@ import pytest
 from unittest.mock import MagicMock, patch
 from src.repositories.plugin_config_repository import PluginConfigRepository
 from src.models.plugin_config import PluginConfig
+from src.plugins.config_store import PluginConfigStore, PluginConfigEntry
 
 
 class FakeQuery:
@@ -32,13 +33,20 @@ class TestPluginConfigRepository:
     def repo(self, session):
         return PluginConfigRepository(session)
 
+    def test_lsp_compliance(self, repo):
+        """PluginConfigRepository is a PluginConfigStore."""
+        assert isinstance(repo, PluginConfigStore)
+
     def test_get_by_name_found(self, repo, session):
-        """get_by_name returns entry when found."""
-        entry = PluginConfig(plugin_name="analytics", status="enabled")
+        """get_by_name returns PluginConfigEntry when found."""
+        entry = PluginConfig(plugin_name="analytics", status="enabled", config={"k": "v"})
         session.query.return_value = FakeQuery([entry])
 
         result = repo.get_by_name("analytics")
-        assert result == entry
+        assert isinstance(result, PluginConfigEntry)
+        assert result.plugin_name == "analytics"
+        assert result.status == "enabled"
+        assert result.config == {"k": "v"}
 
     def test_get_by_name_not_found(self, repo, session):
         """get_by_name returns None when not found."""
@@ -48,30 +56,32 @@ class TestPluginConfigRepository:
         assert result is None
 
     def test_get_all(self, repo, session):
-        """get_all returns all entries."""
+        """get_all returns list of PluginConfigEntry."""
         entries = [
-            PluginConfig(plugin_name="a", status="enabled"),
-            PluginConfig(plugin_name="b", status="disabled"),
+            PluginConfig(plugin_name="a", status="enabled", config={}),
+            PluginConfig(plugin_name="b", status="disabled", config={}),
         ]
         session.query.return_value = FakeQuery(entries)
 
         result = repo.get_all()
         assert len(result) == 2
+        assert all(isinstance(e, PluginConfigEntry) for e in result)
 
     def test_get_enabled(self, repo, session):
-        """get_enabled returns only enabled entries."""
-        enabled = PluginConfig(plugin_name="a", status="enabled")
+        """get_enabled returns only enabled entries as PluginConfigEntry."""
+        enabled = PluginConfig(plugin_name="a", status="enabled", config={})
         session.query.return_value = FakeQuery([enabled])
 
         result = repo.get_enabled()
         assert len(result) == 1
+        assert isinstance(result[0], PluginConfigEntry)
         assert result[0].plugin_name == "a"
 
     def test_save_creates_new_entry(self, repo, session):
         """save creates entry when not existing."""
         session.query.return_value = FakeQuery([])
 
-        result = repo.save("analytics", "enabled", {"key": "val"})
+        repo.save("analytics", "enabled", {"key": "val"})
 
         session.add.assert_called_once()
         session.commit.assert_called_once()
@@ -107,6 +117,31 @@ class TestPluginConfigRepository:
 
         added = session.add.call_args[0][0]
         assert added.disabled_at is not None
+
+    def test_get_config(self, repo, session):
+        """get_config returns config dict for a plugin."""
+        entry = PluginConfig(plugin_name="demo", status="enabled", config={"greeting": "Hi"})
+        session.query.return_value = FakeQuery([entry])
+
+        result = repo.get_config("demo")
+        assert result == {"greeting": "Hi"}
+
+    def test_get_config_returns_empty_for_unknown(self, repo, session):
+        """get_config returns empty dict for unknown plugin."""
+        session.query.return_value = FakeQuery([])
+
+        result = repo.get_config("unknown")
+        assert result == {}
+
+    def test_save_config(self, repo, session):
+        """save_config persists config values."""
+        existing = PluginConfig(plugin_name="demo", status="enabled", config={})
+        session.query.return_value = FakeQuery([existing])
+
+        repo.save_config("demo", {"greeting": "Hello"})
+
+        assert existing.config == {"greeting": "Hello"}
+        session.commit.assert_called_once()
 
     def test_delete(self, repo, session):
         """delete removes entry by name."""

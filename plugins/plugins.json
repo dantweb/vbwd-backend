@@ -1,0 +1,16 @@
+{
+  "plugins": {
+    "analytics": {
+      "enabled": true,
+      "version": "1.0.0",
+      "installedAt": "2026-02-10T00:00:00.000Z",
+      "source": "builtin"
+    },
+    "backend-demo-plugin": {
+      "enabled": false,
+      "version": "1.0.0",
+      "installedAt": "2026-02-10T00:00:00.000Z",
+      "source": "local"
+    }
+  }
+}
