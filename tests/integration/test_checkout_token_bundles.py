@@ -9,7 +9,6 @@ Run with:
 """
 import pytest
 import requests
-import os
 from uuid import uuid4
 from typing import Dict, Optional
 

@@ -225,7 +225,14 @@ def checkout():
     add_on_ids_raw = data.get("add_on_ids", [])
 
     if not plan_id and not token_bundle_ids_raw and not add_on_ids_raw:
-        return jsonify({"error": "At least one item required (plan_id, token_bundle_ids, or add_on_ids)"}), 400
+        return (
+            jsonify(
+                {
+                    "error": "At least one item required (plan_id, token_bundle_ids, or add_on_ids)"
+                }
+            ),
+            400,
+        )
 
     # Parse plan UUID (optional now)
     plan_uuid = None
@@ -420,10 +427,15 @@ def cancel_addon(addon_sub_id):
     addon_sub.cancel()
     db.session.commit()
 
-    return jsonify({
-        "addon_subscription": addon_sub.to_dict(),
-        "message": "Add-on cancelled successfully",
-    }), 200
+    return (
+        jsonify(
+            {
+                "addon_subscription": addon_sub.to_dict(),
+                "message": "Add-on cancelled successfully",
+            }
+        ),
+        200,
+    )
 
 
 @user_bp.route("/tokens/balance", methods=["GET"])

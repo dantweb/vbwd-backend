@@ -19,6 +19,8 @@ def _register_event_handlers(app: Flask, container) -> None:
     from src.handlers.checkout_handler import CheckoutHandler
     from src.handlers.payment_handler import PaymentCapturedHandler
     from src.handlers.refund_handler import PaymentRefundedHandler
+    from src.handlers.restore_handler import RefundReversedHandler
+    from src.handlers.subscription_cancel_handler import SubscriptionCancelledHandler
 
     try:
         dispatcher = container.event_dispatcher()
@@ -26,11 +28,11 @@ def _register_event_handlers(app: Flask, container) -> None:
         # Create a mock email service for now if not configured
         # In production, this should be properly configured
         class MockEmailService:
-            def send_template(self, to, template, context):
+            def send_template(self, to: str, template: str, context: dict) -> object:
                 logger.info(f"[MockEmail] Would send '{template}' to {to}")
                 return type("EmailResult", (), {"success": True})()
 
-        email_service = MockEmailService()
+        email_service: Any = MockEmailService()
 
         # Create password reset handler
         password_reset_handler = PasswordResetHandler(
@@ -61,6 +63,14 @@ def _register_event_handlers(app: Flask, container) -> None:
         # Create and register refund handler
         refund_handler = PaymentRefundedHandler(container)
         dispatcher.register("payment.refunded", refund_handler)
+
+        # Create and register refund reversal handler
+        restore_handler = RefundReversedHandler(container)
+        dispatcher.register("refund.reversed", restore_handler)
+
+        # Create and register subscription cancel handler
+        cancel_handler = SubscriptionCancelledHandler(container)
+        dispatcher.register("subscription.cancelled", cancel_handler)
 
         logger.info("Event handlers registered successfully")
 
@@ -125,6 +135,7 @@ def create_app(config: Optional[Dict[str, Any]] = None) -> Flask:
     from src.routes.settings import settings_bp
     from src.routes.token_bundles import token_bundles_bp
     from src.routes.webhooks import webhooks_bp
+
     csrf.exempt(auth_bp)
     csrf.exempt(user_bp)
     csrf.exempt(tarif_plans_bp)
@@ -157,7 +168,7 @@ def create_app(config: Optional[Dict[str, Any]] = None) -> Flask:
     # Wire container to use Flask-SQLAlchemy session
     # Initial override for app startup (event handlers, etc.)
     # Per-request override happens in before_request hook
-    app.container = container
+    app.container = container  # type: ignore[attr-defined]
 
     # Override db_session for app initialization (required for event handlers)
     with app.app_context():
@@ -181,9 +192,9 @@ def create_app(config: Optional[Dict[str, Any]] = None) -> Flask:
     config_store = JsonFilePluginConfigStore(plugins_dir)
     schema_reader = PluginConfigSchemaReader([plugins_dir])
     plugin_manager = PluginManager(config_repo=config_store)
-    app.plugin_manager = plugin_manager
-    app.config_store = config_store
-    app.schema_reader = schema_reader
+    app.plugin_manager = plugin_manager  # type: ignore[attr-defined]
+    app.config_store = config_store  # type: ignore[attr-defined]
+    app.schema_reader = schema_reader  # type: ignore[attr-defined]
 
     # Auto-discover plugins from user plugins dir
     plugin_manager.discover("plugins")

@@ -1,6 +1,5 @@
 """Tests for admin plugin management routes."""
 import json
-import pytest
 from unittest.mock import patch, MagicMock
 from uuid import uuid4
 from src.models.enums import UserRole
@@ -11,7 +10,9 @@ from src.plugins.config_store import PluginConfigStore, PluginConfigEntry
 class MockPlugin(BasePlugin):
     """Mock plugin for route tests."""
 
-    def __init__(self, name="test-plugin", version="1.0.0", status=PluginStatus.INITIALIZED):
+    def __init__(
+        self, name="test-plugin", version="1.0.0", status=PluginStatus.INITIALIZED
+    ):
         super().__init__()
         self._name = name
         self._version = version
@@ -141,9 +142,7 @@ class TestPutPluginConfig:
 
     @patch("src.middleware.auth.AuthService")
     @patch("src.middleware.auth.UserRepository")
-    def test_saves_config_values(
-        self, mock_repo_class, mock_auth_class, app, client
-    ):
+    def test_saves_config_values(self, mock_repo_class, mock_auth_class, app, client):
         """PUT /admin/plugins/<name>/config saves config values."""
         _mock_admin_auth(mock_repo_class, mock_auth_class)
 
@@ -314,9 +313,7 @@ class TestListPluginsHasConfig:
         app.plugin_manager._plugins["backend-demo-plugin"] = plugin
 
         mock_reader = MagicMock()
-        mock_reader.get_admin_config.return_value = {
-            "tabs": [{"id": "general"}]
-        }
+        mock_reader.get_admin_config.return_value = {"tabs": [{"id": "general"}]}
         app.schema_reader = mock_reader
 
         # Config store for status reading

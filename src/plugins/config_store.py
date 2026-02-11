@@ -22,7 +22,9 @@ class PluginConfigStore(ABC):
         ...
 
     @abstractmethod
-    def save(self, plugin_name: str, status: str, config: Optional[dict] = None) -> None:
+    def save(
+        self, plugin_name: str, status: str, config: Optional[dict] = None
+    ) -> None:
         """Save plugin status and optional config."""
         ...
 

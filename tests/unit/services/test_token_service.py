@@ -2,7 +2,7 @@
 from unittest.mock import MagicMock
 from uuid import uuid4
 
-from src.models.enums import TokenTransactionType, PurchaseStatus
+from src.models.enums import TokenTransactionType
 
 
 class TestTokenServiceRefundTokens:
@@ -107,7 +107,7 @@ class TestTokenServiceCreditTokens:
             purchase_repo=purchase_repo,
         )
 
-        result = service.credit_tokens(
+        service.credit_tokens(
             user_id=user_id,
             amount=50,
             transaction_type=TokenTransactionType.PURCHASE,

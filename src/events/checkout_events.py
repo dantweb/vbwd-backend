@@ -14,12 +14,12 @@ class CheckoutRequestedEvent(DomainEvent):
     All items remain pending until payment is confirmed.
     """
 
-    user_id: UUID = None
-    plan_id: UUID = None
+    user_id: Optional[UUID] = None
+    plan_id: Optional[UUID] = None
     token_bundle_ids: List[UUID] = field(default_factory=list)
     add_on_ids: List[UUID] = field(default_factory=list)
     currency: str = "USD"
-    payment_method_code: str = None
+    payment_method_code: Optional[str] = None
 
     def __post_init__(self):
         self.name = "checkout.requested"
@@ -34,9 +34,9 @@ class CheckoutCompletedEvent(DomainEvent):
     Contains IDs of all created pending items.
     """
 
-    user_id: UUID = None
-    subscription_id: UUID = None
-    invoice_id: UUID = None
+    user_id: Optional[UUID] = None
+    subscription_id: Optional[UUID] = None
+    invoice_id: Optional[UUID] = None
     token_bundle_purchase_ids: List[UUID] = field(default_factory=list)
     addon_subscription_ids: List[UUID] = field(default_factory=list)
 
@@ -49,9 +49,9 @@ class CheckoutCompletedEvent(DomainEvent):
 class CheckoutFailedEvent(DomainEvent):
     """Event emitted when checkout creation fails."""
 
-    user_id: UUID = None
-    error: str = None
-    error_type: str = None
+    user_id: Optional[UUID] = None
+    error: Optional[str] = None
+    error_type: Optional[str] = None
 
     def __post_init__(self):
         self.name = "checkout.failed"

@@ -32,7 +32,9 @@ class MockConfigStore(PluginConfigStore):
 
     def get_enabled(self):
         return [
-            PluginConfigEntry(plugin_name=n, status="enabled", config=self._configs.get(n, {}))
+            PluginConfigEntry(
+                plugin_name=n, status="enabled", config=self._configs.get(n, {})
+            )
             for n, s in self._plugins.items()
             if s == "enabled"
         ]

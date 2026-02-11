@@ -1,6 +1,5 @@
 """Tests for PluginConfigSchemaReader."""
 import json
-import os
 import pytest
 from src.plugins.config_schema import PluginConfigSchemaReader
 
@@ -37,7 +36,11 @@ class TestPluginConfigSchemaReader:
                     "label": "General",
                     "fields": [
                         {"key": "greeting", "label": "Greeting", "component": "input"},
-                        {"key": "requireAdmin", "label": "Require Admin", "component": "checkbox"},
+                        {
+                            "key": "requireAdmin",
+                            "label": "Require Admin",
+                            "component": "checkbox",
+                        },
                     ],
                 }
             ]

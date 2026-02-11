@@ -63,9 +63,9 @@ class AuthService(IAuthService):
         created_user = self._user_repo.save(new_user)
 
         # Generate token
-        token = self._generate_token(created_user.id, created_user.email)
+        token = self._generate_token(created_user.id, created_user.email)  # type: ignore[arg-type]
 
-        return AuthResult(success=True, user_id=created_user.id, token=token)
+        return AuthResult(success=True, user_id=created_user.id, token=token)  # type: ignore[arg-type]
 
     def login(self, email: str, password: str) -> AuthResult:
         """Login user and return JWT token.
@@ -91,7 +91,7 @@ class AuthService(IAuthService):
             return AuthResult(success=False, error="Invalid credentials")
 
         # Generate token
-        token = self._generate_token(user.id, user.email)
+        token = self._generate_token(user.id, user.email)  # type: ignore[arg-type]
 
         # Build user data for response
         user_data = UserData(
@@ -101,7 +101,7 @@ class AuthService(IAuthService):
             roles=[user.role.value] if user.role else ["user"],
         )
 
-        return AuthResult(success=True, user_id=user.id, token=token, user=user_data)
+        return AuthResult(success=True, user_id=user.id, token=token, user=user_data)  # type: ignore[arg-type]
 
     def verify_token(self, token: str) -> Optional[UUID]:
         """Verify JWT token and return user_id if valid.

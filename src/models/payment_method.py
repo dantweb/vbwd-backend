@@ -1,6 +1,6 @@
 """PaymentMethod domain model for enterprise payment management."""
 from decimal import Decimal
-from typing import Optional, List
+from typing import Optional
 from sqlalchemy.dialects.postgresql import UUID, JSON
 from src.extensions import db
 from src.models.base import BaseModel
@@ -245,7 +245,7 @@ class PaymentMethod(BaseModel):
         return f"<PaymentMethod(code='{self.code}', name='{self.name}')>"
 
 
-class PaymentMethodTranslation(db.Model):
+class PaymentMethodTranslation(db.Model):  # type: ignore[name-defined]
     """
     Translation model for payment methods.
 

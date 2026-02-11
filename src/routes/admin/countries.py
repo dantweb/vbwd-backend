@@ -54,7 +54,7 @@ def enable_country(code: str):
     max_pos = db.session.query(
         func.max(
             db.session.query(repo._model)
-            .filter(repo._model.is_enabled == True)
+            .filter(repo._model.is_enabled.is_(True))
             .subquery()
             .c.position
         )
@@ -62,12 +62,12 @@ def enable_country(code: str):
     if max_pos is None:
         max_pos = (
             db.session.query(func.max(repo._model.position))
-            .filter(repo._model.is_enabled == True)
+            .filter(repo._model.is_enabled.is_(True))
             .scalar()
         )
 
-    country.is_enabled = True
-    country.position = (max_pos or -1) + 1
+    country.is_enabled = True  # type: ignore[assignment]
+    country.position = (max_pos or -1) + 1  # type: ignore[assignment]
 
     db.session.commit()
     db.session.refresh(country)
@@ -95,8 +95,8 @@ def disable_country(code: str):
     if not country:
         return jsonify({"error": f"Country '{code}' not found"}), 404
 
-    country.is_enabled = False
-    country.position = 999
+    country.is_enabled = False  # type: ignore[assignment]
+    country.position = 999  # type: ignore[assignment]
 
     db.session.commit()
     db.session.refresh(country)

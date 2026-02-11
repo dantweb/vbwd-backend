@@ -6,7 +6,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 from src.extensions import db
 
 
-class PluginConfig(db.Model):
+class PluginConfig(db.Model):  # type: ignore[name-defined]
     """Persists plugin enabled/disabled state and configuration across restarts."""
 
     __tablename__ = "plugin_config"
@@ -18,7 +18,9 @@ class PluginConfig(db.Model):
     enabled_at = Column(DateTime, nullable=True)
     disabled_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
-    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at = Column(
+        DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
 
     def __repr__(self):
         return f"<PluginConfig {self.plugin_name} ({self.status})>"

@@ -237,7 +237,9 @@ class CheckoutHandler(IEventHandler):
             }
 
             if subscription and plan:
-                result_data["subscription"] = self._subscription_to_dict(subscription, plan)
+                result_data["subscription"] = self._subscription_to_dict(
+                    subscription, plan
+                )
 
             return EventResult.success_result(result_data)
 

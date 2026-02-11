@@ -1,6 +1,6 @@
 """Payment event handlers."""
 from datetime import datetime
-from uuid import UUID
+from typing import Any
 from src.events.domain import DomainEvent, EventResult, IEventHandler
 from src.events.payment_events import PaymentCapturedEvent
 from src.models.enums import LineItemType, SubscriptionStatus, PurchaseStatus
@@ -76,7 +76,7 @@ class PaymentCapturedHandler(IEventHandler):
                 invoice.paid_at = datetime.utcnow()
                 repos["invoice"].save(invoice)
 
-            items_activated = {
+            items_activated: dict[str, Any] = {
                 "subscription": None,
                 "token_bundles": [],
                 "add_ons": [],

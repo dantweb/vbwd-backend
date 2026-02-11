@@ -27,7 +27,7 @@ def require_permission(*permissions: str) -> Callable:
             verify_jwt_in_request()
             user_id = get_jwt_identity()
 
-            rbac = current_app.container.rbac_service()
+            rbac = getattr(current_app, "container").rbac_service()
 
             if not rbac.has_any_permission(user_id, list(permissions)):
                 return (
@@ -70,7 +70,7 @@ def require_all_permissions(*permissions: str) -> Callable:
             verify_jwt_in_request()
             user_id = get_jwt_identity()
 
-            rbac = current_app.container.rbac_service()
+            rbac = getattr(current_app, "container").rbac_service()
 
             if not rbac.has_all_permissions(user_id, list(permissions)):
                 return (
@@ -113,7 +113,7 @@ def require_role(*roles: str) -> Callable:
             verify_jwt_in_request()
             user_id = get_jwt_identity()
 
-            rbac = current_app.container.rbac_service()
+            rbac = getattr(current_app, "container").rbac_service()
             user_roles = rbac.get_user_roles(user_id)
 
             if not any(role in user_roles for role in roles):
@@ -157,7 +157,7 @@ def require_feature(feature_name: str) -> Callable:
             verify_jwt_in_request()
             user_id = get_jwt_identity()
 
-            guard = current_app.container.feature_guard()
+            guard = getattr(current_app, "container").feature_guard()
 
             if not guard.can_access_feature(user_id, feature_name):
                 return (
@@ -202,7 +202,7 @@ def check_usage_limit(feature_name: str, amount: int = 1) -> Callable:
             verify_jwt_in_request()
             user_id = get_jwt_identity()
 
-            guard = current_app.container.feature_guard()
+            guard = getattr(current_app, "container").feature_guard()
             allowed, remaining = guard.check_usage_limit(user_id, feature_name, amount)
 
             if not allowed:

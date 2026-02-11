@@ -1,5 +1,4 @@
 """Tests for PluginConfig model."""
-import pytest
 from src.models.plugin_config import PluginConfig
 
 
@@ -9,7 +8,16 @@ class TestPluginConfigModel:
     def test_required_columns_exist(self):
         """Model has all required columns."""
         columns = {c.name for c in PluginConfig.__table__.columns}
-        expected = {"id", "plugin_name", "status", "config", "enabled_at", "disabled_at", "created_at", "updated_at"}
+        expected = {
+            "id",
+            "plugin_name",
+            "status",
+            "config",
+            "enabled_at",
+            "disabled_at",
+            "created_at",
+            "updated_at",
+        }
         assert expected.issubset(columns)
 
     def test_default_status_is_disabled(self):

@@ -100,7 +100,7 @@ class BaseSDKAdapter(ISDKAdapter, ABC):
             TransientError: After max retries exhausted
         """
         retries = max_retries if max_retries is not None else self._config.max_retries
-        last_error = None
+        last_error: Optional[TransientError] = None
 
         for attempt in range(retries + 1):
             try:
@@ -112,4 +112,6 @@ class BaseSDKAdapter(ISDKAdapter, ABC):
                     time.sleep(0.1 * (2**attempt))
 
         # Re-raise the last error after all retries exhausted
-        raise last_error
+        if last_error is not None:
+            raise last_error
+        raise RuntimeError("Retry loop completed without result")

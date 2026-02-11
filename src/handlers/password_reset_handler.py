@@ -80,7 +80,7 @@ class PasswordResetHandler(IEventHandler):
             reset_url = f"{self._reset_url_base}?token={result.token}"
 
             self._email_service.send_template(
-                to=result.email,
+                to=result.email or "",
                 template="password_reset",
                 context={
                     "reset_url": reset_url,
@@ -117,7 +117,7 @@ class PasswordResetHandler(IEventHandler):
         if result.success:
             # Send confirmation email
             self._email_service.send_template(
-                to=result.email, template="password_changed", context={}
+                to=result.email or "", template="password_changed", context={}
             )
 
             self._activity_logger.log(
@@ -141,5 +141,6 @@ class PasswordResetHandler(IEventHandler):
             )
 
             return EventResult.error_result(
-                error=result.error, error_type=result.failure_reason
+                error=result.error or "Unknown error",
+                error_type=result.failure_reason or "unknown",
             )

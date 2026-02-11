@@ -32,6 +32,9 @@ class User(BaseModel):
         nullable=False,
         default=UserRole.USER,
     )
+    payment_customer_id = db.Column(
+        db.String(255), unique=True, nullable=True, index=True
+    )
 
     # Relationships
     details = db.relationship(

@@ -40,7 +40,7 @@ class TestFeatureGuard:
     ):
         """User with plan containing feature can access."""
         user_id = uuid4()
-        mock_subscription_repo.get_active_subscription.return_value = mock_subscription
+        mock_subscription_repo.find_active_by_user.return_value = mock_subscription
 
         result = feature_guard.can_access_feature(user_id, "premium_feature")
 
@@ -51,7 +51,7 @@ class TestFeatureGuard:
     ):
         """User without feature in plan is denied."""
         user_id = uuid4()
-        mock_subscription_repo.get_active_subscription.return_value = mock_subscription
+        mock_subscription_repo.find_active_by_user.return_value = mock_subscription
 
         result = feature_guard.can_access_feature(user_id, "enterprise_only")
 
@@ -63,7 +63,7 @@ class TestFeatureGuard:
         """Expired subscription falls back to free tier."""
         user_id = uuid4()
         mock_subscription.is_expired = True
-        mock_subscription_repo.get_active_subscription.return_value = mock_subscription
+        mock_subscription_repo.find_active_by_user.return_value = mock_subscription
 
         # Free tier feature should be accessible
         result = feature_guard.can_access_feature(user_id, "basic_access")
@@ -78,7 +78,7 @@ class TestFeatureGuard:
     ):
         """No subscription falls back to free tier."""
         user_id = uuid4()
-        mock_subscription_repo.get_active_subscription.return_value = None
+        mock_subscription_repo.find_active_by_user.return_value = None
 
         result = feature_guard.can_access_feature(user_id, "basic_access")
         assert result is True
@@ -92,7 +92,7 @@ class TestFeatureGuard:
         """Feature usage limits enforced."""
         user_id = uuid4()
         mock_subscription.tarif_plan.features = {"limits": {"api_calls": 100}}
-        mock_subscription_repo.get_active_subscription.return_value = mock_subscription
+        mock_subscription_repo.find_active_by_user.return_value = mock_subscription
         mock_usage_repo.get_monthly_usage.return_value = 99  # 1 remaining
 
         allowed, remaining = feature_guard.check_usage_limit(user_id, "api_calls", 1)
@@ -106,7 +106,7 @@ class TestFeatureGuard:
         """Denies when usage limit exceeded."""
         user_id = uuid4()
         mock_subscription.tarif_plan.features = {"limits": {"api_calls": 100}}
-        mock_subscription_repo.get_active_subscription.return_value = mock_subscription
+        mock_subscription_repo.find_active_by_user.return_value = mock_subscription
         mock_usage_repo.get_monthly_usage.return_value = 100  # At limit
 
         allowed, remaining = feature_guard.check_usage_limit(user_id, "api_calls", 1)
@@ -120,7 +120,7 @@ class TestFeatureGuard:
         """Unlimited features return None for remaining."""
         user_id = uuid4()
         mock_subscription.tarif_plan.features = []  # No limits defined
-        mock_subscription_repo.get_active_subscription.return_value = mock_subscription
+        mock_subscription_repo.find_active_by_user.return_value = mock_subscription
 
         allowed, remaining = feature_guard.check_usage_limit(
             user_id, "unlimited_feature"
@@ -137,7 +137,7 @@ class TestFeatureGuard:
         mock_subscription.tarif_plan.features = {
             "limits": {"api_calls": 100, "exports": 10}
         }
-        mock_subscription_repo.get_active_subscription.return_value = mock_subscription
+        mock_subscription_repo.find_active_by_user.return_value = mock_subscription
         mock_usage_repo.get_monthly_usage.side_effect = [50, 3]  # api_calls, exports
 
         result = feature_guard.get_feature_limits(user_id)
@@ -157,7 +157,7 @@ class TestFeatureGuard:
     ):
         """Returns empty dict without subscription."""
         user_id = uuid4()
-        mock_subscription_repo.get_active_subscription.return_value = None
+        mock_subscription_repo.find_active_by_user.return_value = None
 
         result = feature_guard.get_feature_limits(user_id)
 
@@ -168,7 +168,7 @@ class TestFeatureGuard:
     ):
         """Returns union of plan features and free tier."""
         user_id = uuid4()
-        mock_subscription_repo.get_active_subscription.return_value = mock_subscription
+        mock_subscription_repo.find_active_by_user.return_value = mock_subscription
 
         result = feature_guard.get_user_features(user_id)
 
@@ -183,7 +183,7 @@ class TestFeatureGuard:
     ):
         """Returns False when no subscription."""
         user_id = uuid4()
-        mock_subscription_repo.get_active_subscription.return_value = None
+        mock_subscription_repo.find_active_by_user.return_value = None
 
         allowed, remaining = feature_guard.check_usage_limit(user_id, "api_calls")
 
@@ -196,7 +196,7 @@ class TestFeatureGuard:
         """Increments usage when within limit."""
         user_id = uuid4()
         mock_subscription.tarif_plan.features = {"limits": {"api_calls": 100}}
-        mock_subscription_repo.get_active_subscription.return_value = mock_subscription
+        mock_subscription_repo.find_active_by_user.return_value = mock_subscription
         mock_usage_repo.get_monthly_usage.return_value = 50
 
         feature_guard.check_usage_limit(user_id, "api_calls", 5)

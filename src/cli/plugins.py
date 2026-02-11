@@ -14,7 +14,7 @@ def plugins_cli():
 @with_appcontext
 def list_plugins():
     """List all registered plugins."""
-    manager = getattr(current_app, 'plugin_manager', None)
+    manager = getattr(current_app, "plugin_manager", None)
     if not manager:
         click.echo("Plugin system not initialized.")
         return
@@ -34,7 +34,7 @@ def list_plugins():
 @with_appcontext
 def enable_plugin(name):
     """Enable a plugin."""
-    manager = getattr(current_app, 'plugin_manager', None)
+    manager = getattr(current_app, "plugin_manager", None)
     if not manager:
         click.echo("Plugin system not initialized.")
         return
@@ -49,6 +49,7 @@ def enable_plugin(name):
             return
         # Re-initialize if needed
         from src.plugins.base import PluginStatus
+
         if plugin.status == PluginStatus.DISABLED:
             plugin._status = PluginStatus.INITIALIZED
         manager.enable_plugin(name)
@@ -62,7 +63,7 @@ def enable_plugin(name):
 @with_appcontext
 def disable_plugin(name):
     """Disable a plugin."""
-    manager = getattr(current_app, 'plugin_manager', None)
+    manager = getattr(current_app, "plugin_manager", None)
     if not manager:
         click.echo("Plugin system not initialized.")
         return

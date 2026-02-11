@@ -75,7 +75,7 @@ class PasswordResetService:
             return ResetRequestResult(success=True)
 
         # Invalidate any existing tokens
-        self._reset_repo.invalidate_tokens_for_user(user.id)
+        self._reset_repo.invalidate_tokens_for_user(user.id)  # type: ignore[arg-type]
 
         # Generate secure token
         token = secrets.token_urlsafe(32)
@@ -83,7 +83,7 @@ class PasswordResetService:
 
         # Store token
         self._reset_repo.create_token(
-            user_id=user.id, token=token, expires_at=expires_at
+            user_id=user.id, token=token, expires_at=expires_at  # type: ignore[arg-type]
         )
 
         return ResetRequestResult(
@@ -137,6 +137,6 @@ class PasswordResetService:
         self._user_repo.update(user)
 
         # Mark token as used
-        self._reset_repo.mark_used(reset_token.id)
+        self._reset_repo.mark_used(reset_token.id)  # type: ignore[arg-type]
 
         return ResetResult(success=True, user_id=str(user.id), email=user.email)

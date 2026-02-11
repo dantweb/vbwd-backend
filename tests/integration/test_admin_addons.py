@@ -194,7 +194,7 @@ class TestAdminAddOns:
         assert data["addon"]["name"] == test_addon_data["name"]
         assert data["addon"]["slug"] == test_addon_data["slug"]
         assert data["addon"]["config"]["type"] == "support"
-        assert data["addon"]["is_active"] == True
+        assert data["addon"]["is_active"] is True
 
     def test_create_addon_requires_name(self, admin_headers):
         """
@@ -309,7 +309,7 @@ class TestAdminAddOns:
         assert response.status_code == 201
         data = response.json()
         assert data["addon"]["billing_period"] == "one_time"
-        assert data["addon"]["is_recurring"] == False
+        assert data["addon"]["is_recurring"] is False
 
     # =========================================
     # Get Add-on Tests
@@ -377,7 +377,7 @@ class TestAdminAddOns:
         data = response.json()
         assert data["addon"]["name"] == "Updated Addon Name"
         assert data["addon"]["price"] == "25.00"
-        assert data["addon"]["config"]["updated"] == True
+        assert data["addon"]["config"]["updated"] is True
 
     def test_update_addon_not_found(self, admin_headers):
         """
@@ -435,7 +435,7 @@ class TestAdminAddOns:
         )
         assert response.status_code == 200
         data = response.json()
-        assert data["addon"]["is_active"] == False
+        assert data["addon"]["is_active"] is False
 
     def test_activate_addon(self, admin_headers, created_addon):
         """
@@ -457,7 +457,7 @@ class TestAdminAddOns:
         )
         assert response.status_code == 200
         data = response.json()
-        assert data["addon"]["is_active"] == True
+        assert data["addon"]["is_active"] is True
 
     # =========================================
     # Delete Add-on Tests
@@ -508,4 +508,4 @@ class TestAdminAddOns:
         assert "addons" in data
         # Should only return active addons
         for addon in data["addons"]:
-            assert addon["is_active"] == True
+            assert addon["is_active"] is True

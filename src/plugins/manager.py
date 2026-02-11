@@ -18,7 +18,11 @@ class PluginManager:
     Handles plugin discovery, registration, lifecycle, and dependencies.
     """
 
-    def __init__(self, event_dispatcher: Optional[EventDispatcher] = None, config_repo: Optional[PluginConfigStore] = None):
+    def __init__(
+        self,
+        event_dispatcher: Optional[EventDispatcher] = None,
+        config_repo: Optional[PluginConfigStore] = None,
+    ):
         self._plugins: Dict[str, BasePlugin] = {}
         self._event_dispatcher = event_dispatcher or EventDispatcher()
         self._config_repo = config_repo
@@ -262,7 +266,9 @@ class PluginManager:
             if plugin.status == PluginStatus.INITIALIZED:
                 try:
                     plugin.enable()
-                    logger.info(f"Restored enabled state for plugin '{config.plugin_name}'")
+                    logger.info(
+                        f"Restored enabled state for plugin '{config.plugin_name}'"
+                    )
                 except Exception as e:
                     logger.warning(
                         f"Failed to restore plugin '{config.plugin_name}': {e}"

@@ -41,6 +41,9 @@ class Subscription(BaseModel):
     expires_at = db.Column(db.DateTime, index=True)
     cancelled_at = db.Column(db.DateTime)
     paused_at = db.Column(db.DateTime, nullable=True)
+    provider_subscription_id = db.Column(
+        db.String(255), unique=True, nullable=True, index=True
+    )
 
     # Relationships
     invoices = db.relationship(

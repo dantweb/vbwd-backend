@@ -1,7 +1,6 @@
 """Tests for admin add-on tarif_plan_ids handling in routes (Sprint 13)."""
 from unittest.mock import patch, MagicMock
 from uuid import uuid4
-from decimal import Decimal
 from src.models.enums import UserRole
 
 

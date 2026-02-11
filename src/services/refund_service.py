@@ -3,10 +3,17 @@ from datetime import datetime
 from typing import Optional, Dict, Any
 from uuid import UUID
 
-from src.models.enums import InvoiceStatus, LineItemType, SubscriptionStatus, PurchaseStatus
+from src.models.enums import (
+    InvoiceStatus,
+    LineItemType,
+    SubscriptionStatus,
+    PurchaseStatus,
+)
 from src.repositories.invoice_repository import InvoiceRepository
 from src.repositories.subscription_repository import SubscriptionRepository
-from src.repositories.token_bundle_purchase_repository import TokenBundlePurchaseRepository
+from src.repositories.token_bundle_purchase_repository import (
+    TokenBundlePurchaseRepository,
+)
 from src.repositories.addon_subscription_repository import AddOnSubscriptionRepository
 from src.services.token_service import TokenService
 
@@ -50,9 +57,7 @@ class RefundService:
         self._purchase_repo = purchase_repo
         self._addon_sub_repo = addon_sub_repo
 
-    def process_refund(
-        self, invoice_id: UUID, refund_reference: str
-    ) -> RefundResult:
+    def process_refund(self, invoice_id: UUID, refund_reference: str) -> RefundResult:
         """
         Process a full refund for an invoice.
 
@@ -82,14 +87,14 @@ class RefundService:
         self._invoice_repo.save(invoice)
 
         # 3. Reverse line items
-        items_reversed = {
+        items_reversed: dict[str, object] = {
             "subscription": None,
             "token_bundles": [],
             "add_ons": [],
             "tokens_debited": 0,
         }
 
-        for line_item in invoice.line_items:
+        for line_item in invoice.line_items:  # type: ignore[attr-defined]
             if line_item.item_type == LineItemType.SUBSCRIPTION:
                 self._reverse_subscription(line_item, items_reversed)
             elif line_item.item_type == LineItemType.TOKEN_BUNDLE:

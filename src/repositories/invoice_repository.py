@@ -40,6 +40,16 @@ class InvoiceRepository(BaseRepository[UserInvoice]):
             .all()
         )
 
+    def find_by_provider_session_id(
+        self, provider_session_id: str
+    ) -> Optional[UserInvoice]:
+        """Find invoice by external provider session/order ID."""
+        return (
+            self._session.query(UserInvoice)
+            .filter(UserInvoice.provider_session_id == provider_session_id)
+            .first()
+        )
+
     def find_pending(self) -> List[UserInvoice]:
         """Find all pending invoices."""
         return (

@@ -1,5 +1,5 @@
 """Redis client utilities for distributed locking and caching."""
-import redis
+import redis  # type: ignore[import-untyped]
 from contextlib import contextmanager
 from typing import Optional, Generator
 from src.config import get_redis_url

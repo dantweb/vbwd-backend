@@ -31,8 +31,8 @@ def list_plans():
 
     # Initialize services
     plan_repo = TarifPlanRepository(db.session)
-    currency_repo = CurrencyRepository(db.session)
-    tax_repo = TaxRepository(db.session)
+    currency_repo = CurrencyRepository(db.session)  # type: ignore[arg-type]
+    tax_repo = TaxRepository(db.session)  # type: ignore[arg-type]
 
     currency_service = CurrencyService(currency_repo=currency_repo)
     tax_service = TaxService(tax_repo=tax_repo)
@@ -105,8 +105,8 @@ def get_plan(slug_or_id: str):
 
     # Initialize services
     plan_repo = TarifPlanRepository(db.session)
-    currency_repo = CurrencyRepository(db.session)
-    tax_repo = TaxRepository(db.session)
+    currency_repo = CurrencyRepository(db.session)  # type: ignore[arg-type]
+    tax_repo = TaxRepository(db.session)  # type: ignore[arg-type]
 
     currency_service = CurrencyService(currency_repo=currency_repo)
     tax_service = TaxService(tax_repo=tax_repo)

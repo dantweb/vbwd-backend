@@ -1,6 +1,5 @@
 """Tests for plugin blueprint registration."""
 import pytest
-from unittest.mock import MagicMock
 from src.plugins.base import BasePlugin, PluginMetadata
 from src.plugins.manager import PluginManager
 from plugins.analytics import AnalyticsPlugin

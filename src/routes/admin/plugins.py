@@ -6,7 +6,9 @@ from src.plugins.base import PluginStatus
 
 logger = logging.getLogger(__name__)
 
-admin_plugins_bp = Blueprint("admin_plugins", __name__, url_prefix="/api/v1/admin/plugins")
+admin_plugins_bp = Blueprint(
+    "admin_plugins", __name__, url_prefix="/api/v1/admin/plugins"
+)
 
 
 def _get_persisted_status(plugin_name):
@@ -57,15 +59,17 @@ def list_plugins():
             admin_config = schema_reader.get_admin_config(meta.name)
             has_config = bool(admin_config.get("tabs"))
 
-        plugins.append({
-            "name": meta.name,
-            "version": meta.version,
-            "author": meta.author,
-            "description": meta.description,
-            "status": status,
-            "dependencies": meta.dependencies or [],
-            "hasConfig": has_config,
-        })
+        plugins.append(
+            {
+                "name": meta.name,
+                "version": meta.version,
+                "author": meta.author,
+                "description": meta.description,
+                "status": status,
+                "dependencies": meta.dependencies or [],
+                "hasConfig": has_config,
+            }
+        )
 
     return jsonify({"plugins": plugins}), 200
 
@@ -99,17 +103,22 @@ def get_plugin_detail(plugin_name):
     if config_store:
         saved_config = config_store.get_config(plugin_name)
 
-    return jsonify({
-        "name": meta.name,
-        "version": meta.version,
-        "author": meta.author,
-        "description": meta.description,
-        "status": status,
-        "dependencies": meta.dependencies or [],
-        "configSchema": config_schema,
-        "adminConfig": admin_config,
-        "savedConfig": saved_config,
-    }), 200
+    return (
+        jsonify(
+            {
+                "name": meta.name,
+                "version": meta.version,
+                "author": meta.author,
+                "description": meta.description,
+                "status": status,
+                "dependencies": meta.dependencies or [],
+                "configSchema": config_schema,
+                "adminConfig": admin_config,
+                "savedConfig": saved_config,
+            }
+        ),
+        200,
+    )
 
 
 @admin_plugins_bp.route("/<plugin_name>/config", methods=["PUT"])

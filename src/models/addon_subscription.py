@@ -49,6 +49,7 @@ class AddOnSubscription(BaseModel):
     starts_at = db.Column(db.DateTime, nullable=True)
     expires_at = db.Column(db.DateTime, nullable=True, index=True)
     cancelled_at = db.Column(db.DateTime, nullable=True)
+    provider_subscription_id = db.Column(db.String(255), nullable=True, index=True)
 
     # Relationships
     addon = db.relationship(
@@ -88,7 +89,9 @@ class AddOnSubscription(BaseModel):
             "id": str(self.id),
             "user_id": str(self.user_id),
             "addon_id": str(self.addon_id),
-            "subscription_id": str(self.subscription_id) if self.subscription_id else None,
+            "subscription_id": str(self.subscription_id)
+            if self.subscription_id
+            else None,
             "invoice_id": str(self.invoice_id) if self.invoice_id else None,
             "status": self.status.value,
             "is_valid": self.is_valid,

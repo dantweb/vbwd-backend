@@ -12,7 +12,6 @@ Or against running backend:
 """
 import pytest
 import requests
-import os
 from uuid import uuid4
 from typing import Dict, Optional
 
@@ -313,7 +312,9 @@ class TestCheckoutWithoutPlan:
             "Content-Type": "application/json",
         }
 
-    def test_checkout_without_plan_with_bundles_returns_201(self, auth_headers, admin_headers):
+    def test_checkout_without_plan_with_bundles_returns_201(
+        self, auth_headers, admin_headers
+    ):
         """Checkout with only token bundles (no plan) returns 201."""
         from tests.fixtures.checkout_fixtures import create_test_token_bundle
 
@@ -327,14 +328,18 @@ class TestCheckoutWithoutPlan:
             headers=auth_headers,
             timeout=10,
         )
-        assert response.status_code == 201, f"Got {response.status_code}: {response.text}"
+        assert (
+            response.status_code == 201
+        ), f"Got {response.status_code}: {response.text}"
         data = response.json()
         assert "invoice" in data
         assert data["invoice"]["status"] == "pending"
         # No subscription should be created
         assert "subscription" not in data
 
-    def test_checkout_payment_method_code_stored_on_invoice(self, auth_headers, admin_headers):
+    def test_checkout_payment_method_code_stored_on_invoice(
+        self, auth_headers, admin_headers
+    ):
         """Payment method code is stored on the created invoice."""
         from tests.fixtures.checkout_fixtures import create_test_token_bundle
 
@@ -351,6 +356,8 @@ class TestCheckoutWithoutPlan:
             headers=auth_headers,
             timeout=10,
         )
-        assert response.status_code == 201, f"Got {response.status_code}: {response.text}"
+        assert (
+            response.status_code == 201
+        ), f"Got {response.status_code}: {response.text}"
         data = response.json()
         assert data["invoice"]["payment_method"] == "paypal"

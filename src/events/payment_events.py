@@ -36,9 +36,9 @@ class PaymentCapturedEvent(DomainEvent):
     - Add-ons → active
     """
 
-    invoice_id: UUID = None
-    payment_reference: str = None
-    amount: str = None
+    invoice_id: Optional[UUID] = None
+    payment_reference: Optional[str] = None
+    amount: Optional[str] = None
     currency: str = "USD"
     # Legacy fields for backward compatibility
     subscription_id: Optional[UUID] = None
@@ -80,14 +80,53 @@ class PaymentRefundedEvent(DomainEvent):
     - Add-ons → cancelled
     """
 
-    invoice_id: UUID = None
-    refund_reference: str = None
-    amount: str = None
+    invoice_id: Optional[UUID] = None
+    refund_reference: Optional[str] = None
+    amount: Optional[str] = None
     currency: str = "USD"
     metadata: Dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self):
         self.name = "payment.refunded"
+        super().__post_init__()
+
+
+@dataclass
+class RefundReversedEvent(DomainEvent):
+    """Refund reversed/cancelled by payment provider.
+
+    Emitted when a previously completed refund is cancelled or reversed.
+    Handler restores all items on the invoice:
+    - Invoice → PAID
+    - Subscription → re-activated
+    - Token bundles → tokens re-credited
+    - Add-ons → re-activated
+    """
+
+    invoice_id: Optional[UUID] = None
+    reason: str = ""
+    provider: Optional[str] = None
+    metadata: Dict[str, Any] = field(default_factory=dict)
+
+    def __post_init__(self):
+        self.name = "refund.reversed"
+        super().__post_init__()
+
+
+@dataclass
+class SubscriptionCancelledEvent(DomainEvent):
+    """Subscription cancelled by provider (webhook) or admin action.
+
+    Handler marks subscription as CANCELLED.
+    """
+
+    subscription_id: Optional[UUID] = None
+    user_id: Optional[UUID] = None
+    reason: str = ""
+    provider: Optional[str] = None
+
+    def __post_init__(self):
+        self.name = "subscription.cancelled"
         super().__post_init__()
 
 

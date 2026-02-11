@@ -1,6 +1,6 @@
 """Tests for PluginConfigRepository."""
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 from src.repositories.plugin_config_repository import PluginConfigRepository
 from src.models.plugin_config import PluginConfig
 from src.plugins.config_store import PluginConfigStore, PluginConfigEntry
@@ -39,7 +39,9 @@ class TestPluginConfigRepository:
 
     def test_get_by_name_found(self, repo, session):
         """get_by_name returns PluginConfigEntry when found."""
-        entry = PluginConfig(plugin_name="analytics", status="enabled", config={"k": "v"})
+        entry = PluginConfig(
+            plugin_name="analytics", status="enabled", config={"k": "v"}
+        )
         session.query.return_value = FakeQuery([entry])
 
         result = repo.get_by_name("analytics")
@@ -120,7 +122,9 @@ class TestPluginConfigRepository:
 
     def test_get_config(self, repo, session):
         """get_config returns config dict for a plugin."""
-        entry = PluginConfig(plugin_name="demo", status="enabled", config={"greeting": "Hi"})
+        entry = PluginConfig(
+            plugin_name="demo", status="enabled", config={"greeting": "Hi"}
+        )
         session.query.return_value = FakeQuery([entry])
 
         result = repo.get_config("demo")

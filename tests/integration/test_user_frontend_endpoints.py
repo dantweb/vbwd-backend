@@ -13,7 +13,7 @@ Or against running backend:
 import pytest
 import requests
 import os
-from typing import Optional, Dict, Any
+from typing import Optional, Dict
 
 
 class TestUserSubscriptionEndpoint:

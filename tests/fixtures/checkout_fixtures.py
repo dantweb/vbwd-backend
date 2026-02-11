@@ -1,5 +1,4 @@
 """Fixtures for checkout integration tests."""
-import pytest
 import requests
 import os
 from uuid import uuid4

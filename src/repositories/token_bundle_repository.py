@@ -1,5 +1,5 @@
 """TokenBundle repository implementation."""
-from typing import Optional, List, Tuple
+from typing import List, Tuple
 from src.repositories.base import BaseRepository
 from src.models import TokenBundle
 

@@ -1,7 +1,0 @@
-{
-  "analytics": {},
-  "backend-demo-plugin": {
-    "greeting": "Hello from demo plugin!!!456",
-    "requireAdmin": true
-  }
-}

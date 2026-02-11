@@ -4,7 +4,7 @@ import json
 from typing import Dict, Any, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from redis import Redis
+    from redis import Redis  # type: ignore[import-untyped]
 
 
 class IdempotencyService:

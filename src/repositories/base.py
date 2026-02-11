@@ -1,5 +1,5 @@
 """Base repository implementation with optimistic locking."""
-from typing import Generic, TypeVar, Optional, List, Type, Union
+from typing import Any, Generic, TypeVar, Optional, List, Type, Union
 from uuid import UUID
 from sqlalchemy.orm.exc import StaleDataError
 from src.models.base import ConcurrentModificationError
@@ -37,7 +37,7 @@ class BaseRepository(Generic[T]):
         """Count total entities."""
         return self._session.query(self._model).count()
 
-    def save(self, entity: T, expected_version: Optional[int] = None) -> T:
+    def save(self, entity: Any, expected_version: Optional[int] = None) -> Any:
         """
         Save entity with optimistic locking.
 
@@ -57,10 +57,10 @@ class BaseRepository(Generic[T]):
             if current is None:
                 raise ValueError(f"Entity {entity.id} not found")
 
-            if current.version != expected_version:
+            if current.version != expected_version:  # type: ignore[attr-defined]
                 raise ConcurrentModificationError(
                     f"Entity {entity.id} was modified by another transaction. "
-                    f"Expected version {expected_version}, found {current.version}"
+                    f"Expected version {expected_version}, found {current.version}"  # type: ignore[attr-defined]
                 )
 
         try:
@@ -68,7 +68,7 @@ class BaseRepository(Generic[T]):
             from sqlalchemy.orm import object_session
             from sqlalchemy.inspection import inspect
 
-            if object_session(entity) is None or inspect(entity).transient:
+            if object_session(entity) is None or inspect(entity).transient:  # type: ignore[union-attr]
                 self._session.add(entity)
             self._session.commit()
             self._session.refresh(entity)

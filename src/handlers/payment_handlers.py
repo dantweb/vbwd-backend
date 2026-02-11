@@ -1,7 +1,7 @@
 """Payment event handlers."""
 from typing import List, TYPE_CHECKING
 
-from src.events.domain import IEventHandler, EventResult
+from src.events.domain import DomainEvent, IEventHandler, EventResult
 from src.events.payment_events import (
     CheckoutInitiatedEvent,
     PaymentCapturedEvent,
@@ -36,15 +36,19 @@ class CheckoutInitiatedHandler(IEventHandler):
         """Check if can handle event."""
         return isinstance(event, CheckoutInitiatedEvent)
 
-    def handle(self, event: CheckoutInitiatedEvent) -> EventResult:
+    def handle(self, event: DomainEvent) -> EventResult:
         """Handle checkout initiation.
 
         Creates payment intent via SDK adapter.
         """
+        assert isinstance(event, CheckoutInitiatedEvent)
         try:
             adapter = self._sdk_registry.get(event.provider)
         except ValueError as e:
             return EventResult.error_result(str(e))
+
+        if event.amount is None:
+            return EventResult.error_result("Amount is required")
 
         # Call SDK to create payment intent
         sdk_result = adapter.create_payment_intent(
@@ -65,7 +69,7 @@ class CheckoutInitiatedHandler(IEventHandler):
                 }
             )
         else:
-            return EventResult.error_result(sdk_result.error)
+            return EventResult.error_result(sdk_result.error or "Unknown error")
 
 
 class PaymentCapturedHandler(IEventHandler):
@@ -92,11 +96,12 @@ class PaymentCapturedHandler(IEventHandler):
         """Check if can handle event."""
         return isinstance(event, PaymentCapturedEvent)
 
-    def handle(self, event: PaymentCapturedEvent) -> EventResult:
+    def handle(self, event: DomainEvent) -> EventResult:
         """Handle payment captured.
 
         Activates subscription and marks invoice as paid.
         """
+        assert isinstance(event, PaymentCapturedEvent)
         self._processed_events.append(event)
 
         # In a real implementation, this would:
@@ -137,11 +142,12 @@ class PaymentFailedHandler(IEventHandler):
         """Check if can handle event."""
         return isinstance(event, PaymentFailedEvent)
 
-    def handle(self, event: PaymentFailedEvent) -> EventResult:
+    def handle(self, event: DomainEvent) -> EventResult:
         """Handle payment failure.
 
         Updates subscription status.
         """
+        assert isinstance(event, PaymentFailedEvent)
         self._processed_events.append(event)
 
         # In a real implementation, this would:
@@ -180,11 +186,14 @@ class RefundRequestedHandler(IEventHandler):
         """Check if can handle event."""
         return isinstance(event, RefundRequestedEvent)
 
-    def handle(self, event: RefundRequestedEvent) -> EventResult:
+    def handle(self, event: DomainEvent) -> EventResult:
         """Handle refund request.
 
         Calls SDK adapter to process refund.
         """
+        assert isinstance(event, RefundRequestedEvent)
+        if not event.provider:
+            return EventResult.error_result("Provider is required")
         try:
             adapter = self._sdk_registry.get(event.provider)
         except (ValueError, AttributeError) as e:
@@ -204,4 +213,4 @@ class RefundRequestedHandler(IEventHandler):
                 }
             )
         else:
-            return EventResult.error_result(sdk_result.error)
+            return EventResult.error_result(sdk_result.error or "Unknown error")

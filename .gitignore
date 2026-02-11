@@ -115,3 +115,6 @@ logs/*.log
 # Coverage
 .coverage
 htmlcov/
+
+
+plugins/config.json

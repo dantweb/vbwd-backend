@@ -11,7 +11,8 @@ Current workaround: Use /auth/register for user creation.
 Subscriptions cannot be created via API - they need a purchase/checkout flow.
 
 Run with:
-    docker-compose run --rm -e API_BASE_URL=http://api:5000/api/v1 test pytest tests/integration/test_user_subscription_flow.py -v
+    docker-compose run --rm -e API_BASE_URL=http://api:5000/api/v1 test \
+        pytest tests/integration/test_user_subscription_flow.py -v
 
 Methodology: TDD-First, Event-Driven, SOLID
 """

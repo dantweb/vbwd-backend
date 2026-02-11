@@ -210,7 +210,7 @@ class TestAdminTokenBundles:
         assert "bundle" in data
         assert data["bundle"]["name"] == test_bundle_data["name"]
         assert data["bundle"]["token_amount"] == test_bundle_data["token_amount"]
-        assert data["bundle"]["is_active"] == True
+        assert data["bundle"]["is_active"] is True
 
     def test_create_token_bundle_requires_name(self, admin_headers):
         """
@@ -373,7 +373,7 @@ class TestAdminTokenBundles:
         )
         assert response.status_code == 200
         data = response.json()
-        assert data["bundle"]["is_active"] == False
+        assert data["bundle"]["is_active"] is False
 
     def test_activate_token_bundle(self, admin_headers, created_bundle):
         """
@@ -395,7 +395,7 @@ class TestAdminTokenBundles:
         )
         assert response.status_code == 200
         data = response.json()
-        assert data["bundle"]["is_active"] == True
+        assert data["bundle"]["is_active"] is True
 
     # =========================================
     # Delete Token Bundle Tests

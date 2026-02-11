@@ -40,10 +40,13 @@ class TestJsonFilePluginConfigStore:
 
     def test_get_enabled_returns_enabled_plugins(self, store, plugins_dir):
         """get_enabled returns only enabled plugins."""
-        self._write_plugins(plugins_dir, {
-            "analytics": {"enabled": True, "version": "1.0.0"},
-            "demo": {"enabled": False, "version": "1.0.0"},
-        })
+        self._write_plugins(
+            plugins_dir,
+            {
+                "analytics": {"enabled": True, "version": "1.0.0"},
+                "demo": {"enabled": False, "version": "1.0.0"},
+            },
+        )
         self._write_config(plugins_dir, {"analytics": {"key": "val"}})
 
         result = store.get_enabled()
@@ -54,9 +57,12 @@ class TestJsonFilePluginConfigStore:
 
     def test_save_enables_plugin_updates_json(self, store, plugins_dir):
         """save with status='enabled' sets enabled=True in JSON."""
-        self._write_plugins(plugins_dir, {
-            "demo": {"enabled": False, "version": "1.0.0"},
-        })
+        self._write_plugins(
+            plugins_dir,
+            {
+                "demo": {"enabled": False, "version": "1.0.0"},
+            },
+        )
         self._write_config(plugins_dir, {})
 
         store.save("demo", "enabled")
@@ -66,9 +72,12 @@ class TestJsonFilePluginConfigStore:
 
     def test_save_disables_plugin_updates_json(self, store, plugins_dir):
         """save with status='disabled' sets enabled=False in JSON."""
-        self._write_plugins(plugins_dir, {
-            "demo": {"enabled": True, "version": "1.0.0"},
-        })
+        self._write_plugins(
+            plugins_dir,
+            {
+                "demo": {"enabled": True, "version": "1.0.0"},
+            },
+        )
         self._write_config(plugins_dir, {})
 
         store.save("demo", "disabled")
@@ -92,9 +101,12 @@ class TestJsonFilePluginConfigStore:
 
     def test_save_with_config_persists(self, store, plugins_dir):
         """save with config persists config to config.json."""
-        self._write_plugins(plugins_dir, {
-            "demo": {"enabled": False, "version": "1.0.0"},
-        })
+        self._write_plugins(
+            plugins_dir,
+            {
+                "demo": {"enabled": False, "version": "1.0.0"},
+            },
+        )
         self._write_config(plugins_dir, {})
 
         store.save("demo", "enabled", {"greeting": "Hello"})
@@ -104,9 +116,12 @@ class TestJsonFilePluginConfigStore:
 
     def test_get_by_name_returns_entry(self, store, plugins_dir):
         """get_by_name returns PluginConfigEntry for existing plugin."""
-        self._write_plugins(plugins_dir, {
-            "demo": {"enabled": True, "version": "1.0.0"},
-        })
+        self._write_plugins(
+            plugins_dir,
+            {
+                "demo": {"enabled": True, "version": "1.0.0"},
+            },
+        )
         self._write_config(plugins_dir, {"demo": {"key": "val"}})
 
         result = store.get_by_name("demo")
@@ -124,10 +139,13 @@ class TestJsonFilePluginConfigStore:
 
     def test_get_all_returns_all_entries(self, store, plugins_dir):
         """get_all returns all plugins regardless of status."""
-        self._write_plugins(plugins_dir, {
-            "analytics": {"enabled": True, "version": "1.0.0"},
-            "demo": {"enabled": False, "version": "1.0.0"},
-        })
+        self._write_plugins(
+            plugins_dir,
+            {
+                "analytics": {"enabled": True, "version": "1.0.0"},
+                "demo": {"enabled": False, "version": "1.0.0"},
+            },
+        )
         self._write_config(plugins_dir, {})
 
         result = store.get_all()

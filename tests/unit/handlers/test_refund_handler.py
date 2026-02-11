@@ -14,12 +14,20 @@ class TestPaymentRefundedHandler:
         invoice_id = uuid4()
         mock_invoice = MagicMock()
         mock_invoice.id = invoice_id
-        mock_invoice.to_dict.return_value = {"id": str(invoice_id), "status": "refunded"}
+        mock_invoice.to_dict.return_value = {
+            "id": str(invoice_id),
+            "status": "refunded",
+        }
 
         mock_result = MagicMock()
         mock_result.success = True
         mock_result.invoice = mock_invoice
-        mock_result.items_reversed = {"subscription": None, "token_bundles": [], "add_ons": [], "tokens_debited": 0}
+        mock_result.items_reversed = {
+            "subscription": None,
+            "token_bundles": [],
+            "add_ons": [],
+            "tokens_debited": 0,
+        }
 
         mock_refund_service = MagicMock()
         mock_refund_service.process_refund.return_value = mock_result
@@ -75,7 +83,10 @@ class TestPaymentRefundedHandler:
         invoice_id = uuid4()
         mock_invoice = MagicMock()
         mock_invoice.id = invoice_id
-        mock_invoice.to_dict.return_value = {"id": str(invoice_id), "status": "refunded"}
+        mock_invoice.to_dict.return_value = {
+            "id": str(invoice_id),
+            "status": "refunded",
+        }
 
         mock_result = MagicMock()
         mock_result.success = True

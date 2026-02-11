@@ -158,7 +158,7 @@ def cancel_subscription(subscription_id: str):
     return (
         jsonify(
             {
-                "subscription": result.subscription.to_dict(),
+                "subscription": result.subscription.to_dict(),  # type: ignore[union-attr]
                 "message": "Subscription cancelled. Access continues until expiration.",
             }
         ),
@@ -201,7 +201,7 @@ def pause_subscription(subscription_id: str):
     return (
         jsonify(
             {
-                "subscription": result.subscription.to_dict(),
+                "subscription": result.subscription.to_dict(),  # type: ignore[union-attr]
                 "message": "Subscription paused.",
             }
         ),
@@ -244,7 +244,7 @@ def resume_subscription(subscription_id: str):
     return (
         jsonify(
             {
-                "subscription": result.subscription.to_dict(),
+                "subscription": result.subscription.to_dict(),  # type: ignore[union-attr]
                 "message": "Subscription resumed. Expiration extended by pause duration.",
             }
         ),
@@ -302,7 +302,7 @@ def upgrade_subscription(subscription_id: str):
     return (
         jsonify(
             {
-                "subscription": result.subscription.to_dict(),
+                "subscription": result.subscription.to_dict(),  # type: ignore[union-attr]
                 "message": "Subscription upgraded successfully.",
             }
         ),
@@ -360,7 +360,7 @@ def downgrade_subscription(subscription_id: str):
     return (
         jsonify(
             {
-                "subscription": result.subscription.to_dict(),
+                "subscription": result.subscription.to_dict(),  # type: ignore[union-attr]
                 "message": "Downgrade scheduled for next renewal.",
             }
         ),

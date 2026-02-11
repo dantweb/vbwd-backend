@@ -416,9 +416,15 @@ def get_user_addons(user_id):
             "id": str(addon_sub.id),
             "addon_name": addon_sub.addon.name if addon_sub.addon else "Unknown",
             "status": addon_sub.status.value,
-            "starts_at": addon_sub.starts_at.isoformat() if addon_sub.starts_at else None,
-            "expires_at": addon_sub.expires_at.isoformat() if addon_sub.expires_at else None,
-            "created_at": addon_sub.created_at.isoformat() if addon_sub.created_at else None,
+            "starts_at": addon_sub.starts_at.isoformat()
+            if addon_sub.starts_at
+            else None,
+            "expires_at": addon_sub.expires_at.isoformat()
+            if addon_sub.expires_at
+            else None,
+            "created_at": addon_sub.created_at.isoformat()
+            if addon_sub.created_at
+            else None,
             "invoice_status": None,
             "first_invoice": None,
             "last_invoice": None,
@@ -430,7 +436,9 @@ def get_user_addons(user_id):
                 invoice_data = {
                     "id": str(invoice.id),
                     "invoice_number": invoice.invoice_number,
-                    "created_at": invoice.invoiced_at.isoformat() if invoice.invoiced_at else None,
+                    "created_at": invoice.invoiced_at.isoformat()
+                    if invoice.invoiced_at
+                    else None,
                 }
                 data["invoice_status"] = invoice.status.value
                 data["first_invoice"] = invoice_data

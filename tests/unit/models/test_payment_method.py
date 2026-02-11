@@ -3,7 +3,6 @@
 TDD RED PHASE: These tests are written BEFORE implementation.
 All tests should FAIL initially until the PaymentMethod model is implemented.
 """
-import pytest
 from uuid import uuid4
 from decimal import Decimal
 

@@ -128,7 +128,7 @@ class DemoSeeder:
         ]
         for table in tables:
             result = self.session.execute(text(f"DELETE FROM {table}"))
-            counts[f"deleted_{table}"] = result.rowcount
+            counts[f"deleted_{table}"] = result.rowcount  # type: ignore[attr-defined]
         return counts
 
     def _clear_catalog(self) -> dict:
@@ -140,7 +140,7 @@ class DemoSeeder:
 
         for table in ["tarif_plan", "addon", "token_bundle", "price"]:
             result = self.session.execute(text(f"DELETE FROM {table}"))
-            counts[f"deleted_{table}"] = result.rowcount
+            counts[f"deleted_{table}"] = result.rowcount  # type: ignore[attr-defined]
 
         return counts
 

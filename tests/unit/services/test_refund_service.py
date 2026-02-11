@@ -1,6 +1,5 @@
 """Tests for RefundService."""
-from datetime import datetime
-from unittest.mock import MagicMock, PropertyMock
+from unittest.mock import MagicMock
 from uuid import uuid4
 
 from src.models.enums import (
@@ -204,9 +203,7 @@ class TestRefundServiceProcessRefund:
             addon_sub_repo=MagicMock(),
         )
 
-        result = service.process_refund(
-            invoice_id=uuid4(), refund_reference="REF_006"
-        )
+        result = service.process_refund(invoice_id=uuid4(), refund_reference="REF_006")
 
         assert result.success is False
         assert "not found" in result.error.lower()

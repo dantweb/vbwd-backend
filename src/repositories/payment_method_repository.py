@@ -1,5 +1,5 @@
 """Repository for PaymentMethod model."""
-from typing import Optional, List, Tuple
+from typing import Optional, List
 from uuid import UUID
 from decimal import Decimal
 from src.repositories.base import BaseRepository
@@ -38,7 +38,7 @@ class PaymentMethodRepository(BaseRepository[PaymentMethod]):
         """
         return (
             self._session.query(PaymentMethod)
-            .filter(PaymentMethod.is_active == True)
+            .filter(PaymentMethod.is_active.is_(True))
             .order_by(PaymentMethod.position)
             .all()
         )
@@ -71,7 +71,7 @@ class PaymentMethodRepository(BaseRepository[PaymentMethod]):
         """
         query = (
             self._session.query(PaymentMethod)
-            .filter(PaymentMethod.is_active == True)
+            .filter(PaymentMethod.is_active.is_(True))
             .order_by(PaymentMethod.position)
         )
 
@@ -91,7 +91,7 @@ class PaymentMethodRepository(BaseRepository[PaymentMethod]):
         """
         return (
             self._session.query(PaymentMethod)
-            .filter(PaymentMethod.is_default == True)
+            .filter(PaymentMethod.is_default.is_(True))
             .first()
         )
 
@@ -107,7 +107,7 @@ class PaymentMethodRepository(BaseRepository[PaymentMethod]):
         """
         # Clear existing default
         self._session.query(PaymentMethod).filter(
-            PaymentMethod.is_default == True
+            PaymentMethod.is_default.is_(True)
         ).update({"is_default": False})
 
         # Set new default

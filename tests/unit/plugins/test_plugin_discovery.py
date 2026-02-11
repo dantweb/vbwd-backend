@@ -2,7 +2,7 @@
 import pytest
 from unittest.mock import patch
 from src.plugins.manager import PluginManager
-from src.plugins.base import BasePlugin, PluginMetadata, PluginStatus
+from src.plugins.base import PluginStatus
 from plugins.analytics import AnalyticsPlugin
 
 
@@ -60,9 +60,7 @@ class TestPluginDiscovery:
 
         # analytics should not be double-registered
         all_plugins = plugin_manager.get_all_plugins()
-        analytics_count = sum(
-            1 for p in all_plugins if p.metadata.name == "analytics"
-        )
+        analytics_count = sum(1 for p in all_plugins if p.metadata.name == "analytics")
         assert analytics_count == 1
 
     def test_handles_import_errors_gracefully(self, plugin_manager):

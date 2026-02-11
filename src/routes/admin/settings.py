@@ -1,7 +1,6 @@
 """Admin settings routes."""
 from flask import Blueprint, jsonify, request
 from src.middleware.auth import require_auth, require_admin
-from src.extensions import db
 
 admin_settings_bp = Blueprint("admin_settings", __name__, url_prefix="/api/v1/admin")
 

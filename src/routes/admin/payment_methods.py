@@ -105,7 +105,7 @@ def create_payment_method():
         # If setting as default, clear other defaults
         if method.is_default:
             db.session.query(PaymentMethod).filter(
-                PaymentMethod.is_default == True
+                PaymentMethod.is_default.is_(True)
             ).update({"is_default": False})
 
         saved = repo.save(method)

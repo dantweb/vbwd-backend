@@ -59,7 +59,9 @@ class PluginConfigRepository(PluginConfigStore):
             for r in rows
         ]
 
-    def save(self, plugin_name: str, status: str, config: Optional[dict] = None) -> None:
+    def save(
+        self, plugin_name: str, status: str, config: Optional[dict] = None
+    ) -> None:
         """Create or update plugin config entry."""
         existing = (
             self._session.query(PluginConfig)
@@ -88,9 +90,9 @@ class PluginConfigRepository(PluginConfigStore):
             updated_at=now,
         )
         if status == "enabled":
-            entry.enabled_at = now
+            entry.enabled_at = now  # type: ignore[assignment]
         elif status == "disabled":
-            entry.disabled_at = now
+            entry.disabled_at = now  # type: ignore[assignment]
 
         self._session.add(entry)
         self._session.commit()

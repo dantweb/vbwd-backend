@@ -12,7 +12,7 @@ class ConcurrentModificationError(Exception):
     pass
 
 
-class BaseModel(db.Model):
+class BaseModel(db.Model):  # type: ignore[name-defined]
     """
     Abstract base model with common fields and optimistic locking.
 

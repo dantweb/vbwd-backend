@@ -1,7 +1,7 @@
 """Admin subscription management routes."""
 from flask import Blueprint, jsonify, request, current_app
 from datetime import datetime, timedelta
-from dateutil.relativedelta import relativedelta
+from dateutil.relativedelta import relativedelta  # type: ignore[import-untyped]
 from src.middleware.auth import require_auth, require_admin
 from src.repositories.subscription_repository import SubscriptionRepository
 from src.repositories.user_repository import UserRepository

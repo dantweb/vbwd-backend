@@ -87,9 +87,9 @@ class AddOn(BaseModel):
             "is_active": self.is_active,
             "is_recurring": self.is_recurring,
             "sort_order": self.sort_order,
-            "tarif_plan_ids": [str(tp.id) for tp in self.tarif_plans],
+            "tarif_plan_ids": [str(tp.id) for tp in self.tarif_plans],  # type: ignore[attr-defined]
             "tarif_plans": [
-                {"id": str(tp.id), "name": tp.name} for tp in self.tarif_plans
+                {"id": str(tp.id), "name": tp.name} for tp in self.tarif_plans  # type: ignore[attr-defined]
             ],
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,

@@ -58,6 +58,9 @@ class UserInvoice(BaseModel):
     )
     paid_at = db.Column(db.DateTime)
     expires_at = db.Column(db.DateTime)
+    provider_session_id = db.Column(
+        db.String(255), unique=True, nullable=True, index=True
+    )
 
     # Relationships
     line_items = db.relationship(
@@ -133,7 +136,7 @@ class UserInvoice(BaseModel):
             "payment_method": self.payment_method,
             "payment_ref": self.payment_ref,
             "is_payable": self.is_payable,
-            "line_items": [item.to_dict() for item in self.line_items]
+            "line_items": [item.to_dict() for item in self.line_items]  # type: ignore[attr-defined]
             if self.line_items
             else [],
             "invoiced_at": self.invoiced_at.isoformat() if self.invoiced_at else None,

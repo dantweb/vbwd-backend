@@ -30,7 +30,7 @@ class RoleRepository(BaseRepository[Role]):
         roles = self.get_user_roles(user_id)
         permissions = set()
         for role in roles:
-            for perm in role.permissions:
+            for perm in role.permissions:  # type: ignore[attr-defined]
                 permissions.add(perm.name)
         return permissions
 

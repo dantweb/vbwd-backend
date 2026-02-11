@@ -9,7 +9,6 @@ Run with:
 """
 import pytest
 import requests
-import os
 from decimal import Decimal
 from typing import Dict, Optional
 

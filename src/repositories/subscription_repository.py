@@ -32,6 +32,16 @@ class SubscriptionRepository(BaseRepository[Subscription]):
             .first()
         )
 
+    def find_by_provider_subscription_id(
+        self, provider_subscription_id: str
+    ) -> Optional[Subscription]:
+        """Find subscription by external provider subscription ID."""
+        return (
+            self._session.query(Subscription)
+            .filter(Subscription.provider_subscription_id == provider_subscription_id)
+            .first()
+        )
+
     def find_expiring_soon(self, days: int = 7) -> List[Subscription]:
         """Find subscriptions expiring within specified days."""
         from datetime import timedelta

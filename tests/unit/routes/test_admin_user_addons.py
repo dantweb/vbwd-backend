@@ -29,7 +29,12 @@ class TestAdminGetUserAddons:
     @patch("src.middleware.auth.AuthService")
     @patch("src.middleware.auth.UserRepository")
     def test_returns_addon_subscriptions_for_user(
-        self, mock_auth_user_repo_class, mock_auth_class, mock_user_repo_class, client, app
+        self,
+        mock_auth_user_repo_class,
+        mock_auth_class,
+        mock_user_repo_class,
+        client,
+        app,
     ):
         """Admin can get addon subscriptions for a user."""
         self._mock_admin_auth(mock_auth_user_repo_class, mock_auth_class)
@@ -74,7 +79,9 @@ class TestAdminGetUserAddons:
 
         with app.app_context():
             app.container = MagicMock()
-            app.container.addon_subscription_repository.return_value = mock_addon_sub_repo
+            app.container.addon_subscription_repository.return_value = (
+                mock_addon_sub_repo
+            )
             app.container.invoice_repository.return_value = mock_invoice_repo
 
             response = client.get(
@@ -93,7 +100,12 @@ class TestAdminGetUserAddons:
     @patch("src.middleware.auth.AuthService")
     @patch("src.middleware.auth.UserRepository")
     def test_returns_empty_list_for_user_with_no_addons(
-        self, mock_auth_user_repo_class, mock_auth_class, mock_user_repo_class, client, app
+        self,
+        mock_auth_user_repo_class,
+        mock_auth_class,
+        mock_user_repo_class,
+        client,
+        app,
     ):
         """Returns empty list when user has no addon subscriptions."""
         self._mock_admin_auth(mock_auth_user_repo_class, mock_auth_class)
@@ -111,7 +123,9 @@ class TestAdminGetUserAddons:
 
         with app.app_context():
             app.container = MagicMock()
-            app.container.addon_subscription_repository.return_value = mock_addon_sub_repo
+            app.container.addon_subscription_repository.return_value = (
+                mock_addon_sub_repo
+            )
 
             response = client.get(
                 f"/api/v1/admin/users/{user_id}/addons",
@@ -126,7 +140,12 @@ class TestAdminGetUserAddons:
     @patch("src.middleware.auth.AuthService")
     @patch("src.middleware.auth.UserRepository")
     def test_includes_invoice_data_in_response(
-        self, mock_auth_user_repo_class, mock_auth_class, mock_user_repo_class, client, app
+        self,
+        mock_auth_user_repo_class,
+        mock_auth_class,
+        mock_user_repo_class,
+        client,
+        app,
     ):
         """Invoice data is included when addon has a linked invoice."""
         self._mock_admin_auth(mock_auth_user_repo_class, mock_auth_class)
@@ -166,7 +185,9 @@ class TestAdminGetUserAddons:
 
         with app.app_context():
             app.container = MagicMock()
-            app.container.addon_subscription_repository.return_value = mock_addon_sub_repo
+            app.container.addon_subscription_repository.return_value = (
+                mock_addon_sub_repo
+            )
             app.container.invoice_repository.return_value = mock_invoice_repo
 
             response = client.get(
@@ -203,9 +224,7 @@ class TestAdminGetUserAddons:
 
     @patch("src.middleware.auth.AuthService")
     @patch("src.middleware.auth.UserRepository")
-    def test_requires_admin_auth(
-        self, mock_user_repo_class, mock_auth_class, client
-    ):
+    def test_requires_admin_auth(self, mock_user_repo_class, mock_auth_class, client):
         """Regular user cannot access admin addon endpoint."""
         user_id = uuid4()
 

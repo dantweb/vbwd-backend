@@ -61,7 +61,7 @@ class Role(BaseModel):
 
     def has_permission(self, permission_name: str) -> bool:
         """Check if role has a specific permission."""
-        return any(p.name == permission_name for p in self.permissions)
+        return any(p.name == permission_name for p in self.permissions)  # type: ignore[attr-defined]
 
     def to_dict(self) -> dict:
         """Convert to dictionary."""
@@ -70,7 +70,7 @@ class Role(BaseModel):
             "name": self.name,
             "description": self.description,
             "is_system": self.is_system,
-            "permissions": [p.name for p in self.permissions],
+            "permissions": [p.name for p in self.permissions],  # type: ignore[attr-defined]
         }
 
     def __repr__(self) -> str:

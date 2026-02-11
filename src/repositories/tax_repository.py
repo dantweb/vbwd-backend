@@ -14,7 +14,7 @@ class TaxRepository(BaseRepository[Tax]):
         Args:
             session: SQLAlchemy database session
         """
-        super().__init__(Tax, session)
+        super().__init__(session=session, model=Tax)
 
     def find_by_code(self, code: str) -> Optional[Tax]:
         """Find tax by code.

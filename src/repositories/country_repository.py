@@ -26,7 +26,7 @@ class CountryRepository(BaseRepository[Country]):
         """Find all enabled countries ordered by position."""
         return (
             self._session.query(Country)
-            .filter(Country.is_enabled == True)
+            .filter(Country.is_enabled.is_(True))
             .order_by(Country.position, Country.name)
             .all()
         )
@@ -35,7 +35,7 @@ class CountryRepository(BaseRepository[Country]):
         """Find all disabled countries ordered by name."""
         return (
             self._session.query(Country)
-            .filter(Country.is_enabled == False)
+            .filter(Country.is_enabled.is_(False))
             .order_by(Country.name)
             .all()
         )
@@ -44,7 +44,7 @@ class CountryRepository(BaseRepository[Country]):
         """Get the maximum position among enabled countries."""
         result = self._session.query(
             self._session.query(Country.position)
-            .filter(Country.is_enabled == True)
+            .filter(Country.is_enabled.is_(True))
             .subquery()
             .c.position
         ).scalar()
@@ -54,7 +54,7 @@ class CountryRepository(BaseRepository[Country]):
 
             result = (
                 self._session.query(func.max(Country.position))
-                .filter(Country.is_enabled == True)
+                .filter(Country.is_enabled.is_(True))
                 .scalar()
             )
         return result if result is not None else -1
@@ -73,7 +73,7 @@ class CountryRepository(BaseRepository[Country]):
         for position, code in enumerate(code_order):
             country = self.find_by_code(code)
             if country and country.is_enabled:
-                country.position = position
+                country.position = position  # type: ignore[assignment]
                 updated.append(country)
 
         self._session.commit()

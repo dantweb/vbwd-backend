@@ -37,9 +37,7 @@ class JsonFilePluginConfigStore(PluginConfigStore):
         """Atomically write plugins.json."""
         os.makedirs(self._plugins_dir, exist_ok=True)
         data = {"plugins": plugins}
-        fd, tmp_path = tempfile.mkstemp(
-            dir=self._plugins_dir, suffix=".tmp"
-        )
+        fd, tmp_path = tempfile.mkstemp(dir=self._plugins_dir, suffix=".tmp")
         try:
             with os.fdopen(fd, "w") as f:
                 json.dump(data, f, indent=2)
@@ -63,9 +61,7 @@ class JsonFilePluginConfigStore(PluginConfigStore):
     def _write_config(self, config: dict) -> None:
         """Atomically write config.json."""
         os.makedirs(self._plugins_dir, exist_ok=True)
-        fd, tmp_path = tempfile.mkstemp(
-            dir=self._plugins_dir, suffix=".tmp"
-        )
+        fd, tmp_path = tempfile.mkstemp(dir=self._plugins_dir, suffix=".tmp")
         try:
             with os.fdopen(fd, "w") as f:
                 json.dump(config, f, indent=2)
@@ -94,7 +90,9 @@ class JsonFilePluginConfigStore(PluginConfigStore):
                 )
         return result
 
-    def save(self, plugin_name: str, status: str, config: Optional[dict] = None) -> None:
+    def save(
+        self, plugin_name: str, status: str, config: Optional[dict] = None
+    ) -> None:
         """Save plugin status and optional config."""
         plugins = self._read_plugins()
 

@@ -54,7 +54,7 @@ class Container(containers.DeclarativeContainer):
     config = providers.Configuration()
 
     # Database session - must be overridden with actual db.session
-    db_session = providers.Dependency()
+    db_session: providers.Dependency = providers.Dependency()
 
     # ==================
     # Repositories

@@ -1,5 +1,5 @@
 """AddOnSubscription repository implementation."""
-from typing import Optional, List
+from typing import List
 from uuid import UUID
 from src.repositories.base import BaseRepository
 from src.models.addon_subscription import AddOnSubscription
@@ -34,6 +34,16 @@ class AddOnSubscriptionRepository(BaseRepository[AddOnSubscription]):
         return (
             self._session.query(AddOnSubscription)
             .filter(AddOnSubscription.invoice_id == invoice_id)
+            .all()
+        )
+
+    def find_by_provider_subscription_id(
+        self, provider_subscription_id: str
+    ) -> List[AddOnSubscription]:
+        """Find add-on subscriptions by external provider subscription ID."""
+        return (
+            self._session.query(AddOnSubscription)
+            .filter(AddOnSubscription.provider_subscription_id == provider_subscription_id)
             .all()
         )
 

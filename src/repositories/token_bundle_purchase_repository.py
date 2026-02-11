@@ -1,5 +1,5 @@
 """TokenBundlePurchase repository implementation."""
-from typing import Optional, List
+from typing import List
 from uuid import UUID
 from src.repositories.base import BaseRepository
 from src.models.token_bundle_purchase import TokenBundlePurchase

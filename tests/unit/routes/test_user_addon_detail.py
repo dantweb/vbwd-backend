@@ -85,7 +85,9 @@ class TestGetAddonDetail:
 
         with app.app_context():
             app.container = MagicMock()
-            app.container.addon_subscription_repository.return_value = mock_addon_sub_repo
+            app.container.addon_subscription_repository.return_value = (
+                mock_addon_sub_repo
+            )
             app.container.invoice_repository.return_value = mock_invoice_repo
 
             response = client.get(
@@ -112,7 +114,9 @@ class TestGetAddonDetail:
 
         with app.app_context():
             app.container = MagicMock()
-            app.container.addon_subscription_repository.return_value = mock_addon_sub_repo
+            app.container.addon_subscription_repository.return_value = (
+                mock_addon_sub_repo
+            )
 
             response = client.get(
                 f"/api/v1/user/addons/{uuid4()}",
@@ -127,7 +131,7 @@ class TestGetAddonDetail:
         self, mock_auth_user_repo_class, mock_auth_class, client, app
     ):
         """Returns 403 when accessing another user's addon subscription."""
-        user_id = self._mock_user_auth(mock_auth_user_repo_class, mock_auth_class)
+        self._mock_user_auth(mock_auth_user_repo_class, mock_auth_class)
         other_user_id = uuid4()
 
         mock_addon_sub = MagicMock()
@@ -139,7 +143,9 @@ class TestGetAddonDetail:
 
         with app.app_context():
             app.container = MagicMock()
-            app.container.addon_subscription_repository.return_value = mock_addon_sub_repo
+            app.container.addon_subscription_repository.return_value = (
+                mock_addon_sub_repo
+            )
 
             response = client.get(
                 f"/api/v1/user/addons/{mock_addon_sub.id}",
@@ -195,7 +201,9 @@ class TestCancelAddon:
 
         with app.app_context():
             app.container = MagicMock()
-            app.container.addon_subscription_repository.return_value = mock_addon_sub_repo
+            app.container.addon_subscription_repository.return_value = (
+                mock_addon_sub_repo
+            )
 
             response = client.post(
                 f"/api/v1/user/addons/{addon_sub_id}/cancel",
@@ -227,7 +235,9 @@ class TestCancelAddon:
 
         with app.app_context():
             app.container = MagicMock()
-            app.container.addon_subscription_repository.return_value = mock_addon_sub_repo
+            app.container.addon_subscription_repository.return_value = (
+                mock_addon_sub_repo
+            )
 
             response = client.post(
                 f"/api/v1/user/addons/{addon_sub_id}/cancel",
@@ -242,7 +252,7 @@ class TestCancelAddon:
         self, mock_auth_user_repo_class, mock_auth_class, client, app
     ):
         """Cannot cancel another user's addon subscription."""
-        user_id = self._mock_user_auth(mock_auth_user_repo_class, mock_auth_class)
+        self._mock_user_auth(mock_auth_user_repo_class, mock_auth_class)
         other_user_id = uuid4()
 
         mock_addon_sub = MagicMock()
@@ -254,7 +264,9 @@ class TestCancelAddon:
 
         with app.app_context():
             app.container = MagicMock()
-            app.container.addon_subscription_repository.return_value = mock_addon_sub_repo
+            app.container.addon_subscription_repository.return_value = (
+                mock_addon_sub_repo
+            )
 
             response = client.post(
                 f"/api/v1/user/addons/{mock_addon_sub.id}/cancel",

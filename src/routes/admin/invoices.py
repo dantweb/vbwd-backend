@@ -1,4 +1,5 @@
 """Admin invoice management routes."""
+import logging
 from uuid import UUID
 
 from flask import Blueprint, current_app, jsonify, request
@@ -8,6 +9,8 @@ from src.repositories.user_repository import UserRepository
 from src.services.invoice_service import InvoiceService
 from src.events.payment_events import PaymentCapturedEvent, PaymentRefundedEvent
 from src.extensions import db
+
+logger = logging.getLogger(__name__)
 
 admin_invoices_bp = Blueprint(
     "admin_invoices", __name__, url_prefix="/api/v1/admin/invoices"
@@ -280,8 +283,8 @@ def refund_invoice(invoice_id):
     """
     Refund a paid invoice.
 
-    Emits PaymentRefundedEvent; the handler delegates to RefundService
-    which marks the invoice as refunded and reverses all line items.
+    First calls the payment provider API (Stripe/PayPal) to process the actual
+    refund, then emits PaymentRefundedEvent to update local state.
 
     Args:
         invoice_id: UUID of the invoice
@@ -294,24 +297,38 @@ def refund_invoice(invoice_id):
         404: Invoice not found
         400: Invoice cannot be refunded
     """
-    data = request.get_json() or {}
-    refund_reference = data.get("refund_reference", "ADMIN_REFUND")
+    req_data = request.get_json() or {}
+    refund_reference = req_data.get("refund_reference", "ADMIN_REFUND")
+
+    # Load invoice to determine payment provider
+    container = current_app.container
+    invoice_repo = container.invoice_repository()
+    invoice = invoice_repo.find_by_id(UUID(invoice_id))
+    if not invoice:
+        return jsonify({"error": "Invoice not found"}), 404
+
+    # Call the payment provider API to process the actual refund
+    provider_error = _refund_via_provider(invoice)
+    if provider_error:
+        return jsonify({"error": provider_error}), 400
 
     event = PaymentRefundedEvent(
         invoice_id=UUID(invoice_id),
         refund_reference=refund_reference,
     )
-    dispatcher = current_app.container.event_dispatcher()
+    dispatcher = container.event_dispatcher()
     result = dispatcher.emit(event)
 
     if result.success:
-        data = result.data
-        if isinstance(data, list) and len(data) == 1:
-            data = data[0]
+        resp_data = result.data
+        if isinstance(resp_data, list) and len(resp_data) == 1:
+            resp_data = resp_data[0]
         return (
             jsonify(
                 {
-                    "invoice": data.get("invoice", {}) if isinstance(data, dict) else {},
+                    "invoice": resp_data.get("invoice", {})
+                    if isinstance(resp_data, dict)
+                    else {},
                     "message": "Invoice refunded",
                 }
             ),
@@ -321,6 +338,52 @@ def refund_invoice(invoice_id):
         if result.error and "not found" in result.error.lower():
             return jsonify({"error": result.error}), 404
         return jsonify({"error": result.error}), 400
+
+
+def _refund_via_provider(invoice):
+    """Call payment provider API to issue a real refund. Returns error string or None.
+
+    Uses the plugin system to find the payment provider plugin and call its
+    refund_payment() method. The core code never imports provider-specific modules.
+    """
+    payment_method = invoice.payment_method
+    if not payment_method or payment_method == "basic":
+        return None  # No external provider to refund
+
+    # Find the payment plugin via plugin_manager
+    plugin_manager = getattr(current_app, "plugin_manager", None)
+    if not plugin_manager:
+        logger.warning("Plugin manager not available, skipping provider refund")
+        return None
+
+    plugin = plugin_manager.get_plugin(payment_method)
+    if not plugin:
+        logger.warning("Payment plugin '%s' not found, skipping provider refund", payment_method)
+        return None
+
+    if not plugin_manager.is_enabled(payment_method):
+        logger.warning("Payment plugin '%s' is disabled, skipping provider refund", payment_method)
+        return None
+
+    # Use provider_session_id or payment_ref as the transaction reference
+    transaction_ref = invoice.provider_session_id or invoice.payment_ref
+    if not transaction_ref:
+        logger.warning("No provider reference for invoice %s", invoice.id)
+        return None
+
+    try:
+        result = plugin.refund_payment(transaction_ref)
+        if not result.success:
+            logger.error(
+                "Provider refund failed for invoice %s via %s: %s",
+                invoice.id, payment_method, result.error_message,
+            )
+            return f"Provider refund failed: {result.error_message}"
+        logger.info("Provider refund succeeded for invoice %s via %s", invoice.id, payment_method)
+        return None
+    except Exception as e:
+        logger.error("Provider refund error for invoice %s: %s", invoice.id, e)
+        return f"Provider refund error: {e}"
 
 
 @admin_invoices_bp.route("/<invoice_id>/pdf", methods=["GET"])

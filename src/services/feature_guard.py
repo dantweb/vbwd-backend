@@ -48,7 +48,7 @@ class FeatureGuard:
         Returns:
             True if user can access the feature
         """
-        subscription = self.subscription_repo.get_active_subscription(user_id)
+        subscription = self.subscription_repo.find_active_by_user(user_id)
 
         if not subscription:
             # No subscription - check free tier
@@ -79,7 +79,7 @@ class FeatureGuard:
             Tuple of (is_within_limit, remaining_usage)
             remaining_usage is None for unlimited features
         """
-        subscription = self.subscription_repo.get_active_subscription(user_id)
+        subscription = self.subscription_repo.find_active_by_user(user_id)
         if not subscription:
             return False, None
 
@@ -115,7 +115,7 @@ class FeatureGuard:
         Returns:
             Dictionary of feature_name -> {limit, used, remaining}
         """
-        subscription = self.subscription_repo.get_active_subscription(user_id)
+        subscription = self.subscription_repo.find_active_by_user(user_id)
         if not subscription:
             return {}
 
@@ -148,7 +148,7 @@ class FeatureGuard:
         Returns:
             Set of available feature names
         """
-        subscription = self.subscription_repo.get_active_subscription(user_id)
+        subscription = self.subscription_repo.find_active_by_user(user_id)
 
         if not subscription or subscription.is_expired:
             return self.FREE_TIER_FEATURES.copy()
