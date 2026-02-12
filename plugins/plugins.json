@@ -23,6 +23,12 @@
       "version": "1.0.0",
       "installedAt": "",
       "source": "local"
+    },
+    "yookassa": {
+      "enabled": true,
+      "version": "1.0.0",
+      "installedAt": "",
+      "source": "local"
     }
   }
 }
