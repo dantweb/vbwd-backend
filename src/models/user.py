@@ -106,6 +106,10 @@ class User(BaseModel):
         if self.details:
             result["details"] = self.details.to_dict()
 
+        # Include token balance from UserTokenBalance (separate from details.balance)
+        tb = getattr(self, "token_balance", None)
+        result["token_balance"] = tb.balance if tb else 0
+
         return result
 
     def __repr__(self) -> str:

@@ -29,6 +29,12 @@
       "version": "1.0.0",
       "installedAt": "",
       "source": "local"
+    },
+    "chat": {
+      "enabled": true,
+      "version": "1.0.0",
+      "installedAt": "",
+      "source": "local"
     }
   }
 }

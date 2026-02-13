@@ -7,6 +7,7 @@ from src.repositories.user_repository import UserRepository
 from src.extensions import db
 from src.models.user import User
 from src.models.user_details import UserDetails
+from src.models.user_token_balance import UserTokenBalance
 from src.models.enums import UserStatus, UserRole
 
 admin_users_bp = Blueprint("admin_users", __name__, url_prefix="/api/v1/admin/users")
@@ -244,27 +245,41 @@ def update_user(user_id):
             "utf-8"
         )
 
-    # Handle UserDetails updates (name, balance)
-    # Create UserDetails if needed for any detail update
-    needs_details = ("name" in data and data["name"]) or "balance" in data
+    # Collect detail field names that can be updated
+    detail_fields = [
+        "first_name", "last_name", "phone",
+        "address_line_1", "address_line_2",
+        "city", "postal_code", "country",
+        "company", "tax_number",
+    ]
+
+    # Check if any detail field is provided
+    has_detail_updates = any(k in data for k in detail_fields)
+    has_name_update = "name" in data and data["name"]
+    has_balance_update = "balance" in data
+
+    needs_details = has_detail_updates or has_name_update or has_balance_update
     if needs_details and not user.details:
         user_details = UserDetails()
         user_details.user_id = user.id
         db.session.add(user_details)
-        db.session.flush()  # Flush to make it available via user.details
-        # Re-fetch to get the relationship
+        db.session.flush()
         db.session.refresh(user)
 
-    # Handle name -> UserDetails (frontend sends combined name)
-    if "name" in data and data["name"]:
-        parts = data["name"].strip().split(" ", 1)
-        first_name = parts[0]
-        last_name = parts[1] if len(parts) > 1 else ""
-        user.details.first_name = first_name
-        user.details.last_name = last_name
+    # Handle individual detail fields
+    if has_detail_updates and user.details:
+        for field in detail_fields:
+            if field in data:
+                setattr(user.details, field, data[field] or None)
 
-    # Handle balance update (optional)
-    if "balance" in data:
+    # Handle name -> UserDetails (legacy: frontend sends combined name)
+    if has_name_update and not has_detail_updates:
+        parts = data["name"].strip().split(" ", 1)
+        user.details.first_name = parts[0]
+        user.details.last_name = parts[1] if len(parts) > 1 else ""
+
+    # Handle monetary balance update on UserDetails (optional)
+    if has_balance_update:
         try:
             balance_value = float(data["balance"])
             if balance_value < 0:
@@ -272,6 +287,21 @@ def update_user(user_id):
             user.details.balance = balance_value
         except (ValueError, TypeError):
             return jsonify({"error": "Invalid balance value"}), 400
+
+    # Handle token balance update (UserTokenBalance — separate model)
+    if "token_balance" in data:
+        try:
+            token_value = int(data["token_balance"])
+            if token_value < 0:
+                return jsonify({"error": "Token balance cannot be negative"}), 400
+            tb = UserTokenBalance.query.filter_by(user_id=user.id).first()
+            if tb:
+                tb.balance = token_value
+            else:
+                tb = UserTokenBalance(user_id=user.id, balance=token_value)
+                db.session.add(tb)
+        except (ValueError, TypeError):
+            return jsonify({"error": "Invalid token balance value"}), 400
 
     saved_user = user_repo.save(user)
 
