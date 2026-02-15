@@ -22,13 +22,13 @@ class User(BaseModel):
     )
     password_hash = db.Column(db.String(255), nullable=False)
     status = db.Column(
-        db.Enum(UserStatus),
+        db.Enum(UserStatus, native_enum=True, create_constraint=False),
         nullable=False,
         default=UserStatus.PENDING,
         index=True,
     )
     role = db.Column(
-        db.Enum(UserRole),
+        db.Enum(UserRole, native_enum=True, create_constraint=False),
         nullable=False,
         default=UserRole.USER,
     )

@@ -43,7 +43,9 @@ class AddOnSubscriptionRepository(BaseRepository[AddOnSubscription]):
         """Find add-on subscriptions by external provider subscription ID."""
         return (
             self._session.query(AddOnSubscription)
-            .filter(AddOnSubscription.provider_subscription_id == provider_subscription_id)
+            .filter(
+                AddOnSubscription.provider_subscription_id == provider_subscription_id
+            )
             .all()
         )
 

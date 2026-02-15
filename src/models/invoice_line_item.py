@@ -24,7 +24,9 @@ class InvoiceLineItem(BaseModel):
         index=True,
     )
     item_type = db.Column(
-        db.Enum(LineItemType),
+        db.Enum(
+            LineItemType, name="lineitemtype", native_enum=True, create_constraint=False
+        ),
         nullable=False,
     )
     item_id = db.Column(

@@ -41,7 +41,12 @@ class AddOnSubscription(BaseModel):
         index=True,
     )
     status = db.Column(
-        db.Enum(SubscriptionStatus),
+        db.Enum(
+            SubscriptionStatus,
+            name="subscriptionstatus",
+            native_enum=True,
+            create_constraint=False,
+        ),
         nullable=False,
         default=SubscriptionStatus.PENDING,
         index=True,

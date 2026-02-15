@@ -57,7 +57,15 @@ class TokenTransaction(BaseModel):
         index=True,
     )
     amount = db.Column(db.Integer, nullable=False)  # positive=credit, negative=debit
-    transaction_type = db.Column(db.Enum(TokenTransactionType), nullable=False)
+    transaction_type = db.Column(
+        db.Enum(
+            TokenTransactionType,
+            name="tokentransactiontype",
+            native_enum=True,
+            create_constraint=False,
+        ),
+        nullable=False,
+    )
     reference_id = db.Column(UUID(as_uuid=True), nullable=True, index=True)
     description = db.Column(db.String(255), nullable=True)
 

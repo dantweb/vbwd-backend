@@ -358,11 +358,15 @@ def _refund_via_provider(invoice):
 
     plugin = plugin_manager.get_plugin(payment_method)
     if not plugin:
-        logger.warning("Payment plugin '%s' not found, skipping provider refund", payment_method)
+        logger.warning(
+            "Payment plugin '%s' not found, skipping provider refund", payment_method
+        )
         return None
 
     if not plugin_manager.is_enabled(payment_method):
-        logger.warning("Payment plugin '%s' is disabled, skipping provider refund", payment_method)
+        logger.warning(
+            "Payment plugin '%s' is disabled, skipping provider refund", payment_method
+        )
         return None
 
     # Use provider_session_id or payment_ref as the transaction reference
@@ -376,10 +380,16 @@ def _refund_via_provider(invoice):
         if not result.success:
             logger.error(
                 "Provider refund failed for invoice %s via %s: %s",
-                invoice.id, payment_method, result.error_message,
+                invoice.id,
+                payment_method,
+                result.error_message,
             )
             return f"Provider refund failed: {result.error_message}"
-        logger.info("Provider refund succeeded for invoice %s via %s", invoice.id, payment_method)
+        logger.info(
+            "Provider refund succeeded for invoice %s via %s",
+            invoice.id,
+            payment_method,
+        )
         return None
     except Exception as e:
         logger.error("Provider refund error for invoice %s: %s", invoice.id, e)

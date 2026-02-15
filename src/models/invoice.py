@@ -41,7 +41,12 @@ class UserInvoice(BaseModel):
     amount = db.Column(db.Numeric(10, 2), nullable=False)
     currency = db.Column(db.String(3), nullable=False, default="EUR")
     status = db.Column(
-        db.Enum(InvoiceStatus),
+        db.Enum(
+            InvoiceStatus,
+            name="invoicestatus",
+            native_enum=True,
+            create_constraint=False,
+        ),
         nullable=False,
         default=InvoiceStatus.PENDING,
         index=True,

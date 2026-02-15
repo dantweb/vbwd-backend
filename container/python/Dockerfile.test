@@ -17,4 +17,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Run tests
-CMD ["pytest", "-v", "--cov=src", "--cov-report=term-missing"]
+CMD ["pytest", "-q"]

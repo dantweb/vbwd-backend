@@ -35,7 +35,12 @@ class TokenBundlePurchase(BaseModel):
         index=True,
     )
     status = db.Column(
-        db.Enum(PurchaseStatus),
+        db.Enum(
+            PurchaseStatus,
+            name="purchasestatus",
+            native_enum=True,
+            create_constraint=False,
+        ),
         nullable=False,
         default=PurchaseStatus.PENDING,
         index=True,

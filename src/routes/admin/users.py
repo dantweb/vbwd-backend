@@ -247,10 +247,16 @@ def update_user(user_id):
 
     # Collect detail field names that can be updated
     detail_fields = [
-        "first_name", "last_name", "phone",
-        "address_line_1", "address_line_2",
-        "city", "postal_code", "country",
-        "company", "tax_number",
+        "first_name",
+        "last_name",
+        "phone",
+        "address_line_1",
+        "address_line_2",
+        "city",
+        "postal_code",
+        "country",
+        "company",
+        "tax_number",
     ]
 
     # Check if any detail field is provided

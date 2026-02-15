@@ -39,7 +39,12 @@ class TarifPlan(BaseModel):
     currency = db.Column(db.String(3), nullable=True, default="EUR")  # Made nullable
 
     billing_period = db.Column(
-        db.Enum(BillingPeriod),
+        db.Enum(
+            BillingPeriod,
+            name="billingperiod",
+            native_enum=True,
+            create_constraint=False,
+        ),
         nullable=False,
     )
     features = db.Column(db.JSON, default=list)

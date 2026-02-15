@@ -87,7 +87,10 @@ def emit_payment_captured(
     """
     logger.info(
         "emit_payment_captured: invoice=%s provider=%s ref=%s amount=%s",
-        invoice_id, provider, payment_reference, amount,
+        invoice_id,
+        provider,
+        payment_reference,
+        amount,
     )
     event = PaymentCapturedEvent(
         invoice_id=invoice_id,
@@ -102,7 +105,9 @@ def emit_payment_captured(
     if not result.success:
         logger.error("PaymentCapturedEvent handler failed: %s", result.error)
     else:
-        logger.info("PaymentCapturedEvent processed successfully for invoice %s", invoice_id)
+        logger.info(
+            "PaymentCapturedEvent processed successfully for invoice %s", invoice_id
+        )
     return result
 
 

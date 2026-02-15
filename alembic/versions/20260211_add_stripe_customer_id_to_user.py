@@ -66,8 +66,9 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     # addon_subscription
-    op.drop_index("ix_addon_subscription_stripe_subscription_id", table_name="addon_subscription")
-    op.drop_column("addon_subscription", "stripe_subscription_id")
+    # NOTE: Commented out because addon_subscription table doesn't exist yet
+    # op.drop_index("ix_addon_subscription_stripe_subscription_id", table_name="addon_subscription")
+    # op.drop_column("addon_subscription", "stripe_subscription_id")
 
     # user_invoice
     op.drop_index("ix_user_invoice_stripe_invoice_id", table_name="user_invoice")

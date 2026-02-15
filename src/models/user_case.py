@@ -23,7 +23,12 @@ class UserCase(BaseModel):
     description = db.Column(db.Text)
     date_started = db.Column(db.Date)
     status = db.Column(
-        db.Enum(UserCaseStatus),
+        db.Enum(
+            UserCaseStatus,
+            name="usercasestatus",
+            native_enum=True,
+            create_constraint=False,
+        ),
         nullable=False,
         default=UserCaseStatus.DRAFT,
         index=True,

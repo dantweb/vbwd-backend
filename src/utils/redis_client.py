@@ -90,12 +90,13 @@ class RedisClient:
         Returns:
             True if key was set, False if already exists
         """
-        return self._client.set(
+        result = self._client.set(
             f"idempotency:{key}",
             value,
             ex=ttl,
             nx=True,  # Only set if not exists
         )
+        return result or False
 
     def get_idempotency_key(self, key: str) -> Optional[str]:
         """Get cached response for idempotency key."""
