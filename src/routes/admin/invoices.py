@@ -396,6 +396,32 @@ def _refund_via_provider(invoice):
         return f"Provider refund error: {e}"
 
 
+@admin_invoices_bp.route("/<invoice_id>", methods=["DELETE"])
+@require_auth
+@require_admin
+def delete_invoice(invoice_id):
+    """
+    Delete an invoice completely.
+
+    Args:
+        invoice_id: UUID of the invoice
+
+    Returns:
+        200: Invoice deleted successfully
+        404: Invoice not found
+    """
+    invoice_repo = InvoiceRepository(db.session)
+    invoice = invoice_repo.find_by_id(invoice_id)
+
+    if not invoice:
+        return jsonify({"error": "Invoice not found"}), 404
+
+    # Delete invoice
+    invoice_repo.delete(invoice_id)
+
+    return jsonify({"message": "Invoice deleted successfully"}), 200
+
+
 @admin_invoices_bp.route("/<invoice_id>/pdf", methods=["GET"])
 @require_auth
 @require_admin

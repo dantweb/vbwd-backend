@@ -29,6 +29,13 @@ from src.models import (
     UserInvoice,
 )
 
+# Import plugin models
+from plugins.taro.src.models import (
+    Arcana,
+    TaroSession,
+    TaroCardDraw,
+)
+
 # this is the Alembic Config object
 config = context.config
 

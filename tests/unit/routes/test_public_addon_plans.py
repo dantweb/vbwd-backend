@@ -48,7 +48,7 @@ class TestPublicAddonPlanFiltering:
         # Mock auth
         mock_user = MagicMock()
         mock_user.id = user_id
-        mock_user.status.value = "active"
+        mock_user.status.value = "ACTIVE"
 
         mock_auth_user_repo = MagicMock()
         mock_auth_user_repo.find_by_id.return_value = mock_user
@@ -98,7 +98,7 @@ class TestPublicAddonPlanFiltering:
         # Mock auth
         mock_user = MagicMock()
         mock_user.id = user_id
-        mock_user.status.value = "active"
+        mock_user.status.value = "ACTIVE"
 
         mock_auth_user_repo = MagicMock()
         mock_auth_user_repo.find_by_id.return_value = mock_user

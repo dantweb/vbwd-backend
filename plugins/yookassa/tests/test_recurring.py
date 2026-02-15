@@ -38,7 +38,7 @@ def app(mock_yookassa_api, mock_config_store, mock_container, mocker):
 
     mock_user = MagicMock()
     mock_user.id = user_id
-    mock_user.status.value = "active"
+    mock_user.status.value = "ACTIVE"
     mock_user_repo = MagicMock()
     mock_user_repo.return_value.find_by_id.return_value = mock_user
     mocker.patch("src.middleware.auth.UserRepository", mock_user_repo)
@@ -103,7 +103,7 @@ class TestRecurringPaymentSavesMethod:
 
         mock_invoice = MagicMock()
         mock_invoice.id = UUID(invoice_id)
-        mock_invoice.status.value = "pending"
+        mock_invoice.status.value = "PENDING"
         mock_li = MagicMock()
         mock_li.item_type = LineItemType.SUBSCRIPTION
         mock_li.item_id = sub_id
@@ -144,7 +144,7 @@ class TestRecurringPaymentSavesMethod:
 
         mock_invoice = MagicMock()
         mock_invoice.id = UUID(invoice_id)
-        mock_invoice.status.value = "pending"
+        mock_invoice.status.value = "PENDING"
         mock_invoice.line_items = []
         mock_container.invoice_repository.return_value.find_by_id.return_value = (
             mock_invoice
@@ -180,7 +180,7 @@ class TestRecurringPaymentEmitsEvent:
 
         mock_invoice = MagicMock()
         mock_invoice.id = UUID(invoice_id)
-        mock_invoice.status.value = "pending"
+        mock_invoice.status.value = "PENDING"
         mock_li = MagicMock()
         mock_li.item_type = LineItemType.SUBSCRIPTION
         mock_li.item_id = sub_id

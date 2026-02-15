@@ -145,7 +145,7 @@ def create_test_addon(
         "description": "Test add-on for checkout",
         "price": price,
         "currency": "USD",
-        "billing_period": "monthly",
+        "billing_period": "MONTHLY",
         "is_active": True,
     }
     response = requests.post(

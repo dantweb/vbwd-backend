@@ -14,7 +14,7 @@ class TestGetAddonDetail:
 
         mock_user = MagicMock()
         mock_user.id = user_id
-        mock_user.status.value = "active"
+        mock_user.status.value = "ACTIVE"
 
         mock_user_repo = MagicMock()
         mock_user_repo.find_by_id.return_value = mock_user
@@ -41,7 +41,7 @@ class TestGetAddonDetail:
         mock_addon.slug = "extra-storage"
         mock_addon.description = "More storage"
         mock_addon.price = 9.99
-        mock_addon.billing_period = "monthly"
+        mock_addon.billing_period = "MONTHLY"
 
         mock_addon_sub = MagicMock()
         mock_addon_sub.id = addon_sub_id
@@ -165,7 +165,7 @@ class TestCancelAddon:
 
         mock_user = MagicMock()
         mock_user.id = user_id
-        mock_user.status.value = "active"
+        mock_user.status.value = "ACTIVE"
 
         mock_user_repo = MagicMock()
         mock_user_repo.find_by_id.return_value = mock_user

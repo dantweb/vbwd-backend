@@ -57,7 +57,7 @@ from plugins.stripe.routes import stripe_plugin_bp
 # Helpers to create realistic mock domain objects
 # ---------------------------------------------------------------------------
 
-def _make_invoice(invoice_id, user_id, line_items=None, status="pending"):
+def _make_invoice(invoice_id, user_id, line_items=None, status="PENDING"):
     inv = MagicMock()
     inv.id = invoice_id
     inv.user_id = user_id
@@ -211,7 +211,7 @@ def app(mock_stripe, mock_config_store, container_with_real_dispatcher, mocker):
 
     mock_user = MagicMock()
     mock_user.id = user_id
-    mock_user.status.value = "active"
+    mock_user.status.value = "ACTIVE"
     mock_user_repo = MagicMock()
     mock_user_repo.return_value.find_by_id.return_value = mock_user
     mocker.patch("src.middleware.auth.UserRepository", mock_user_repo)
@@ -512,7 +512,7 @@ class TestIdempotencyE2E:
     ):
         """If invoice is already PAID, handler should not overwrite paid_at."""
         li = _make_line_item(LineItemType.SUBSCRIPTION, ids["subscription"])
-        invoice = _make_invoice(ids["invoice"], ids["user"], [li], status="paid")
+        invoice = _make_invoice(ids["invoice"], ids["user"], [li], status="PAID")
         original_paid_at = datetime(2026, 2, 11, 12, 0, 0)
         invoice.paid_at = original_paid_at
 

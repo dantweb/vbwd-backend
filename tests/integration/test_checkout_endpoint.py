@@ -210,7 +210,7 @@ class TestCheckoutEndpointSuccess:
         ), f"Got {response.status_code}: {response.text}"
         data = response.json()
         assert "subscription" in data
-        assert data["subscription"]["status"] == "pending"
+        assert data["subscription"]["status"] == "PENDING"
 
     def test_checkout_creates_invoice(self, auth_headers, test_plan):
         """Checkout creates pending invoice."""
@@ -223,7 +223,7 @@ class TestCheckoutEndpointSuccess:
         assert response.status_code == 201
         data = response.json()
         assert "invoice" in data
-        assert data["invoice"]["status"] == "pending"
+        assert data["invoice"]["status"] == "PENDING"
         assert data["invoice"]["invoice_number"].startswith("INV-")
 
     def test_checkout_returns_awaiting_payment_message(self, auth_headers, test_plan):
@@ -333,7 +333,7 @@ class TestCheckoutWithoutPlan:
         ), f"Got {response.status_code}: {response.text}"
         data = response.json()
         assert "invoice" in data
-        assert data["invoice"]["status"] == "pending"
+        assert data["invoice"]["status"] == "PENDING"
         # No subscription should be created
         assert "subscription" not in data
 

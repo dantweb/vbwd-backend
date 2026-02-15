@@ -72,7 +72,7 @@ class TestWebhookEventEmission:
         invoice_id = str(uuid4())
         mock_invoice = MagicMock()
         mock_invoice.id = UUID(invoice_id)
-        mock_invoice.status.value = "pending"
+        mock_invoice.status.value = "PENDING"
         mock_container.invoice_repository.return_value.find_by_id.return_value = (
             mock_invoice
         )
@@ -100,7 +100,7 @@ class TestWebhookEventEmission:
         invoice_id = str(uuid4())
         mock_invoice = MagicMock()
         mock_invoice.id = UUID(invoice_id)
-        mock_invoice.status.value = "pending"
+        mock_invoice.status.value = "PENDING"
         mock_container.invoice_repository.return_value.find_by_id.return_value = (
             mock_invoice
         )
@@ -125,7 +125,7 @@ class TestWebhookEventEmission:
         invoice_id = str(uuid4())
         mock_invoice = MagicMock()
         mock_invoice.id = UUID(invoice_id)
-        mock_invoice.status.value = "pending"
+        mock_invoice.status.value = "PENDING"
         mock_container.invoice_repository.return_value.find_by_id.return_value = (
             mock_invoice
         )
@@ -150,7 +150,7 @@ class TestWebhookEventEmission:
         invoice_id = str(uuid4())
         mock_invoice = MagicMock()
         mock_invoice.id = UUID(invoice_id)
-        mock_invoice.status.value = "pending"
+        mock_invoice.status.value = "PENDING"
         mock_container.invoice_repository.return_value.find_by_id.return_value = (
             mock_invoice
         )
@@ -175,7 +175,7 @@ class TestWebhookEventEmission:
         invoice_id = str(uuid4())
         mock_invoice = MagicMock()
         mock_invoice.id = UUID(invoice_id)
-        mock_invoice.status.value = "pending"
+        mock_invoice.status.value = "PENDING"
         mock_container.invoice_repository.return_value.find_by_id.return_value = (
             mock_invoice
         )
@@ -200,7 +200,7 @@ class TestWebhookEventEmission:
         invoice_id = str(uuid4())
         mock_invoice = MagicMock()
         mock_invoice.id = UUID(invoice_id)
-        mock_invoice.status.value = "pending"
+        mock_invoice.status.value = "PENDING"
         mock_container.invoice_repository.return_value.find_by_id.return_value = (
             mock_invoice
         )

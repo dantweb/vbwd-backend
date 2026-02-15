@@ -84,7 +84,7 @@ def app(mock_stripe, mock_config_store, mock_container, mocker):
 
     mock_user = MagicMock()
     mock_user.id = user_id
-    mock_user.status.value = "active"
+    mock_user.status.value = "ACTIVE"
 
     mock_user_repo = MagicMock()
     mock_user_repo.return_value.find_by_id.return_value = mock_user

@@ -5,82 +5,122 @@ import enum
 class UserStatus(enum.Enum):
     """User account status."""
 
-    PENDING = "pending"
-    ACTIVE = "active"
-    SUSPENDED = "suspended"
-    DELETED = "deleted"
+    PENDING = "PENDING"
+    ACTIVE = "ACTIVE"
+    SUSPENDED = "SUSPENDED"
+    DELETED = "DELETED"
 
 
 class UserRole(enum.Enum):
     """User role."""
 
-    USER = "user"
-    ADMIN = "admin"
-    VENDOR = "vendor"
+    USER = "USER"
+    ADMIN = "ADMIN"
+    VENDOR = "VENDOR"
 
 
 class SubscriptionStatus(enum.Enum):
     """Subscription status."""
 
-    PENDING = "pending"
-    ACTIVE = "active"
-    TRIALING = "trialing"
-    PAUSED = "paused"
-    CANCELLED = "cancelled"
-    EXPIRED = "expired"
+    PENDING = "PENDING"
+    ACTIVE = "ACTIVE"
+    PAUSED = "PAUSED"
+    CANCELLED = "CANCELLED"
+    EXPIRED = "EXPIRED"
 
 
 class InvoiceStatus(enum.Enum):
     """Invoice status."""
 
-    PENDING = "pending"
-    PAID = "paid"
-    FAILED = "failed"
-    CANCELLED = "cancelled"
-    REFUNDED = "refunded"
+    PENDING = "PENDING"
+    PAID = "PAID"
+    FAILED = "FAILED"
+    CANCELLED = "CANCELLED"
+    REFUNDED = "REFUNDED"
 
 
 class BillingPeriod(enum.Enum):
     """Billing period for tariff plans."""
 
-    MONTHLY = "monthly"
-    YEARLY = "yearly"
-    QUARTERLY = "quarterly"
-    WEEKLY = "weekly"
-    ONE_TIME = "one_time"
+    MONTHLY = "MONTHLY"
+    YEARLY = "YEARLY"
+    QUARTERLY = "QUARTERLY"
+    WEEKLY = "WEEKLY"
+    ONE_TIME = "ONE_TIME"
 
 
 class UserCaseStatus(enum.Enum):
     """User case status."""
 
-    DRAFT = "draft"
-    ACTIVE = "active"
-    COMPLETED = "completed"
-    ARCHIVED = "archived"
+    DRAFT = "DRAFT"
+    ACTIVE = "ACTIVE"
+    COMPLETED = "COMPLETED"
+    ARCHIVED = "ARCHIVED"
 
 
 class PurchaseStatus(enum.Enum):
     """Token bundle purchase status."""
 
-    PENDING = "pending"
-    COMPLETED = "completed"
-    REFUNDED = "refunded"
-    CANCELLED = "cancelled"
+    PENDING = "PENDING"
+    COMPLETED = "COMPLETED"
+    REFUNDED = "REFUNDED"
+    CANCELLED = "CANCELLED"
 
 
 class LineItemType(enum.Enum):
     """Invoice line item type."""
 
-    SUBSCRIPTION = "subscription"
-    TOKEN_BUNDLE = "token_bundle"
-    ADD_ON = "add_on"
+    SUBSCRIPTION = "SUBSCRIPTION"
+    TOKEN_BUNDLE = "TOKEN_BUNDLE"
+    ADD_ON = "ADD_ON"
 
 
 class TokenTransactionType(enum.Enum):
     """Token transaction type."""
 
-    PURCHASE = "purchase"
-    USAGE = "usage"
-    REFUND = "refund"
-    BONUS = "bonus"
-    ADJUSTMENT = "adjustment"
+    PURCHASE = "PURCHASE"
+    USAGE = "USAGE"
+    REFUND = "REFUND"
+    BONUS = "BONUS"
+    ADJUSTMENT = "ADJUSTMENT"
+
+
+class ArcanaType(enum.Enum):
+    """Tarot card arcana type."""
+
+    MAJOR_ARCANA = "MAJOR_ARCANA"
+    CUPS = "CUPS"
+    WANDS = "WANDS"
+    SWORDS = "SWORDS"
+    PENTACLES = "PENTACLES"
+
+
+class CardOrientation(enum.Enum):
+    """Card orientation in spread."""
+
+    UPRIGHT = "UPRIGHT"
+    REVERSED = "REVERSED"
+
+
+class CardPosition(enum.Enum):
+    """Card position in 3-card spread."""
+
+    PAST = "PAST"
+    PRESENT = "PRESENT"
+    FUTURE = "FUTURE"
+
+
+class TaroSessionStatus(enum.Enum):
+    """Taro session status."""
+
+    ACTIVE = "ACTIVE"
+    EXPIRED = "EXPIRED"
+    CLOSED = "CLOSED"
+
+
+class AddonSubscriptionStatus(enum.Enum):
+    """Addon subscription status."""
+
+    PENDING = "PENDING"
+    ACTIVE = "ACTIVE"
+    CANCELLED = "CANCELLED"

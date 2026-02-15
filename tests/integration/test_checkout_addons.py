@@ -113,7 +113,7 @@ class TestCheckoutWithAddons:
         data = response.json()
         assert "add_ons" in data
         assert len(data["add_ons"]) == 1
-        assert data["add_ons"][0]["status"] == "pending"
+        assert data["add_ons"][0]["status"] == "PENDING"
 
     def test_checkout_with_multiple_addons(
         self, auth_headers, test_plan, test_addon, test_addon_premium
@@ -212,7 +212,7 @@ class TestCheckoutWithAddons:
 
         # Each add-on should have pending status
         for addon in data["add_ons"]:
-            assert addon["status"] == "pending"
+            assert addon["status"] == "PENDING"
 
     def test_checkout_addon_not_active_before_payment(
         self, auth_headers, test_plan, test_addon

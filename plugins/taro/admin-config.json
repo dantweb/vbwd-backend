@@ -1,0 +1,74 @@
+{
+  "tabs": [
+    {
+      "label": "Settings",
+      "fields": [
+        {
+          "name": "llm_model",
+          "type": "text",
+          "label": "LLM Model",
+          "description": "Model identifier (e.g., gpt-4, claude-3)"
+        },
+        {
+          "name": "llm_temperature",
+          "type": "number",
+          "label": "Temperature",
+          "description": "Creativity level (0.0-1.0)",
+          "min": 0,
+          "max": 1,
+          "step": 0.1
+        },
+        {
+          "name": "llm_max_tokens",
+          "type": "number",
+          "label": "Max Tokens",
+          "description": "Maximum tokens per interpretation",
+          "min": 50,
+          "max": 500
+        }
+      ]
+    },
+    {
+      "label": "Session Configuration",
+      "fields": [
+        {
+          "name": "session_duration_minutes",
+          "type": "number",
+          "label": "Session Duration (minutes)",
+          "description": "How long sessions remain active",
+          "min": 5,
+          "max": 120
+        },
+        {
+          "name": "session_expiry_warning_minutes",
+          "type": "number",
+          "label": "Expiry Warning (minutes)",
+          "description": "Show warning when N minutes remaining",
+          "min": 1,
+          "max": 10
+        }
+      ]
+    },
+    {
+      "label": "Token Configuration",
+      "fields": [
+        {
+          "name": "base_session_tokens",
+          "type": "number",
+          "label": "Session Base Tokens",
+          "description": "Token cost for creating a new session",
+          "min": 1,
+          "max": 50
+        },
+        {
+          "name": "follow_up_base_tokens",
+          "type": "number",
+          "label": "Follow-up Base Tokens",
+          "description": "Base token cost for follow-up questions",
+          "min": 1,
+          "max": 50
+        }
+      ]
+    }
+  ]
+}

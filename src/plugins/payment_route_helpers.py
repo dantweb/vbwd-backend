@@ -62,9 +62,9 @@ def validate_invoice_for_payment(invoice_id_str, user_id):
 
     if not invoice:
         return None, (jsonify({"error": "Invoice not found"}), 404)
-    if invoice.status.value != "pending":
+    if invoice.status.value != "PENDING":
         return None, (
-            jsonify({"error": f"Invoice is {invoice.status.value}, expected pending"}),
+            jsonify({"error": f"Invoice is {invoice.status.value}, expected PENDING"}),
             400,
         )
     if str(invoice.user_id) != str(user_id):

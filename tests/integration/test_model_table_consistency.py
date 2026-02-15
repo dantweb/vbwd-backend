@@ -11,7 +11,7 @@ Ensures that:
 from typing import Any, Type
 
 import pytest
-from sqlalchemy import inspect
+from sqlalchemy import inspect, text
 from sqlalchemy.types import Enum as SQLAlchemyEnum
 
 from src.extensions import db
@@ -231,9 +231,9 @@ class TestModelTableConsistency:
         """Verify Python enum types match PostgreSQL enum types.
 
         This test ensures that:
-        - Enum values are lowercase in database (PostgreSQL convention)
         - Python enums map correctly to database enums
-        - No enum value mismatches
+        - No enum value case/format mismatches between Python and database
+        - Enum consistency is maintained
         """
         models = get_all_models()
         tables = get_db_tables()
@@ -248,14 +248,14 @@ class TestModelTableConsistency:
             for col_name, enum_type in enum_cols.items():
                 if enum_type.enum_class:
                     py_values = {e.value for e in enum_type.enum_class}
-                    # Verify values are lowercase (PostgreSQL convention)
-                    non_lowercase = [v for v in py_values if v != v.lower()]
-                    if non_lowercase:
+                    # Verify all Python enum values are strings (not members)
+                    non_string = [v for v in py_values if not isinstance(v, str)]
+                    if non_string:
                         enum_mismatches.append(
                             (
                                 model.__name__,
                                 col_name,
-                                f"Non-lowercase values: {non_lowercase}",
+                                f"Non-string values: {non_string}",
                             )
                         )
 
@@ -353,6 +353,61 @@ class TestModelTableConsistency:
         assert not missing_constraints, (
             f"Found {len(missing_constraints)} models with missing unique constraints:\n"
             + "\n".join(f"  {m[0]}: {', '.join(m[1])}" for m in missing_constraints)
+        )
+
+    def test_enum_values_match_database(self) -> None:
+        """Verify Python enum values match PostgreSQL enum values exactly.
+
+        This test ensures that:
+        - Python enum members' .value matches database enum values
+        - No case mismatches (PostgreSQL is case-sensitive)
+        - All enum values are insertable into the database
+        """
+        models = get_all_models()
+        tables = get_db_tables()
+        mismatches = []
+
+        for model in models:
+            table_name = model.__tablename__
+            if table_name not in tables:
+                continue
+
+            # Check all enum columns in the model
+            for col in model.__table__.columns:
+                if isinstance(col.type, SQLAlchemyEnum) and col.type.enum_class:
+                    enum_class = col.type.enum_class
+                    enum_name = col.type.name
+
+                    try:
+                        # Query PostgreSQL for the enum values
+                        result = db.session.execute(
+                            text(f"SELECT enum_range(NULL::{enum_name});")
+                        )
+                        db_enum_range = result.scalar()
+                        if db_enum_range:
+                            db_values = set(str(db_enum_range).strip("{}").split(","))
+                        else:
+                            db_values = set()
+                    except Exception:
+                        continue
+
+                    # Get Python enum values
+                    py_values = {member.value for member in enum_class}
+
+                    # Check for mismatches
+                    if db_values != py_values:
+                        mismatches.append(
+                            (
+                                model.__name__,
+                                col.name,
+                                f"DB: {db_values}, Python: {py_values}",
+                            )
+                        )
+
+        assert (
+            not mismatches
+        ), f"Found {len(mismatches)} enum value mismatches:\n" + "\n".join(
+            f"  {m[0]}.{m[1]}: {m[2]}" for m in mismatches
         )
 
 

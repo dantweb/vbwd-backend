@@ -107,7 +107,7 @@ class CheckoutHandler(IEventHandler):
                 # Add subscription line item
                 line_items_data.append(
                     {
-                        "type": LineItemType.SUBSCRIPTION,
+                        "type": LineItemType.SUBSCRIPTION.value,
                         "item_id": subscription.id,
                         "description": plan.name,
                         "unit_price": plan_price,
@@ -144,7 +144,7 @@ class CheckoutHandler(IEventHandler):
                 # Add bundle line item
                 line_items_data.append(
                     {
-                        "type": LineItemType.TOKEN_BUNDLE,
+                        "type": LineItemType.TOKEN_BUNDLE.value,
                         "item_id": purchase.id,
                         "description": bundle.name,
                         "unit_price": bundle.price,
@@ -177,7 +177,7 @@ class CheckoutHandler(IEventHandler):
                 # Add add-on line item
                 line_items_data.append(
                     {
-                        "type": LineItemType.ADD_ON,
+                        "type": LineItemType.ADD_ON.value,
                         "item_id": addon_sub.id,
                         "description": addon.name,
                         "unit_price": addon.price,

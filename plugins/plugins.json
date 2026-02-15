@@ -35,6 +35,12 @@
       "version": "1.0.0",
       "installedAt": "",
       "source": "local"
+    },
+    "taro": {
+      "enabled": true,
+      "version": "1.0.0",
+      "installedAt": "",
+      "source": "local"
     }
   }
 }

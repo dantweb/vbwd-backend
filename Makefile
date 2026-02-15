@@ -18,20 +18,20 @@ build:
 
 # Run all tests (unit tests with SQLite)
 test:
-	docker compose run --rm test pytest -v
+	docker compose run --rm test pytest tests/unit/ plugins/ --ignore=tests/integration -v
 
 # Run unit tests only
 test-unit:
-	docker compose run --rm test pytest tests/unit/ -v
+	docker compose run --rm test pytest tests/unit/ plugins/ -v
 
 # Run integration tests with real PostgreSQL and HTTP requests
 # Requires: services running (make up)
 test-integration:
-	docker compose --profile test-integration run --rm test-integration pytest tests/integration/test_api_endpoints.py -v
+	docker compose --profile test-integration run --rm test-integration pytest tests/integration/ -v
 
 # Run integration tests and keep test data for debugging
 test-integration-keep-data:
-	TEST_DATA_CLEANUP=false docker compose --profile test-integration run --rm test-integration pytest tests/integration/test_api_endpoints.py -v
+	TEST_DATA_CLEANUP=false docker compose --profile test-integration run --rm test-integration pytest tests/integration/ -v
 
 # Seed test data manually (requires TEST_DATA_SEED=true)
 seed-test-data:

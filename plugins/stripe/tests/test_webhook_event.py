@@ -66,7 +66,7 @@ def app(mock_stripe, mock_config_store, mock_container, mocker):
     mocker.patch("src.middleware.auth.AuthService", mock_auth_service)
 
     mock_user = MagicMock()
-    mock_user.status.value = "active"
+    mock_user.status.value = "ACTIVE"
     mock_user_repo = MagicMock()
     mock_user_repo.return_value.find_by_id.return_value = mock_user
     mocker.patch("src.middleware.auth.UserRepository", mock_user_repo)

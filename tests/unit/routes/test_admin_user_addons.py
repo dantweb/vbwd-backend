@@ -12,7 +12,7 @@ class TestAdminGetUserAddons:
         admin_id = uuid4()
         mock_admin = MagicMock()
         mock_admin.id = admin_id
-        mock_admin.status.value = "active"
+        mock_admin.status.value = "ACTIVE"
         mock_admin.role = UserRole.ADMIN
 
         mock_auth_user_repo = MagicMock()
@@ -94,7 +94,7 @@ class TestAdminGetUserAddons:
         assert "addon_subscriptions" in data
         assert len(data["addon_subscriptions"]) == 1
         assert data["addon_subscriptions"][0]["addon_name"] == "Extra Storage"
-        assert data["addon_subscriptions"][0]["status"] == "active"
+        assert data["addon_subscriptions"][0]["status"] == "ACTIVE"
 
     @patch("src.routes.admin.users.UserRepository")
     @patch("src.middleware.auth.AuthService")
@@ -198,7 +198,7 @@ class TestAdminGetUserAddons:
         assert response.status_code == 200
         data = response.get_json()
         addon = data["addon_subscriptions"][0]
-        assert addon["invoice_status"] == "paid"
+        assert addon["invoice_status"] == "PAID"
         assert addon["first_invoice"]["invoice_number"] == "INV-100"
         assert addon["last_invoice"]["invoice_number"] == "INV-100"
 
@@ -230,7 +230,7 @@ class TestAdminGetUserAddons:
 
         mock_user = MagicMock()
         mock_user.id = user_id
-        mock_user.status.value = "active"
+        mock_user.status.value = "ACTIVE"
         mock_user.role = UserRole.USER
 
         mock_user_repo = MagicMock()

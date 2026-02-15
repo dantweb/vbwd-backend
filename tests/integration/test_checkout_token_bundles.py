@@ -117,7 +117,7 @@ class TestCheckoutWithTokenBundles:
         data = response.json()
         assert "token_bundles" in data
         assert len(data["token_bundles"]) == 1
-        assert data["token_bundles"][0]["status"] == "pending"
+        assert data["token_bundles"][0]["status"] == "PENDING"
 
     def test_checkout_with_multiple_bundles(
         self, auth_headers, test_plan, test_token_bundle, test_token_bundle_large
@@ -236,4 +236,4 @@ class TestCheckoutWithTokenBundles:
 
         # Each bundle should have pending status
         for bundle in data["token_bundles"]:
-            assert bundle["status"] == "pending"
+            assert bundle["status"] == "PENDING"

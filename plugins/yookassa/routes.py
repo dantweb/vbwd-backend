@@ -188,7 +188,7 @@ def _handle_payment_succeeded(obj):
     container = current_app.container
     invoice_repo = container.invoice_repository()
     invoice = invoice_repo.find_by_id(UUID(invoice_id_str))
-    if not invoice or invoice.status.value != "pending":
+    if not invoice or invoice.status.value != "PENDING":
         return
 
     payment_id = obj.get("id", "")

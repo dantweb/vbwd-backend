@@ -11,7 +11,7 @@ def _mock_admin_auth(mock_auth_user_repo_class, mock_auth_class):
     admin_id = uuid4()
     mock_admin = MagicMock()
     mock_admin.id = admin_id
-    mock_admin.status.value = "active"
+    mock_admin.status.value = "ACTIVE"
     mock_admin.role = UserRole.ADMIN
 
     mock_auth_user_repo = MagicMock()
@@ -80,7 +80,7 @@ class TestActiveSessions:
         user_id = uuid4()
         mock_user = MagicMock()
         mock_user.id = user_id
-        mock_user.status.value = "active"
+        mock_user.status.value = "ACTIVE"
         mock_user.role = UserRole.USER
 
         mock_repo = MagicMock()

@@ -109,6 +109,19 @@ def login():
         return jsonify(auth_response_schema.dump(result)), 401
 
 
+@auth_bp.route("/logout", methods=["POST"])
+def logout():
+    """Logout a user.
+
+    This endpoint invalidates the user's session by clearing client-side token.
+    The JWT token validation happens on the client side.
+
+    Returns:
+        200: {"message": "Logged out successfully"}
+    """
+    return jsonify({"message": "Logged out successfully"}), 200
+
+
 @auth_bp.route("/check-email", methods=["GET"])
 @limiter.limit("5000 per minute")
 def check_email():

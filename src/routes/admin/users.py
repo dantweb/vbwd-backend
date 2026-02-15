@@ -54,7 +54,7 @@ def create_user():
     password_hash = bcrypt.hashpw(password_bytes, bcrypt.gensalt()).decode("utf-8")
 
     # Parse status
-    status_str = data.get("status", "active")
+    status_str = data.get("status", "ACTIVE")
     try:
         status = UserStatus(status_str)
     except ValueError:
@@ -416,6 +416,98 @@ def activate_user(user_id):
         ),
         200,
     )
+
+
+@admin_users_bp.route("/<user_id>/deletion-info", methods=["GET"])
+@require_auth
+@require_admin
+def get_deletion_info(user_id):
+    """
+    Get information about what will be deleted if user is deleted.
+
+    Args:
+        user_id: UUID of the user
+
+    Returns:
+        200: Deletion info with cascade counts
+        404: User not found
+    """
+    user_repo = UserRepository(db.session)
+    user = user_repo.find_by_id(user_id)
+
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    # Check what will be deleted
+    from src.repositories.invoice_repository import InvoiceRepository
+    from src.repositories.subscription_repository import SubscriptionRepository
+
+    invoice_repo = InvoiceRepository(db.session)
+    subscription_repo = SubscriptionRepository(db.session)
+
+    invoices = invoice_repo.find_by_user(user_id)
+    subscriptions = subscription_repo.find_by_user(user_id)
+
+    return jsonify({
+        "user_id": str(user.id),
+        "email": user.email,
+        "has_cascade_dependencies": len(invoices) > 0 or len(subscriptions) > 0,
+        "invoice_count": len(invoices),
+        "subscription_count": len(subscriptions),
+    }), 200
+
+
+@admin_users_bp.route("/<user_id>", methods=["DELETE"])
+@require_auth
+@require_admin
+def delete_user(user_id):
+    """
+    Delete a user completely.
+
+    Body (optional):
+        - force: bool (if true, cascade delete all dependencies including invoices and subscriptions)
+
+    Args:
+        user_id: UUID of the user
+
+    Returns:
+        200: User deleted successfully
+        404: User not found
+        409: User has invoices/subscriptions and force delete not requested
+    """
+    user_repo = UserRepository(db.session)
+    user = user_repo.find_by_id(user_id)
+
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    data = request.get_json() or {}
+    force_delete = data.get("force", False)
+
+    # Check if user has invoices or subscriptions
+    from src.repositories.invoice_repository import InvoiceRepository
+    from src.repositories.subscription_repository import SubscriptionRepository
+
+    invoice_repo = InvoiceRepository(db.session)
+    subscription_repo = SubscriptionRepository(db.session)
+
+    invoices = invoice_repo.find_by_user(user_id)
+    subscriptions = subscription_repo.find_by_user(user_id)
+
+    has_dependencies = len(invoices) > 0 or len(subscriptions) > 0
+
+    if has_dependencies and not force_delete:
+        return jsonify({
+            "error": f"Cannot delete user with {len(invoices)} invoice(s) and {len(subscriptions)} subscription(s). User has transaction history.",
+            "has_dependencies": True,
+            "invoice_count": len(invoices),
+            "subscription_count": len(subscriptions),
+        }), 409
+
+    # Delete user (cascade delete is handled by database FK constraints with ondelete="CASCADE")
+    user_repo.delete(user_id)
+
+    return jsonify({"message": "User deleted successfully"}), 200
 
 
 @admin_users_bp.route("/<user_id>/addons", methods=["GET"])

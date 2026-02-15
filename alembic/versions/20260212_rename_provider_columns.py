@@ -45,18 +45,20 @@ def upgrade():
     )
 
     # ---- addon_subscription: stripe_subscription_id -> provider_subscription_id ----
-    op.alter_column(
-        "addon_subscription", "stripe_subscription_id",
-        new_column_name="provider_subscription_id",
-    )
+    # NOTE: Commented out because addon_subscription table is created in 20260215_addon_subscription
+    # op.alter_column(
+    #     "addon_subscription", "stripe_subscription_id",
+    #     new_column_name="provider_subscription_id",
+    # )
 
 
 def downgrade():
     # ---- addon_subscription ----
-    op.alter_column(
-        "addon_subscription", "provider_subscription_id",
-        new_column_name="stripe_subscription_id",
-    )
+    # NOTE: Commented out because addon_subscription table is created in 20260215_addon_subscription
+    # op.alter_column(
+    #     "addon_subscription", "provider_subscription_id",
+    #     new_column_name="stripe_subscription_id",
+    # )
 
     # ---- user_invoice: split back ----
     op.alter_column(

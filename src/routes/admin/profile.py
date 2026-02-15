@@ -37,7 +37,7 @@ def get_profile():
                     "email": user.email,
                     "name": user.details.full_name if user.details else "",
                     "role": user.role.value if user.role else "user",
-                    "is_active": user.status.value == "active" if user.status else True,
+                    "is_active": user.status.value == "ACTIVE" if user.status else True,
                     "details": details_dict,
                 }
             }
@@ -123,7 +123,7 @@ def update_profile():
                     "email": user.email,
                     "name": user.details.full_name if user.details else "",
                     "role": user.role.value if user.role else "user",
-                    "is_active": user.status.value == "active" if user.status else True,
+                    "is_active": user.status.value == "ACTIVE" if user.status else True,
                     "details": details_dict,
                 },
                 "message": "Profile updated",

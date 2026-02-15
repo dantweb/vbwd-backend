@@ -50,7 +50,7 @@ def require_auth(f):
         if not user:
             return jsonify({"error": "User not found"}), 401
 
-        if user.status.value != "active":
+        if user.status.value != "ACTIVE":
             return jsonify({"error": "User account is not active"}), 401
 
         # Store user_id in Flask's g object for use in route
@@ -136,7 +136,7 @@ def optional_auth(f):
         if user_id:
             # Valid token, load user
             user = user_repo.find_by_id(user_id)
-            if user and user.status.value == "active":
+            if user and user.status.value == "ACTIVE":
                 g.user_id = user_id
                 g.user = user
 

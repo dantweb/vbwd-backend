@@ -19,7 +19,7 @@ class TestAdminAnalyticsDashboard:
         # Mock admin user
         mock_admin = MagicMock()
         mock_admin.id = admin_id
-        mock_admin.status.value = "active"
+        mock_admin.status.value = "ACTIVE"
         mock_admin.role = UserRole.ADMIN
 
         mock_auth_user_repo = MagicMock()
@@ -67,7 +67,7 @@ class TestAdminAnalyticsDashboard:
 
         mock_user = MagicMock()
         mock_user.id = user_id
-        mock_user.status.value = "active"
+        mock_user.status.value = "ACTIVE"
         mock_user.role = UserRole.USER
 
         mock_user_repo = MagicMock()

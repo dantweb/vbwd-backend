@@ -55,13 +55,14 @@ def upgrade() -> None:
     )
 
     # addon_subscription.stripe_subscription_id
-    op.add_column(
-        "addon_subscription",
-        sa.Column("stripe_subscription_id", sa.String(length=255), nullable=True),
-    )
-    op.create_index(
-        "ix_addon_subscription_stripe_subscription_id", "addon_subscription", ["stripe_subscription_id"]
-    )
+    # NOTE: Commented out because addon_subscription table is created in 20260215_addon_subscription
+    # op.add_column(
+    #     "addon_subscription",
+    #     sa.Column("stripe_subscription_id", sa.String(length=255), nullable=True),
+    # )
+    # op.create_index(
+    #     "ix_addon_subscription_stripe_subscription_id", "addon_subscription", ["stripe_subscription_id"]
+    # )
 
 
 def downgrade() -> None:

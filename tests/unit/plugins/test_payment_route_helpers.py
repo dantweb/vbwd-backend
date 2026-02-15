@@ -90,6 +90,7 @@ class TestValidateInvoiceForPayment:
         invoice.status = InvoiceStatus.PENDING
         invoice.user_id = user_id
         mock_container.invoice_repository.return_value.find_by_id.return_value = invoice
+        app.container = mock_container
 
         with app.app_context():
             result, err = validate_invoice_for_payment(str(invoice.id), user_id)
@@ -134,6 +135,7 @@ class TestValidateInvoiceForPayment:
         invoice.status = InvoiceStatus.PENDING
         invoice.user_id = uuid4()
         mock_container.invoice_repository.return_value.find_by_id.return_value = invoice
+        app.container = mock_container
 
         different_user = uuid4()
         with app.app_context():

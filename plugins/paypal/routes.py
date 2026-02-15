@@ -268,7 +268,7 @@ def _handle_capture_completed(resource):
     container = current_app.container
     invoice_repo = container.invoice_repository()
     invoice = invoice_repo.find_by_id(UUID(custom_id))
-    if not invoice or invoice.status.value != "pending":
+    if not invoice or invoice.status.value != "PENDING":
         return
 
     capture_id = resource.get("id", "")

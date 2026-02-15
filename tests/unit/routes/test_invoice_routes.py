@@ -21,7 +21,7 @@ class TestInvoiceRoutes:
         """Get invoices returns list for authenticated user."""
         user_id = uuid4()
         mock_user = MagicMock()
-        mock_user.status.value = "active"
+        mock_user.status.value = "ACTIVE"
         mock_user.id = user_id
 
         mock_user_repo = MagicMock()
@@ -72,7 +72,7 @@ class TestInvoiceRoutes:
         invoice_id = uuid4()
 
         mock_user = MagicMock()
-        mock_user.status.value = "active"
+        mock_user.status.value = "ACTIVE"
         mock_user.id = user_id
 
         mock_user_repo = MagicMock()
@@ -122,7 +122,7 @@ class TestInvoiceRoutes:
         user_id = uuid4()
 
         mock_user = MagicMock()
-        mock_user.status.value = "active"
+        mock_user.status.value = "ACTIVE"
         mock_user.id = user_id
 
         mock_user_repo = MagicMock()
@@ -162,7 +162,7 @@ class TestInvoiceRoutes:
         invoice_id = uuid4()
 
         mock_user = MagicMock()
-        mock_user.status.value = "active"
+        mock_user.status.value = "ACTIVE"
         mock_user.id = user_id
 
         mock_user_repo = MagicMock()

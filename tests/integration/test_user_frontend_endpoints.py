@@ -152,7 +152,7 @@ class TestUserSubscriptionEndpoint:
         if subscription is None:
             pytest.skip("User has no active subscription")
 
-        valid_statuses = ["active", "cancelled", "cancelling", "paused", "expired"]
+        valid_statuses = ["PENDING", "ACTIVE", "PAUSED", "CANCELLED", "EXPIRED"]
         assert (
             subscription["status"] in valid_statuses
         ), f"Invalid status: {subscription['status']}"
@@ -340,7 +340,7 @@ class TestUserInvoicesEndpoint:
         if len(invoices) == 0:
             pytest.skip("No invoices to test")
 
-        valid_statuses = ["pending", "paid", "failed", "cancelled", "refunded"]
+        valid_statuses = ["PENDING", "PAID", "FAILED", "CANCELLED", "REFUNDED"]
         for invoice in invoices:
             assert (
                 invoice["status"] in valid_statuses

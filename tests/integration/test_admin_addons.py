@@ -93,7 +93,7 @@ class TestAdminAddOns:
             "description": "24/7 priority support add-on",
             "price": "15.00",
             "currency": "EUR",
-            "billing_period": "monthly",
+            "billing_period": "MONTHLY",
             "config": {
                 "type": "support",
                 "response_time_hours": 4,
@@ -203,7 +203,7 @@ class TestAdminAddOns:
         """
         response = requests.post(
             f"{self.BASE_URL}/admin/addons/",
-            json={"price": "10.00", "billing_period": "monthly"},
+            json={"price": "10.00", "billing_period": "MONTHLY"},
             headers=admin_headers,
             timeout=10,
         )
@@ -217,7 +217,7 @@ class TestAdminAddOns:
         """
         response = requests.post(
             f"{self.BASE_URL}/admin/addons/",
-            json={"name": "Test Addon", "billing_period": "monthly"},
+            json={"name": "Test Addon", "billing_period": "MONTHLY"},
             headers=admin_headers,
             timeout=10,
         )
@@ -234,7 +234,7 @@ class TestAdminAddOns:
             json={
                 "name": "Premium Support Feature",
                 "price": "25.00",
-                "billing_period": "monthly",
+                "billing_period": "MONTHLY",
             },
             headers=admin_headers,
             timeout=10,
@@ -255,7 +255,7 @@ class TestAdminAddOns:
                 "name": "Another Addon",
                 "slug": created_addon["slug"],  # Duplicate slug
                 "price": "10.00",
-                "billing_period": "monthly",
+                "billing_period": "MONTHLY",
             },
             headers=admin_headers,
             timeout=10,
@@ -279,7 +279,7 @@ class TestAdminAddOns:
             json={
                 "name": f"Storage Addon {uuid4().hex[:6]}",
                 "price": "20.00",
-                "billing_period": "monthly",
+                "billing_period": "MONTHLY",
                 "config": config,
             },
             headers=admin_headers,

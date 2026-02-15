@@ -38,7 +38,7 @@ def get_profile():
             "user": {
                 "id": "uuid-here",
                 "email": "user@example.com",
-                "status": "active",
+                "status": "ACTIVE",
                 "role": "user",
                 ...
             },
@@ -540,7 +540,7 @@ def pay_invoice(invoice_id):
         return jsonify({"error": "Access denied"}), 403
 
     # Check if already paid
-    if invoice.status == "paid":
+    if invoice.status.value == "PAID":
         return jsonify({"error": "Invoice already paid"}), 400
 
     # Dispatch payment event to trigger full payment flow

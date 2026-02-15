@@ -70,8 +70,8 @@ class PaymentCapturedHandler(IEventHandler):
             # Invoice may already be marked paid by the route/service that
             # dispatched this event — that's expected. Only update payment
             # metadata if it hasn't been set yet.
-            if invoice.status.value != "paid":
-                invoice.status = invoice.status.__class__("paid")
+            if invoice.status.value != "PAID":
+                invoice.status = invoice.status.__class__("PAID")
                 invoice.payment_ref = event.payment_reference
                 invoice.paid_at = datetime.utcnow()
                 repos["invoice"].save(invoice)

@@ -19,7 +19,7 @@ class TestAdminListUsers:
         # Mock admin user
         mock_admin = MagicMock()
         mock_admin.id = admin_id
-        mock_admin.status.value = "active"
+        mock_admin.status.value = "ACTIVE"
         mock_admin.role = UserRole.ADMIN
 
         mock_auth_user_repo = MagicMock()
@@ -64,7 +64,7 @@ class TestAdminListUsers:
 
         mock_admin = MagicMock()
         mock_admin.id = admin_id
-        mock_admin.status.value = "active"
+        mock_admin.status.value = "ACTIVE"
         mock_admin.role = UserRole.ADMIN
 
         mock_auth_user_repo = MagicMock()
@@ -100,7 +100,7 @@ class TestAdminListUsers:
 
         mock_user = MagicMock()
         mock_user.id = user_id
-        mock_user.status.value = "active"
+        mock_user.status.value = "ACTIVE"
         mock_user.role = UserRole.USER
 
         mock_user_repo = MagicMock()
@@ -139,7 +139,7 @@ class TestAdminGetUser:
 
         mock_admin = MagicMock()
         mock_admin.id = admin_id
-        mock_admin.status.value = "active"
+        mock_admin.status.value = "ACTIVE"
         mock_admin.role = UserRole.ADMIN
 
         mock_auth_user_repo = MagicMock()
@@ -182,7 +182,7 @@ class TestAdminGetUser:
 
         mock_admin = MagicMock()
         mock_admin.id = admin_id
-        mock_admin.status.value = "active"
+        mock_admin.status.value = "ACTIVE"
         mock_admin.role = UserRole.ADMIN
 
         mock_auth_user_repo = MagicMock()
@@ -220,7 +220,7 @@ class TestAdminUpdateUser:
 
         mock_admin = MagicMock()
         mock_admin.id = admin_id
-        mock_admin.status.value = "active"
+        mock_admin.status.value = "ACTIVE"
         mock_admin.role = UserRole.ADMIN
 
         mock_auth_user_repo = MagicMock()
@@ -243,7 +243,7 @@ class TestAdminUpdateUser:
 
         response = client.put(
             f"/api/v1/admin/users/{user_id}",
-            json={"status": "suspended"},
+            json={"status": "SUSPENDED"},
             headers={"Authorization": "Bearer valid_token"},
         )
 
@@ -261,7 +261,7 @@ class TestAdminUpdateUser:
 
         mock_admin = MagicMock()
         mock_admin.id = admin_id
-        mock_admin.status.value = "active"
+        mock_admin.status.value = "ACTIVE"
         mock_admin.role = UserRole.ADMIN
 
         mock_auth_user_repo = MagicMock()
@@ -301,7 +301,7 @@ class TestAdminUpdateUser:
 
         mock_admin = MagicMock()
         mock_admin.id = admin_id
-        mock_admin.status.value = "active"
+        mock_admin.status.value = "ACTIVE"
         mock_admin.role = UserRole.ADMIN
 
         mock_auth_user_repo = MagicMock()
