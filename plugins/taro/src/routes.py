@@ -57,6 +57,7 @@ def create_session():
         JSON response with session_id and initial 3-card spread
     """
     try:
+        verify_jwt_in_request()
         user_id = get_jwt_identity()
         session_service = _get_taro_services()
 
@@ -165,6 +166,7 @@ def create_follow_up(session_id: str):
         JSON response with follow-up interpretation
     """
     try:
+        verify_jwt_in_request()
         user_id = get_jwt_identity()
         data = request.get_json() or {}
 
@@ -309,6 +311,7 @@ def get_session_history():
         JSON response with list of sessions
     """
     try:
+        verify_jwt_in_request()
         user_id = get_jwt_identity()
 
         # Get pagination parameters
@@ -390,6 +393,7 @@ def get_daily_limits():
         JSON response with daily limits and remaining sessions
     """
     try:
+        verify_jwt_in_request()
         user_id = get_jwt_identity()
 
         # Get daily limit from user's tarif plan
