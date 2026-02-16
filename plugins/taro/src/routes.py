@@ -1,8 +1,11 @@
 """Routes for Taro plugin - API endpoints."""
-from flask import Blueprint, request, jsonify, current_app
+from flask import Blueprint, request, jsonify, current_app, send_from_directory
 from datetime import datetime
+from pathlib import Path
+from uuid import UUID
 from src.extensions import db
 from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request
+from src.middleware.auth import require_auth, require_admin
 
 from plugins.taro.src.events import (
     TaroSessionRequestedEvent,
@@ -32,6 +35,55 @@ def _get_taro_services():
     return session_service
 
 
+def get_user_tarif_plan_limits(user_id: str) -> tuple:
+    """Get user's daily Taro limits from their tarif plan.
+
+    Reads the tarif plan features configuration to determine:
+    - daily_taro_limit: Max taro sessions per day
+    - max_follow_ups: Max follow-up questions per session
+
+    Args:
+        user_id: User ID to fetch limits for
+
+    Returns:
+        Tuple of (daily_limit: int, max_follow_ups: int)
+        Returns defaults (3, 3) if user has no active subscription
+    """
+    from src.models.user import User
+    from src.models.subscription import Subscription
+    from src.models.enums import SubscriptionStatus
+
+    # Default limits
+    DEFAULT_DAILY_LIMIT = 3
+    DEFAULT_MAX_FOLLOW_UPS = 3
+
+    try:
+        # Get user and their active subscription
+        user = User.query.get(user_id)
+        if not user:
+            return DEFAULT_DAILY_LIMIT, DEFAULT_MAX_FOLLOW_UPS
+
+        # Get user's active subscription
+        subscription = Subscription.query.filter(
+            Subscription.user_id == user_id,
+            Subscription.status == SubscriptionStatus.ACTIVE,
+        ).first()
+
+        if not subscription or not subscription.tarif_plan:
+            return DEFAULT_DAILY_LIMIT, DEFAULT_MAX_FOLLOW_UPS
+
+        # Read limits from tarif plan features
+        features = subscription.tarif_plan.features or {}
+        daily_limit = features.get("daily_taro_limit", DEFAULT_DAILY_LIMIT)
+        max_follow_ups = features.get("max_taro_follow_ups", DEFAULT_MAX_FOLLOW_UPS)
+
+        return int(daily_limit), int(max_follow_ups)
+
+    except Exception as e:
+        print(f"Error fetching tarif plan limits: {e}")
+        return DEFAULT_DAILY_LIMIT, DEFAULT_MAX_FOLLOW_UPS
+
+
 def check_token_balance(user_id: str, tokens_required: int = 10) -> bool:
     """Check if user has sufficient tokens.
 
@@ -43,8 +95,17 @@ def check_token_balance(user_id: str, tokens_required: int = 10) -> bool:
         True if user has sufficient tokens, False otherwise
     """
     from src.services.token_service import TokenService
+    from src.repositories.token_repository import (
+        TokenBalanceRepository,
+        TokenTransactionRepository,
+    )
+    from src.repositories.token_bundle_purchase_repository import TokenBundlePurchaseRepository
 
-    token_service = TokenService(db.session)
+    balance_repo = TokenBalanceRepository(db.session)
+    transaction_repo = TokenTransactionRepository(db.session)
+    purchase_repo = TokenBundlePurchaseRepository(db.session)
+
+    token_service = TokenService(balance_repo, transaction_repo, purchase_repo)
     user_balance = token_service.get_balance(user_id)
     return user_balance >= tokens_required
 
@@ -61,12 +122,8 @@ def create_session():
         user_id = get_jwt_identity()
         session_service = _get_taro_services()
 
-        # Get daily limit from user's tarif plan
-        daily_limit = 3  # Default
-        max_follow_ups = 3  # Default
-
-        # Use sensible defaults for limits (can be overridden by user's plan)
-        # TODO: Lookup user's subscription plan from database if needed
+        # Get daily limit and max follow-ups from user's tarif plan
+        daily_limit, max_follow_ups = get_user_tarif_plan_limits(user_id)
 
         # Check daily limit
         allowed, remaining = session_service.check_daily_limit(user_id, daily_limit)
@@ -129,6 +186,8 @@ def create_session():
                     "status": session.status,
                     "created_at": session.created_at.isoformat() if session.created_at else None,
                     "expires_at": session.expires_at.isoformat() if session.expires_at else None,
+                    "follow_up_count": session.follow_up_count,
+                    "max_follow_ups": max_follow_ups,
                     "cards": [
                         {
                             "card_id": str(card.id),
@@ -136,6 +195,18 @@ def create_session():
                             "orientation": card.orientation,
                             "arcana_id": str(card.arcana_id),
                             "interpretation": card.ai_interpretation,
+                            # Include Arcana details for display
+                            "arcana": {
+                                "id": str(card.arcana.id),
+                                "name": card.arcana.name,
+                                "number": card.arcana.number,
+                                "suit": card.arcana.suit,
+                                "rank": card.arcana.rank,
+                                "arcana_type": card.arcana.arcana_type,
+                                "image_url": card.arcana.image_url,
+                                "upright_meaning": card.arcana.upright_meaning,
+                                "reversed_meaning": card.arcana.reversed_meaning,
+                            } if card.arcana else None,
                         }
                         for card in cards
                     ],
@@ -238,9 +309,7 @@ def create_follow_up(session_id: str):
             )
 
         # Get max follow-ups from user's plan
-        max_follow_ups = 3  # Default
-        # Use default max_follow_ups (can be overridden by user's plan)
-        # TODO: Lookup user's subscription plan from database if needed
+        _, max_follow_ups = get_user_tarif_plan_limits(user_id)
 
         # Check follow-up count limit
         if session.follow_up_count >= max_follow_ups:
@@ -397,11 +466,19 @@ def get_daily_limits():
         user_id = get_jwt_identity()
 
         # Get daily limit from user's tarif plan
-        daily_limit = 3  # Default
-        plan_name = "Unknown"
+        daily_limit, _ = get_user_tarif_plan_limits(user_id)
 
-        # Use default daily_limit and plan_name
-        # TODO: Lookup user's subscription plan from database if needed
+        # Get plan name from subscription
+        from src.models.subscription import Subscription
+        from src.models.enums import SubscriptionStatus
+
+        plan_name = "Unknown"
+        subscription = Subscription.query.filter(
+            Subscription.user_id == user_id,
+            Subscription.status == SubscriptionStatus.ACTIVE,
+        ).first()
+        if subscription and subscription.tarif_plan:
+            plan_name = subscription.tarif_plan.name
 
         session_service = _get_taro_services()
 
@@ -445,6 +522,163 @@ def get_daily_limits():
             jsonify({
                 "success": False,
                 "message": f"Error retrieving limits: {str(e)}",
+            }),
+            500,
+        )
+
+
+@taro_bp.route("/assets/arcana/<path:filename>", methods=["GET"])
+def serve_arcana_assets(filename):
+    """Serve tarot card SVG assets from the plugin directory."""
+    try:
+        # Security: only allow safe file paths (alphanumeric, hyphens, slashes, dots)
+        if not all(c.isalnum() or c in '-_/.svg' for c in filename):
+            return jsonify({"error": "Invalid file path"}), 400
+
+        # Get plugin directory path
+        plugin_dir = Path(__file__).parent.parent
+        assets_dir = plugin_dir / "assets" / "arcana"
+
+        # Resolve the full path safely (prevent directory traversal)
+        file_path = (assets_dir / filename).resolve()
+        if not str(file_path).startswith(str(assets_dir.resolve())):
+            return jsonify({"error": "Access denied"}), 403
+
+        if not file_path.exists():
+            return jsonify({"error": "File not found"}), 404
+
+        # Serve the file
+        return send_from_directory(str(assets_dir), filename, mimetype="image/svg+xml")
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ============================================================================
+# ADMIN ENDPOINTS - Taro Admin Utilities
+# ============================================================================
+
+
+@taro_bp.route("/admin/users/<user_id>/sessions", methods=["GET"])
+@require_auth
+@require_admin
+def admin_get_user_sessions(user_id):
+    """Get user's Taro session info (admin utility).
+
+    Returns current session count and limits for the specified user.
+    Used by admins to view user's taro session status.
+
+    Args:
+        user_id: UUID of the user
+
+    Returns:
+        JSON response with session info
+        403: Unauthorized (requires admin)
+        404: User not found
+    """
+    try:
+        # Validate user_id format
+        try:
+            user_uuid = UUID(user_id)
+        except ValueError:
+            return jsonify({"error": "Invalid user ID format"}), 400
+
+        # Verify user exists
+        from src.models.user import User
+        user = User.query.get(user_uuid)
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+
+        # Get taro service
+        session_service = _get_taro_services()
+
+        # Get session info from user's tarif plan
+        daily_limit, _ = get_user_tarif_plan_limits(str(user_id))
+        allowed, remaining = session_service.check_daily_limit(str(user_id), daily_limit)
+
+        return (
+            jsonify({
+                "success": True,
+                "user_id": str(user.id),
+                "email": user.email,
+                "daily_limit": daily_limit,
+                "daily_remaining": remaining,
+                "daily_used": daily_limit - remaining,
+                "can_create": allowed,
+            }),
+            200,
+        )
+
+    except Exception as e:
+        return (
+            jsonify({
+                "success": False,
+                "message": f"Error fetching session info: {str(e)}",
+            }),
+            500,
+        )
+
+
+@taro_bp.route("/admin/users/<user_id>/reset-sessions", methods=["POST"])
+@require_auth
+@require_admin
+def admin_reset_user_sessions(user_id):
+    """Reset user's daily Taro sessions (admin utility).
+
+    Closes all active sessions created today for the specified user.
+    Used by admins to allow users to create new sessions after reaching their limit.
+
+    Args:
+        user_id: UUID of the user to reset sessions for
+
+    Returns:
+        JSON response with reset count and updated session info
+        403: Unauthorized (requires admin)
+        404: User not found
+    """
+    try:
+        # Validate user_id format
+        try:
+            user_uuid = UUID(user_id)
+        except ValueError:
+            return jsonify({"error": "Invalid user ID format"}), 400
+
+        # Verify user exists
+        from src.models.user import User
+        user = User.query.get(user_uuid)
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+
+        # Get taro service
+        session_service = _get_taro_services()
+
+        # Reset sessions
+        reset_count = session_service.reset_today_sessions(str(user_id))
+
+        # Get remaining sessions info after reset (from user's tarif plan)
+        daily_limit, _ = get_user_tarif_plan_limits(str(user_id))
+        allowed, remaining = session_service.check_daily_limit(str(user_id), daily_limit)
+
+        return (
+            jsonify({
+                "success": True,
+                "message": f"Reset {reset_count} Taro sessions for {user.email}",
+                "user_id": str(user.id),
+                "email": user.email,
+                "reset_count": reset_count,
+                "daily_limit": daily_limit,
+                "daily_remaining": remaining,
+                "daily_used": daily_limit - remaining,
+                "can_create": allowed,
+            }),
+            200,
+        )
+
+    except Exception as e:
+        return (
+            jsonify({
+                "success": False,
+                "message": f"Error resetting sessions: {str(e)}",
             }),
             500,
         )

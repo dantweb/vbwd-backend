@@ -6,7 +6,7 @@ from plugins.taro.src.models.arcana import Arcana
 from plugins.taro.src.models.taro_session import TaroSession
 from plugins.taro.src.models.taro_card_draw import TaroCardDraw
 from plugins.taro.src.repositories.taro_card_draw_repository import TaroCardDrawRepository
-from src.models.enums import ArcanaType, CardPosition, CardOrientation, TaroSessionStatus
+from plugins.taro.src.enums import ArcanaType, CardPosition, CardOrientation, TaroSessionStatus
 
 
 @pytest.fixture

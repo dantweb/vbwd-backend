@@ -448,13 +448,18 @@ def get_deletion_info(user_id):
     invoices = invoice_repo.find_by_user(user_id)
     subscriptions = subscription_repo.find_by_user(user_id)
 
-    return jsonify({
-        "user_id": str(user.id),
-        "email": user.email,
-        "has_cascade_dependencies": len(invoices) > 0 or len(subscriptions) > 0,
-        "invoice_count": len(invoices),
-        "subscription_count": len(subscriptions),
-    }), 200
+    return (
+        jsonify(
+            {
+                "user_id": str(user.id),
+                "email": user.email,
+                "has_cascade_dependencies": len(invoices) > 0 or len(subscriptions) > 0,
+                "invoice_count": len(invoices),
+                "subscription_count": len(subscriptions),
+            }
+        ),
+        200,
+    )
 
 
 @admin_users_bp.route("/<user_id>", methods=["DELETE"])
@@ -497,12 +502,21 @@ def delete_user(user_id):
     has_dependencies = len(invoices) > 0 or len(subscriptions) > 0
 
     if has_dependencies and not force_delete:
-        return jsonify({
-            "error": f"Cannot delete user with {len(invoices)} invoice(s) and {len(subscriptions)} subscription(s). User has transaction history.",
-            "has_dependencies": True,
-            "invoice_count": len(invoices),
-            "subscription_count": len(subscriptions),
-        }), 409
+        error_msg = (
+            f"Cannot delete user with {len(invoices)} invoice(s) and "
+            f"{len(subscriptions)} subscription(s). User has transaction history."
+        )
+        return (
+            jsonify(
+                {
+                    "error": error_msg,
+                    "has_dependencies": True,
+                    "invoice_count": len(invoices),
+                    "subscription_count": len(subscriptions),
+                }
+            ),
+            409,
+        )
 
     # Delete user (cascade delete is handled by database FK constraints with ondelete="CASCADE")
     user_repo.delete(user_id)
@@ -575,3 +589,6 @@ def get_user_addons(user_id):
         result.append(data)
 
     return jsonify({"addon_subscriptions": result}), 200
+
+
+# ============================================================================

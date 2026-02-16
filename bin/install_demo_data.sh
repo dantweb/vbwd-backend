@@ -7,6 +7,7 @@
 # - 5 tarif plans (Free, Basic, Pro, Enterprise, Lifetime)
 # - 2 demo users with subscriptions
 # - 10 invoices with various statuses
+# - 5 add-ons (3 global, 2 plan-dependent)
 
 set -e
 
@@ -28,6 +29,8 @@ from src.models.price import Price
 from src.models.tarif_plan import TarifPlan
 from src.models.subscription import Subscription
 from src.models.invoice import UserInvoice
+from src.models.addon import AddOn
+from src.models.addon_subscription import AddOnSubscription
 from src.models.enums import (
     UserStatus, UserRole, BillingPeriod,
     SubscriptionStatus, InvoiceStatus
@@ -269,6 +272,131 @@ try:
             session.add(invoice)
             print(f"  Created: {invoice.invoice_number} - {user.email} - €{invoice.amount} - {invoice.status.value}")
 
+    print("\n=== Creating Add-Ons ===")
+
+    # Global add-ons (available to all users)
+    global_addons_data = [
+        {
+            'name': 'Priority Support',
+            'slug': 'priority-support',
+            'description': 'Get priority support with 24-hour response time',
+            'price': Decimal('9.99'),
+            'billing_period': BillingPeriod.MONTHLY.value,
+            'config': {'support_level': 'priority', 'response_hours': 24},
+            'sort_order': 0,
+            'plans': [],  # Empty = global addon
+        },
+        {
+            'name': 'Advanced Analytics',
+            'slug': 'advanced-analytics',
+            'description': 'Unlock advanced analytics and reporting tools',
+            'price': Decimal('19.99'),
+            'billing_period': BillingPeriod.MONTHLY.value,
+            'config': {'analytics_level': 'advanced', 'custom_reports': True},
+            'sort_order': 1,
+            'plans': [],  # Empty = global addon
+        },
+        {
+            'name': 'White Label',
+            'slug': 'white-label',
+            'description': 'Customize with your own branding',
+            'price': Decimal('49.99'),
+            'billing_period': BillingPeriod.MONTHLY.value,
+            'config': {'custom_domain': True, 'custom_logo': True, 'custom_colors': True},
+            'sort_order': 2,
+            'plans': [],  # Empty = global addon
+        },
+    ]
+
+    # Plan-dependent add-ons (only available for specific plans)
+    plan_dependent_addons_data = [
+        {
+            'name': 'Extra Storage',
+            'slug': 'extra-storage',
+            'description': 'Add 100GB of additional storage to your plan',
+            'price': Decimal('4.99'),
+            'billing_period': BillingPeriod.MONTHLY.value,
+            'config': {'storage_gb': 100},
+            'sort_order': 3,
+            'plans': ['basic', 'pro'],  # Only for Basic and Pro
+        },
+        {
+            'name': 'API Rate Limit Increase',
+            'slug': 'api-rate-limit-increase',
+            'description': 'Increase API rate limits by 5x',
+            'price': Decimal('14.99'),
+            'billing_period': BillingPeriod.MONTHLY.value,
+            'config': {'rate_limit_multiplier': 5},
+            'sort_order': 4,
+            'plans': ['pro', 'enterprise'],  # Only for Pro and Enterprise
+        },
+    ]
+
+    all_addons_data = global_addons_data + plan_dependent_addons_data
+    addons = {}
+
+    for addon_data in all_addons_data:
+        addon = session.query(AddOn).filter_by(slug=addon_data['slug']).first()
+        if not addon:
+            addon = AddOn()
+            addon.name = addon_data['name']
+            addon.slug = addon_data['slug']
+            addon.description = addon_data['description']
+            addon.price = addon_data['price']
+            addon.currency = 'EUR'
+            addon.billing_period = addon_data['billing_period']
+            addon.config = addon_data['config']
+            addon.is_active = True
+            addon.sort_order = addon_data['sort_order']
+
+            # Add to specific plans if specified
+            if addon_data['plans']:
+                for plan_slug in addon_data['plans']:
+                    if plan_slug in plans:
+                        addon.tarif_plans.append(plans[plan_slug])
+
+            session.add(addon)
+            session.flush()
+            plan_info = f" (plans: {', '.join(addon_data['plans'])})" if addon_data['plans'] else " (global)"
+            print(f"  Created: {addon.name}{plan_info} - €{addon.price}")
+        else:
+            plan_info = f" (plans: {', '.join(addon_data['plans'])})" if addon_data['plans'] else " (global)"
+            print(f"  Exists: {addon.name}{plan_info}")
+        addons[addon_data['slug']] = addon
+
+    # Create some addon subscriptions for demo users
+    print("\n=== Creating Add-On Subscriptions ===")
+
+    pro_user = users['user.pro@demo.local']['user']
+    pro_subscription = users['user.pro@demo.local']['subscription']
+
+    addon_subscriptions_data = [
+        {'user_email': 'user.pro@demo.local', 'addon_slug': 'priority-support', 'status': SubscriptionStatus.ACTIVE},
+        {'user_email': 'user.pro@demo.local', 'addon_slug': 'advanced-analytics', 'status': SubscriptionStatus.ACTIVE},
+        {'user_email': 'user.pro@demo.local', 'addon_slug': 'extra-storage', 'status': SubscriptionStatus.ACTIVE},
+    ]
+
+    for addon_sub_data in addon_subscriptions_data:
+        addon = addons[addon_sub_data['addon_slug']]
+        existing = session.query(AddOnSubscription).filter_by(
+            addon_id=addon.id,
+            user_id=pro_user.id
+        ).first()
+
+        if not existing:
+            addon_sub = AddOnSubscription()
+            addon_sub.user_id = pro_user.id
+            addon_sub.addon_id = addon.id
+            addon_sub.subscription_id = pro_subscription.id
+            addon_sub.status = addon_sub_data['status']
+            addon_sub.starts_at = datetime.utcnow() - timedelta(days=5)
+            addon_sub.expires_at = datetime.utcnow() + timedelta(days=25)
+            session.add(addon_sub)
+            session.flush()
+            print(f"  Created: {pro_user.email} -> {addon.name}")
+        else:
+            print(f"  Exists: {pro_user.email} -> {addon.name}")
+
     session.commit()
     print("\n=== Demo Data Installation Complete ===")
     print(f"  Currencies: {session.query(Currency).count()}")
@@ -276,6 +404,8 @@ try:
     print(f"  Users: {session.query(User).count()}")
     print(f"  Subscriptions: {session.query(Subscription).count()}")
     print(f"  Invoices: {session.query(UserInvoice).count()}")
+    print(f"  Add-Ons: {session.query(AddOn).count()}")
+    print(f"  Add-On Subscriptions: {session.query(AddOnSubscription).count()}")
 
 except Exception as e:
     session.rollback()

@@ -1,7 +1,7 @@
 """Tests for TaroCardDraw model."""
 import pytest
 from plugins.taro.src.models.taro_card_draw import TaroCardDraw
-from src.models.enums import CardPosition, CardOrientation
+from plugins.taro.src.enums import CardPosition, CardOrientation
 
 
 class TestTaroCardDrawCreation:

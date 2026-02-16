@@ -2,22 +2,30 @@
 from typing import Optional, List
 from src.extensions import db
 from plugins.taro.src.models.taro_card_draw import TaroCardDraw
-from src.models.enums import CardPosition, CardOrientation
+from plugins.taro.src.enums import CardPosition, CardOrientation
 
 
 class TaroCardDrawRepository:
     """Repository for TaroCardDraw model database operations."""
 
+    def __init__(self, session):
+        """Initialize repository with database session.
+
+        Args:
+            session: SQLAlchemy session for database operations
+        """
+        self.session = session
+
     def create(self, **kwargs) -> TaroCardDraw:
         """Create new TaroCardDraw."""
         card = TaroCardDraw(**kwargs)
-        db.session.add(card)
-        db.session.commit()
+        self.session.add(card)
+        self.session.commit()
         return card
 
     def get_by_id(self, card_id: str) -> Optional[TaroCardDraw]:
         """Get TaroCardDraw by ID."""
-        return db.session.query(TaroCardDraw).filter(TaroCardDraw.id == card_id).first()
+        return self.session.query(TaroCardDraw).filter(TaroCardDraw.id == card_id).first()
 
     def get_session_cards(self, session_id: str) -> List[TaroCardDraw]:
         """Get all cards in a session, ordered by position (PAST, PRESENT, FUTURE)."""
@@ -28,7 +36,7 @@ class TaroCardDrawRepository:
         }
 
         cards = (
-            db.session.query(TaroCardDraw)
+            self.session.query(TaroCardDraw)
             .filter(TaroCardDraw.session_id == session_id)
             .all()
         )
@@ -46,7 +54,7 @@ class TaroCardDrawRepository:
     ) -> Optional[TaroCardDraw]:
         """Get specific card from session by position."""
         return (
-            db.session.query(TaroCardDraw)
+            self.session.query(TaroCardDraw)
             .filter(
                 TaroCardDraw.session_id == session_id,
                 TaroCardDraw.position == position.value,
@@ -57,7 +65,7 @@ class TaroCardDrawRepository:
     def get_by_arcana(self, arcana_id: str) -> List[TaroCardDraw]:
         """Get all card draws for specific Arcana."""
         return (
-            db.session.query(TaroCardDraw)
+            self.session.query(TaroCardDraw)
             .filter(TaroCardDraw.arcana_id == arcana_id)
             .order_by(TaroCardDraw.created_at.desc())
             .all()
@@ -66,7 +74,7 @@ class TaroCardDrawRepository:
     def get_by_orientation(self, orientation: CardOrientation) -> List[TaroCardDraw]:
         """Get all cards with specific orientation."""
         return (
-            db.session.query(TaroCardDraw)
+            self.session.query(TaroCardDraw)
             .filter(TaroCardDraw.orientation == orientation.value)
             .order_by(TaroCardDraw.created_at.desc())
             .all()
@@ -75,7 +83,7 @@ class TaroCardDrawRepository:
     def count_session_cards(self, session_id: str) -> int:
         """Count cards in session. Typically 3 (PAST, PRESENT, FUTURE)."""
         return (
-            db.session.query(TaroCardDraw)
+            self.session.query(TaroCardDraw)
             .filter(TaroCardDraw.session_id == session_id)
             .count()
         )
@@ -87,24 +95,24 @@ class TaroCardDrawRepository:
             return False
 
         card.ai_interpretation = interpretation
-        db.session.commit()
+        self.session.commit()
         return True
 
     def delete(self, card_id: str) -> bool:
         """Delete TaroCardDraw. Returns True if deleted."""
         card = self.get_by_id(card_id)
         if card:
-            db.session.delete(card)
-            db.session.commit()
+            self.session.delete(card)
+            self.session.commit()
             return True
         return False
 
     def delete_session_cards(self, session_id: str) -> int:
         """Delete all cards in session. Returns count deleted."""
         count = (
-            db.session.query(TaroCardDraw)
+            self.session.query(TaroCardDraw)
             .filter(TaroCardDraw.session_id == session_id)
             .delete()
         )
-        db.session.commit()
+        self.session.commit()
         return count

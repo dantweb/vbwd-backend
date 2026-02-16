@@ -1,7 +1,8 @@
 """TaroCardDraw domain model - card within a session."""
+from sqlalchemy.dialects.postgresql import UUID
 from src.extensions import db
 from src.models.base import BaseModel
-from src.models.enums import CardPosition, CardOrientation
+from plugins.taro.src.enums import CardPosition, CardOrientation
 
 
 class TaroCardDraw(BaseModel):
@@ -24,7 +25,12 @@ class TaroCardDraw(BaseModel):
 
     # References
     session_id = db.Column(db.UUID, nullable=False, index=True)  # FK to taro_session
-    arcana_id = db.Column(db.UUID, nullable=False, index=True)  # FK to arcana
+    arcana_id = db.Column(
+        UUID(as_uuid=True),
+        db.ForeignKey("arcana.id"),
+        nullable=False,
+        index=True,
+    )
 
     # Spread context
     position = db.Column(
@@ -42,15 +48,25 @@ class TaroCardDraw(BaseModel):
     # Interpretation
     ai_interpretation = db.Column(db.Text, nullable=False)  # LLM-generated
 
+    # Relationships
+    arcana = db.relationship(
+        "Arcana",
+        backref="card_draws",
+        lazy="joined",
+        foreign_keys=[arcana_id],
+    )
+
     def to_dict(self) -> dict:
         """Convert TaroCardDraw to dictionary for API response."""
         return {
             "id": str(self.id),
+            "card_id": str(self.id),  # Frontend expects card_id
             "session_id": str(self.session_id) if self.session_id else None,
             "arcana_id": str(self.arcana_id) if self.arcana_id else None,
             "position": self.position,
             "orientation": self.orientation,
             "ai_interpretation": self.ai_interpretation,
+            "arcana": self.arcana.to_dict() if self.arcana else None,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }

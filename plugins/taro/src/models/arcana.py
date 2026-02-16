@@ -1,7 +1,7 @@
 """Arcana domain model - Tarot card representation."""
 from src.extensions import db
 from src.models.base import BaseModel
-from src.models.enums import ArcanaType
+from plugins.taro.src.enums import ArcanaType
 
 
 class Arcana(BaseModel):

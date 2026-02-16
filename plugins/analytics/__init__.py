@@ -36,6 +36,11 @@ class AnalyticsPlugin(BasePlugin):
     def get_url_prefix(self) -> Optional[str]:
         return "/api/v1/plugins/analytics"
 
+    def get_admin_blueprint(self) -> Optional["Blueprint"]:
+        """Return the admin analytics blueprint for direct registration."""
+        from plugins.analytics.src.routes import analytics_admin_bp
+        return analytics_admin_bp
+
     def on_enable(self) -> None:
         self._active = True
         self._count_fn = self._config.get("session_count_fn")

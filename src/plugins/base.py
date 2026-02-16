@@ -97,6 +97,10 @@ class BasePlugin(ABC):
         """Return URL prefix for this plugin's blueprint."""
         return None
 
+    def get_admin_blueprint(self) -> Optional["Blueprint"]:
+        """Return Flask blueprint for admin-specific routes. None if no admin routes."""
+        return None
+
     def get_config(self, key: str, default: Any = None) -> Any:
         """Get configuration value."""
         return self._config.get(key, default)

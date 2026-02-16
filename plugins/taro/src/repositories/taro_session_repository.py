@@ -3,27 +3,35 @@ from typing import Optional, List
 from datetime import datetime
 from src.extensions import db
 from plugins.taro.src.models.taro_session import TaroSession
-from src.models.enums import TaroSessionStatus
+from plugins.taro.src.enums import TaroSessionStatus
 
 
 class TaroSessionRepository:
     """Repository for TaroSession model database operations."""
 
+    def __init__(self, session):
+        """Initialize repository with database session.
+
+        Args:
+            session: SQLAlchemy session for database operations
+        """
+        self.session = session
+
     def create(self, **kwargs) -> TaroSession:
         """Create new TaroSession."""
         session = TaroSession(**kwargs)
-        db.session.add(session)
-        db.session.commit()
+        self.session.add(session)
+        self.session.commit()
         return session
 
     def get_by_id(self, session_id: str) -> Optional[TaroSession]:
         """Get TaroSession by ID."""
-        return db.session.query(TaroSession).filter(TaroSession.id == session_id).first()
+        return self.session.query(TaroSession).filter(TaroSession.id == session_id).first()
 
     def get_user_sessions(self, user_id: str) -> List[TaroSession]:
         """Get all sessions for a user, ordered by created_at descending."""
         return (
-            db.session.query(TaroSession)
+            self.session.query(TaroSession)
             .filter(TaroSession.user_id == user_id)
             .order_by(TaroSession.created_at.desc())
             .all()
@@ -32,7 +40,7 @@ class TaroSessionRepository:
     def get_active_session(self, user_id: str) -> Optional[TaroSession]:
         """Get current ACTIVE session for user. Only one active session per user."""
         return (
-            db.session.query(TaroSession)
+            self.session.query(TaroSession)
             .filter(
                 TaroSession.user_id == user_id,
                 TaroSession.status == TaroSessionStatus.ACTIVE.value,
@@ -43,7 +51,7 @@ class TaroSessionRepository:
     def get_sessions_by_status(self, status: TaroSessionStatus) -> List[TaroSession]:
         """Get all sessions with specific status."""
         return (
-            db.session.query(TaroSession)
+            self.session.query(TaroSession)
             .filter(TaroSession.status == status.value)
             .order_by(TaroSession.created_at.desc())
             .all()
@@ -60,7 +68,7 @@ class TaroSessionRepository:
             before: Only return sessions with expires_at < this datetime
             status_only: If provided, only return sessions with this status
         """
-        query = db.session.query(TaroSession).filter(TaroSession.expires_at < before)
+        query = self.session.query(TaroSession).filter(TaroSession.expires_at < before)
 
         if status_only:
             query = query.filter(TaroSession.status == status_only.value)
@@ -82,17 +90,17 @@ class TaroSessionRepository:
         if ended_at:
             session.ended_at = ended_at
 
-        db.session.commit()
+        self.session.commit()
         return True
 
     def count_user_sessions(self, user_id: str) -> int:
         """Count total sessions for user."""
-        return db.session.query(TaroSession).filter(TaroSession.user_id == user_id).count()
+        return self.session.query(TaroSession).filter(TaroSession.user_id == user_id).count()
 
     def count_active_sessions(self, user_id: str) -> int:
         """Count active sessions for user. Should typically be 0 or 1."""
         return (
-            db.session.query(TaroSession)
+            self.session.query(TaroSession)
             .filter(
                 TaroSession.user_id == user_id,
                 TaroSession.status == TaroSessionStatus.ACTIVE.value,
@@ -104,8 +112,8 @@ class TaroSessionRepository:
         """Delete TaroSession and cascade to TaroCardDraw. Returns True if deleted."""
         session = self.get_by_id(session_id)
         if session:
-            db.session.delete(session)
-            db.session.commit()
+            self.session.delete(session)
+            self.session.commit()
             return True
         return False
 
@@ -116,7 +124,7 @@ class TaroSessionRepository:
             return False
 
         session.tokens_consumed += tokens
-        db.session.commit()
+        self.session.commit()
         return True
 
     def increment_follow_up_count(self, session_id: str) -> bool:
@@ -126,5 +134,5 @@ class TaroSessionRepository:
             return False
 
         session.follow_up_count += 1
-        db.session.commit()
+        self.session.commit()
         return True

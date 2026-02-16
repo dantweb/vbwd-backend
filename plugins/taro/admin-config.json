@@ -1,70 +1,118 @@
 {
   "tabs": [
     {
+      "id": "api",
+      "label": "API Settings",
+      "fields": [
+        {
+          "key": "llm_api_endpoint",
+          "name": "llm_api_endpoint",
+          "type": "text",
+          "label": "API Endpoint",
+          "description": "OpenAI-compatible API endpoint (e.g. https://api.openai.com/v1/chat/completions)",
+          "component": "input",
+          "inputType": "text"
+        },
+        {
+          "key": "llm_api_key",
+          "name": "llm_api_key",
+          "type": "string",
+          "label": "API Key",
+          "description": "API key for the LLM provider",
+          "component": "input",
+          "inputType": "password"
+        }
+      ]
+    },
+    {
+      "id": "settings",
       "label": "Settings",
       "fields": [
         {
+          "key": "llm_model",
           "name": "llm_model",
           "type": "text",
           "label": "LLM Model",
-          "description": "Model identifier (e.g., gpt-4, claude-3)"
+          "description": "Model identifier (e.g., gpt-4, claude-3)",
+          "component": "input",
+          "inputType": "text"
         },
         {
+          "key": "llm_temperature",
           "name": "llm_temperature",
           "type": "number",
           "label": "Temperature",
           "description": "Creativity level (0.0-1.0)",
+          "component": "input",
+          "inputType": "number",
           "min": 0,
           "max": 1,
           "step": 0.1
         },
         {
+          "key": "llm_max_tokens",
           "name": "llm_max_tokens",
           "type": "number",
           "label": "Max Tokens",
           "description": "Maximum tokens per interpretation",
+          "component": "input",
+          "inputType": "number",
           "min": 50,
           "max": 500
         }
       ]
     },
     {
+      "id": "session",
       "label": "Session Configuration",
       "fields": [
         {
+          "key": "session_duration_minutes",
           "name": "session_duration_minutes",
           "type": "number",
           "label": "Session Duration (minutes)",
           "description": "How long sessions remain active",
+          "component": "input",
+          "inputType": "number",
           "min": 5,
           "max": 120
         },
         {
+          "key": "session_expiry_warning_minutes",
           "name": "session_expiry_warning_minutes",
           "type": "number",
           "label": "Expiry Warning (minutes)",
           "description": "Show warning when N minutes remaining",
+          "component": "input",
+          "inputType": "number",
           "min": 1,
           "max": 10
         }
       ]
     },
     {
+      "id": "tokens",
       "label": "Token Configuration",
       "fields": [
         {
+          "key": "base_session_tokens",
           "name": "base_session_tokens",
           "type": "number",
           "label": "Session Base Tokens",
           "description": "Token cost for creating a new session",
+          "component": "input",
+          "inputType": "number",
           "min": 1,
           "max": 50
         },
         {
+          "key": "follow_up_base_tokens",
           "name": "follow_up_base_tokens",
           "type": "number",
           "label": "Follow-up Base Tokens",
           "description": "Base token cost for follow-up questions",
+          "component": "input",
+          "inputType": "number",
           "min": 1,
           "max": 50
         }

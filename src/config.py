@@ -67,6 +67,12 @@ class Config:
     )
     JWT_ACCESS_TOKEN_EXPIRES = JWT_EXPIRATION_HOURS * 3600  # Convert to seconds
 
+    # Flask-JWT-Extended configuration
+    JWT_TOKEN_LOCATION = ["headers"]
+    JWT_HEADER_NAME = "Authorization"
+    JWT_HEADER_TYPE = "Bearer"
+    JWT_IDENTITY_CLAIM = "user_id"  # Match the claim name used in tokens
+
     # Celery
     CELERY_BROKER_URL = get_redis_url()
     CELERY_RESULT_BACKEND = get_redis_url()

@@ -2,7 +2,7 @@
 import pytest
 from uuid import uuid4
 from plugins.taro.src.models.arcana import Arcana
-from src.models.enums import ArcanaType
+from plugins.taro.src.enums import ArcanaType
 
 
 class TestArcanaCreation:

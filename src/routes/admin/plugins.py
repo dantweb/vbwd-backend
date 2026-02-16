@@ -38,6 +38,36 @@ def _sync_in_memory(plugin, target_enabled):
         logger.warning(f"In-memory sync failed for '{plugin.metadata.name}': {e}")
 
 
+def _prepare_admin_config(admin_config: dict) -> dict:
+    """Prepare admin config by adding id to tabs, key to fields, and component type."""
+    if admin_config.get("tabs"):
+        for idx, tab in enumerate(admin_config["tabs"]):
+            if "id" not in tab:
+                tab["id"] = f"tab-{idx}"
+            if "fields" in tab:
+                for field in tab["fields"]:
+                    # Add key from name if not present
+                    if "key" not in field and "name" in field:
+                        field["key"] = field["name"]
+
+                    # Derive component type from field type if not present
+                    if "component" not in field:
+                        field_type = field.get("type", "text").lower()
+                        if field_type == "boolean":
+                            field["component"] = "checkbox"
+                        elif field_type == "number":
+                            field["component"] = "input"
+                            field["inputType"] = "number"
+                        elif field_type == "select":
+                            field["component"] = "select"
+                        elif field_type == "textarea":
+                            field["component"] = "textarea"
+                        else:  # text, string, etc.
+                            field["component"] = "input"
+                            field["inputType"] = "text"
+    return admin_config
+
+
 @admin_plugins_bp.route("", methods=["GET"])
 @require_auth
 @require_admin
@@ -98,6 +128,7 @@ def get_plugin_detail(plugin_name):
     if schema_reader:
         config_schema = schema_reader.get_config_schema(plugin_name)
         admin_config = schema_reader.get_admin_config(plugin_name)
+        admin_config = _prepare_admin_config(admin_config)
 
     config_store = getattr(current_app, "config_store", None)
     if config_store:

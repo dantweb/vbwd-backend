@@ -163,13 +163,13 @@ run_unit_tests() {
 
     local failed=0
 
-    echo -e "${YELLOW}Running unit tests with pytest...${NC}"
+    echo -e "${YELLOW}Running unit tests with pytest (core + plugins)...${NC}"
     echo ""
 
     if $IN_DOCKER; then
-        pytest tests/unit/ -q --tb=line 2>&1 || failed=1
+        pytest tests/unit/ plugins/*/tests/unit/ -q --tb=line 2>&1 || failed=1
     else
-        docker-compose run --rm test pytest tests/unit/ -q --tb=line 2>&1 || failed=1
+        docker-compose run --rm test pytest tests/unit/ plugins/*/tests/unit/ -q --tb=line 2>&1 || failed=1
     fi
 
     echo ""
@@ -186,7 +186,7 @@ run_integration_tests() {
 
     local failed=0
 
-    echo -e "${YELLOW}Running integration tests with real PostgreSQL...${NC}"
+    echo -e "${YELLOW}Running integration tests with real PostgreSQL (core + plugins)...${NC}"
     echo ""
 
     # Ensure services are running
@@ -201,12 +201,12 @@ run_integration_tests() {
     fi
 
     if $IN_DOCKER; then
-        # Inside Docker, run directly
-        pytest tests/integration/ -q --tb=line 2>&1 || failed=1
+        # Inside Docker, run directly (core + plugin integration tests)
+        pytest tests/integration/ plugins/*/tests/integration/ -q --tb=line 2>&1 || failed=1
     else
         # Outside Docker, use the test-integration service
         docker-compose --profile test-integration run --rm test-integration \
-            pytest tests/integration/test_api_endpoints.py -q --tb=line 2>&1 || failed=1
+            pytest tests/integration/test_api_endpoints.py plugins/*/tests/integration/ -q --tb=line 2>&1 || failed=1
     fi
 
     echo ""

@@ -9,7 +9,7 @@ from plugins.taro.src.models.taro_card_draw import TaroCardDraw
 from plugins.taro.src.repositories.arcana_repository import ArcanaRepository
 from plugins.taro.src.repositories.taro_session_repository import TaroSessionRepository
 from plugins.taro.src.repositories.taro_card_draw_repository import TaroCardDrawRepository
-from src.models.enums import TaroSessionStatus, CardPosition, CardOrientation
+from plugins.taro.src.enums import TaroSessionStatus, CardPosition, CardOrientation
 
 
 class TaroSessionService:
@@ -123,13 +123,17 @@ class TaroSessionService:
         return sessions[:limit]
 
     def count_today_sessions(self, user_id: str) -> int:
-        """Count sessions created today for user."""
+        """Count ACTIVE sessions created today for user.
+
+        Only ACTIVE sessions count towards the daily limit.
+        CLOSED and EXPIRED sessions do not consume the user's quota.
+        """
         sessions = self.session_repo.get_user_sessions(user_id)
 
         today = datetime.utcnow().date()
         today_count = sum(
             1 for s in sessions
-            if s.started_at.date() == today
+            if s.started_at.date() == today and s.status == TaroSessionStatus.ACTIVE.value
         )
 
         return today_count
@@ -240,3 +244,68 @@ class TaroSessionService:
             True if updated, False if not found
         """
         return self.session_repo.update_tokens_consumed(session_id, tokens)
+
+    def get_user_sessions(self, user_id: str, limit: int = 10, offset: int = 0) -> List[TaroSession]:
+        """Get user's sessions with pagination support.
+
+        Args:
+            user_id: User ID
+            limit: Number of sessions to return
+            offset: Number of sessions to skip
+
+        Returns:
+            List of sessions
+        """
+        sessions = self.session_repo.get_user_sessions(user_id)
+        return sessions[offset:offset + limit]
+
+    def count_user_sessions(self, user_id: str) -> int:
+        """Count total sessions for user.
+
+        Args:
+            user_id: User ID
+
+        Returns:
+            Total count of sessions
+        """
+        return self.session_repo.count_user_sessions(user_id)
+
+    def get_active_session(self, user_id: str) -> Optional[TaroSession]:
+        """Get user's active session.
+
+        Args:
+            user_id: User ID
+
+        Returns:
+            Active session or None
+        """
+        return self.get_user_active_session(user_id)
+
+    def reset_today_sessions(self, user_id: str) -> int:
+        """Close all active sessions created today for user (admin utility).
+
+        Used by admins to reset a user's daily session counter.
+        Closes all ACTIVE sessions created today.
+
+        Args:
+            user_id: User ID to reset sessions for
+
+        Returns:
+            Count of sessions that were closed
+        """
+        sessions = self.session_repo.get_user_sessions(user_id)
+        today = datetime.utcnow().date()
+
+        closed_count = 0
+        for session in sessions:
+            # Only close ACTIVE sessions created today
+            if (session.status == TaroSessionStatus.ACTIVE.value and
+                session.started_at.date() == today):
+                self.session_repo.update_status(
+                    session.id,
+                    TaroSessionStatus.CLOSED,
+                    ended_at=datetime.utcnow(),
+                )
+                closed_count += 1
+
+        return closed_count

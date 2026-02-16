@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from uuid import uuid4
 from plugins.taro.src.models.taro_session import TaroSession
 from plugins.taro.src.repositories.taro_session_repository import TaroSessionRepository
-from src.models.enums import TaroSessionStatus
+from plugins.taro.src.enums import TaroSessionStatus
 
 
 @pytest.fixture

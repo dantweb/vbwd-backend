@@ -102,11 +102,12 @@ def create_app(config: Optional[Dict[str, Any]] = None) -> Flask:
         app.config.from_object(get_config())
 
     # Initialize extensions
-    from src.extensions import db, limiter, csrf
+    from src.extensions import db, limiter, csrf, jwt
 
     db.init_app(app)
     limiter.init_app(app)
     csrf.init_app(app)
+    jwt.init_app(app)
 
     # Exempt API routes from CSRF (they use JWT authentication)
     # CSRF is only needed for browser form submissions, not API calls
@@ -121,7 +122,6 @@ def create_app(config: Optional[Dict[str, Any]] = None) -> Flask:
         admin_subs_bp,
         admin_invoices_bp,
         admin_plans_bp,
-        admin_analytics_bp,
         admin_profile_bp,
         admin_token_bundles_bp,
         admin_addons_bp,
@@ -146,7 +146,6 @@ def create_app(config: Optional[Dict[str, Any]] = None) -> Flask:
     csrf.exempt(admin_subs_bp)
     csrf.exempt(admin_invoices_bp)
     csrf.exempt(admin_plans_bp)
-    csrf.exempt(admin_analytics_bp)
     csrf.exempt(admin_profile_bp)
     csrf.exempt(admin_token_bundles_bp)
     csrf.exempt(admin_addons_bp)
@@ -209,11 +208,21 @@ def create_app(config: Optional[Dict[str, Any]] = None) -> Flask:
             pass
 
     # Register ALL plugin blueprints at startup (route handlers check enabled status)
+    analytics_plugin = None
     for plugin in plugin_manager.get_all_plugins():
+        if plugin.metadata.name == "analytics":
+            analytics_plugin = plugin
         bp = plugin.get_blueprint()
         if bp:
             csrf.exempt(bp)
             app.register_blueprint(bp, url_prefix=plugin.get_url_prefix())
+
+    # Register analytics admin blueprint from plugin (for /admin/analytics routes)
+    if analytics_plugin:
+        admin_bp = analytics_plugin.get_admin_blueprint()
+        if admin_bp:
+            csrf.exempt(admin_bp)
+            app.register_blueprint(admin_bp)
 
     # Register blueprints (already imported above for CSRF exemption)
     app.register_blueprint(auth_bp)
@@ -226,7 +235,6 @@ def create_app(config: Optional[Dict[str, Any]] = None) -> Flask:
     app.register_blueprint(admin_subs_bp)
     app.register_blueprint(admin_invoices_bp)
     app.register_blueprint(admin_plans_bp)
-    app.register_blueprint(admin_analytics_bp)
     app.register_blueprint(admin_profile_bp)
     app.register_blueprint(admin_token_bundles_bp)
     app.register_blueprint(admin_addons_bp)

@@ -3,7 +3,7 @@ from typing import Optional, Tuple, List
 from plugins.taro.src.repositories.taro_card_draw_repository import TaroCardDrawRepository
 from plugins.taro.src.models.arcana import Arcana
 from plugins.taro.src.models.taro_card_draw import TaroCardDraw
-from src.models.enums import CardPosition, CardOrientation
+from plugins.taro.src.enums import CardPosition, CardOrientation
 
 
 class ArcanaInterpretationService:

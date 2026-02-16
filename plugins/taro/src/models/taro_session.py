@@ -2,7 +2,7 @@
 from datetime import datetime, timedelta
 from src.extensions import db
 from src.models.base import BaseModel
-from src.models.enums import TaroSessionStatus
+from plugins.taro.src.enums import TaroSessionStatus
 
 
 class TaroSession(BaseModel):
@@ -54,6 +54,16 @@ class TaroSession(BaseModel):
     follow_up_count = db.Column(db.Integer, nullable=False, default=0)  # How many follow-ups asked
     max_follow_ups = db.Column(db.Integer, nullable=False, default=3)  # From tarif plan/add-ons
 
+    # Relationships
+    cards = db.relationship(
+        "TaroCardDraw",
+        foreign_keys="TaroCardDraw.session_id",
+        primaryjoin="TaroSession.id == TaroCardDraw.session_id",
+        backref="session",
+        lazy="joined",
+        cascade="all, delete-orphan",
+    )
+
     def to_dict(self) -> dict:
         """Convert TaroSession to dictionary for API response."""
         return {
@@ -67,6 +77,7 @@ class TaroSession(BaseModel):
             "tokens_consumed": self.tokens_consumed,
             "follow_up_count": self.follow_up_count,
             "max_follow_ups": self.max_follow_ups,
+            "cards": [card.to_dict() for card in self.cards] if self.cards else [],
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }

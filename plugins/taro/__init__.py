@@ -7,6 +7,8 @@ if TYPE_CHECKING:
 
 
 DEFAULT_CONFIG = {
+    "llm_api_endpoint": "",
+    "llm_api_key": "",
     "llm_model": "gpt-4",
     "llm_temperature": 0.8,
     "llm_max_tokens": 200,

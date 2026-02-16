@@ -7,16 +7,16 @@ from plugins.taro.src.repositories.arcana_repository import ArcanaRepository
 from plugins.taro.src.repositories.taro_session_repository import TaroSessionRepository
 from plugins.taro.src.repositories.taro_card_draw_repository import TaroCardDrawRepository
 from plugins.taro.src.models.arcana import Arcana
-from src.models.enums import ArcanaType, TaroSessionStatus, CardPosition, CardOrientation
+from plugins.taro.src.enums import ArcanaType, TaroSessionStatus, CardPosition, CardOrientation
 
 
 @pytest.fixture
 def taro_service(db):
     """Fixture providing TaroSessionService instance."""
     return TaroSessionService(
-        arcana_repo=ArcanaRepository(),
-        session_repo=TaroSessionRepository(),
-        card_draw_repo=TaroCardDrawRepository(),
+        arcana_repo=ArcanaRepository(db.session),
+        session_repo=TaroSessionRepository(db.session),
+        card_draw_repo=TaroCardDrawRepository(db.session),
     )
 
 
@@ -50,10 +50,10 @@ class TestTaroSessionService:
         session = taro_service.create_session(user_id=user_id)
 
         assert session is not None
-        assert session.user_id == user_id
+        assert str(session.user_id) == user_id
         assert session.status == TaroSessionStatus.ACTIVE.value
         assert session.spread_id is not None
-        assert session.tokens_consumed == 0
+        assert session.tokens_consumed == 10  # SESSION_BASE_TOKENS default
         assert session.follow_up_count == 0
 
     def test_create_session_with_tarif_plan_daily_limit(self, taro_service, sample_arcanas, db):
@@ -109,7 +109,7 @@ class TestTaroSessionService:
 
         assert retrieved is not None
         assert retrieved.id == created.id
-        assert retrieved.user_id == user_id
+        assert str(retrieved.user_id) == user_id
 
     def test_get_session_not_found(self, taro_service):
         """Test retrieving non-existent session."""
@@ -321,3 +321,95 @@ class TestTaroSessionService:
         # Should have marked as expired
         updated = taro_service.get_session(str(expired_session.id))
         assert updated.status == TaroSessionStatus.EXPIRED.value
+
+    def test_reset_today_sessions(self, taro_service, sample_arcanas, db):
+        """Test resetting all active sessions for a user today."""
+        user_id = str(uuid4())
+
+        # Create 3 active sessions today
+        session1 = taro_service.create_session(user_id=user_id, daily_limit=5)
+        session2 = taro_service.create_session(user_id=user_id, daily_limit=5)
+        session3 = taro_service.create_session(user_id=user_id, daily_limit=5)
+
+        assert session1 is not None
+        assert session2 is not None
+        assert session3 is not None
+
+        # Reset sessions
+        reset_count = taro_service.reset_today_sessions(user_id)
+
+        # Should have reset 3 sessions
+        assert reset_count == 3
+
+        # Verify all sessions are now closed
+        s1 = taro_service.get_session(str(session1.id))
+        s2 = taro_service.get_session(str(session2.id))
+        s3 = taro_service.get_session(str(session3.id))
+
+        assert s1.status == TaroSessionStatus.CLOSED.value
+        assert s2.status == TaroSessionStatus.CLOSED.value
+        assert s3.status == TaroSessionStatus.CLOSED.value
+
+    def test_reset_today_sessions_empty(self, taro_service):
+        """Test reset on user with no sessions today."""
+        user_id = str(uuid4())
+
+        reset_count = taro_service.reset_today_sessions(user_id)
+
+        assert reset_count == 0
+
+    def test_get_today_sessions_info(self, taro_service, sample_arcanas, db):
+        """Test getting today's session count and limits info."""
+        user_id = str(uuid4())
+        daily_limit = 3
+
+        # Create 2 sessions today
+        taro_service.create_session(user_id=user_id, daily_limit=daily_limit)
+        taro_service.create_session(user_id=user_id, daily_limit=daily_limit)
+
+        today_count = taro_service.count_today_sessions(user_id)
+        allowed, remaining = taro_service.check_daily_limit(user_id, daily_limit)
+
+        assert today_count == 2
+        assert allowed is True
+        assert remaining == 1
+
+    def test_reset_sessions_freeing_quota(self, taro_service, sample_arcanas, db):
+        """Test that resetting sessions frees up the daily quota.
+
+        This is the key test for the bug fix: after resetting sessions,
+        they should no longer count towards the daily limit.
+        """
+        user_id = str(uuid4())
+        daily_limit = 3
+
+        # Create 3 sessions (uses entire daily quota)
+        session1 = taro_service.create_session(user_id=user_id, daily_limit=daily_limit)
+        session2 = taro_service.create_session(user_id=user_id, daily_limit=daily_limit)
+        session3 = taro_service.create_session(user_id=user_id, daily_limit=daily_limit)
+
+        # Verify quota is full
+        today_count = taro_service.count_today_sessions(user_id)
+        allowed, remaining = taro_service.check_daily_limit(user_id, daily_limit)
+        assert today_count == 3
+        assert allowed is False
+        assert remaining == 0
+
+        # Reset sessions
+        reset_count = taro_service.reset_today_sessions(user_id)
+        assert reset_count == 3
+
+        # Verify sessions are CLOSED
+        s1 = taro_service.get_session(str(session1.id))
+        s2 = taro_service.get_session(str(session2.id))
+        s3 = taro_service.get_session(str(session3.id))
+        assert s1.status == TaroSessionStatus.CLOSED.value
+        assert s2.status == TaroSessionStatus.CLOSED.value
+        assert s3.status == TaroSessionStatus.CLOSED.value
+
+        # After reset: CLOSED sessions should NOT count towards limit
+        today_count = taro_service.count_today_sessions(user_id)
+        allowed, remaining = taro_service.check_daily_limit(user_id, daily_limit)
+        assert today_count == 0, "CLOSED sessions should not count towards daily limit"
+        assert allowed is True, "User should be able to create new session after reset"
+        assert remaining == 3, "All quota should be available after reset"

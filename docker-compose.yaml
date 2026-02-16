@@ -67,12 +67,15 @@ services:
     environment:
       PYTHONPATH: /app
       FLASK_ENV: testing
-      DATABASE_URL: "sqlite:///:memory:"
+      DATABASE_URL: "postgresql://vbwd:vbwd@postgres:5432/vbwd"
       REDIS_URL: "redis://redis:6379/1"
     volumes:
       - .:/app
     depends_on:
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     profiles:
       - test
 

@@ -7,7 +7,7 @@ from src.models.enums import UserRole
 class TestAdminAnalyticsDashboard:
     """Tests for admin analytics dashboard endpoint."""
 
-    @patch("src.routes.admin.analytics.db")
+    @patch("plugins.analytics.src.routes.db")
     @patch("src.middleware.auth.AuthService")
     @patch("src.middleware.auth.UserRepository")
     def test_dashboard_returns_metrics(

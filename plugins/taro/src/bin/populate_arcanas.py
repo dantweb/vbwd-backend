@@ -22,7 +22,7 @@ sys.path.insert(0, str(project_root))
 
 from src.extensions import db
 from plugins.taro.src.models.arcana import Arcana
-from src.models.enums import ArcanaType
+from plugins.taro.src.enums import ArcanaType
 
 
 # 22 Major Arcana (0-21)
@@ -145,7 +145,7 @@ def populate_arcanas():
             arcana_type=ArcanaType.MAJOR_ARCANA.value,
             upright_meaning=upright,
             reversed_meaning=reversed,
-            image_url=f"https://example.com/arcana/{number:02d}-{name.lower().replace(' ', '-')}.jpg",
+            image_url=f"/api/v1/taro/assets/arcana/major/{number:02d}-{name.lower().replace(' ', '-')}.svg",
         )
         db.session.add(arcana)
         cards_created += 1
@@ -172,7 +172,7 @@ def populate_arcanas():
                 arcana_type=suit,
                 upright_meaning=upright,
                 reversed_meaning=reversed,
-                image_url=f"https://example.com/arcana/{suit.lower()}/{rank.lower()}.jpg",
+                image_url=f"/api/v1/taro/assets/arcana/minor/{suit.lower()}/{rank.lower()}-of-{suit.lower()}.svg",
             )
             db.session.add(arcana)
             cards_created += 1

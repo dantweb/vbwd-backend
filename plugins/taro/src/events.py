@@ -2,120 +2,134 @@
 from dataclasses import dataclass
 from datetime import datetime
 from typing import List, Optional
+from src.events.domain import DomainEvent
 
 
 @dataclass
-class TaroSessionRequestedEvent:
+class TaroSessionRequestedEvent(DomainEvent):
     """Event emitted when user requests a new Taro session."""
 
-    user_id: str
-    requested_at: datetime
+    user_id: Optional[str] = None
+    requested_at: Optional[datetime] = None
     daily_limit: int = 3
     max_follow_ups: int = 3
 
     def __post_init__(self):
-        """Validate event data."""
+        """Validate event data and set event name."""
+        super().__post_init__()
+        self.name = "taro.session.requested"
         if not self.user_id:
             raise ValueError("user_id is required")
 
 
 @dataclass
-class TaroSessionCreatedEvent:
+class TaroSessionCreatedEvent(DomainEvent):
     """Event emitted after Taro session is successfully created."""
 
-    session_id: str
-    user_id: str
-    spread_id: str
-    expires_at: datetime
-    created_at: datetime
-    card_arcana_ids: List[str]  # IDs of the 3 cards in spread
+    session_id: Optional[str] = None
+    user_id: Optional[str] = None
+    spread_id: Optional[str] = None
+    expires_at: Optional[datetime] = None
+    card_arcana_ids: Optional[List[str]] = None  # IDs of the 3 cards in spread
     initial_tokens_consumed: int = 10
 
     def __post_init__(self):
-        """Validate event data."""
+        """Validate event data and set event name."""
+        super().__post_init__()
+        self.name = "taro.session.created"
         if not self.session_id or not self.user_id:
             raise ValueError("session_id and user_id are required")
-        if len(self.card_arcana_ids) != 3:
+        if not self.card_arcana_ids or len(self.card_arcana_ids) != 3:
             raise ValueError("Must have exactly 3 cards in spread")
 
 
 @dataclass
-class TaroFollowUpRequestedEvent:
+class TaroFollowUpRequestedEvent(DomainEvent):
     """Event emitted when user asks a follow-up question."""
 
-    session_id: str
-    user_id: str
-    question: str
-    follow_up_type: str  # SAME_CARDS, ADDITIONAL, NEW_SPREAD
-    requested_at: datetime
+    session_id: Optional[str] = None
+    user_id: Optional[str] = None
+    question: Optional[str] = None
+    follow_up_type: Optional[str] = None  # SAME_CARDS, ADDITIONAL, NEW_SPREAD
+    requested_at: Optional[datetime] = None
 
     def __post_init__(self):
-        """Validate event data."""
+        """Validate event data and set event name."""
+        super().__post_init__()
+        self.name = "taro.followup.requested"
         valid_types = {"SAME_CARDS", "ADDITIONAL", "NEW_SPREAD"}
         if self.follow_up_type not in valid_types:
             raise ValueError(f"follow_up_type must be one of {valid_types}")
 
 
 @dataclass
-class TaroFollowUpGeneratedEvent:
+class TaroFollowUpGeneratedEvent(DomainEvent):
     """Event emitted after follow-up interpretation is generated."""
 
-    session_id: str
-    user_id: str
-    follow_up_count: int
-    tokens_consumed: int
-    interpretation: str
+    session_id: Optional[str] = None
+    user_id: Optional[str] = None
+    follow_up_count: int = 0
+    tokens_consumed: int = 0
+    interpretation: Optional[str] = None
     new_cards: Optional[List[str]] = None  # IDs of new cards if ADDITIONAL/NEW_SPREAD
     created_at: Optional[datetime] = None
 
     def __post_init__(self):
-        """Set defaults if needed."""
+        """Set defaults if needed and set event name."""
+        super().__post_init__()
+        self.name = "taro.followup.generated"
         if not self.created_at:
             self.created_at = datetime.utcnow()
 
 
 @dataclass
-class TaroSessionExpiredEvent:
+class TaroSessionExpiredEvent(DomainEvent):
     """Event emitted when session expires (30 minutes pass)."""
 
-    session_id: str
-    user_id: str
-    expired_at: datetime
-    follow_ups_count: int
-    total_tokens_consumed: int
+    session_id: Optional[str] = None
+    user_id: Optional[str] = None
+    expired_at: Optional[datetime] = None
+    follow_ups_count: int = 0
+    total_tokens_consumed: int = 0
 
     def __post_init__(self):
-        """Validate event data."""
+        """Validate event data and set event name."""
+        super().__post_init__()
+        self.name = "taro.session.expired"
         if not self.session_id or not self.user_id:
             raise ValueError("session_id and user_id are required")
 
 
 @dataclass
-class TaroSessionClosedEvent:
+class TaroSessionClosedEvent(DomainEvent):
     """Event emitted when user explicitly closes session."""
 
-    session_id: str
-    user_id: str
-    closed_at: datetime
-    follow_ups_count: int
-    total_tokens_consumed: int
+    session_id: Optional[str] = None
+    user_id: Optional[str] = None
+    closed_at: Optional[datetime] = None
+    follow_ups_count: int = 0
+    total_tokens_consumed: int = 0
 
     def __post_init__(self):
-        """Validate event data."""
+        """Validate event data and set event name."""
+        super().__post_init__()
+        self.name = "taro.session.closed"
         if not self.session_id or not self.user_id:
             raise ValueError("session_id and user_id are required")
 
 
 @dataclass
-class TaroInterpretationGeneratedEvent:
+class TaroInterpretationGeneratedEvent(DomainEvent):
     """Event emitted after card interpretations are generated by LLM."""
 
-    card_ids: List[str]  # IDs of cards interpreted
-    session_id: str
-    tokens_used: int
-    created_at: datetime
+    card_ids: Optional[List[str]] = None  # IDs of cards interpreted
+    session_id: Optional[str] = None
+    tokens_used: int = 0
+    created_at: Optional[datetime] = None
 
     def __post_init__(self):
-        """Validate event data."""
+        """Validate event data and set event name."""
+        super().__post_init__()
+        self.name = "taro.interpretation.generated"
         if not self.card_ids:
             raise ValueError("At least one card must be interpreted")
