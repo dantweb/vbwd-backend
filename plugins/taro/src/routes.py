@@ -21,6 +21,31 @@ from plugins.taro.src.services.prompt_service import PromptService
 taro_bp = Blueprint("taro", __name__, url_prefix="/api/v1/taro")
 
 
+# Language code to full language name mapping for LLM prompts
+LANGUAGE_NAMES = {
+    'en': 'English',
+    'de': 'Deutsch (German)',
+    'es': 'Español (Spanish)',
+    'fr': 'Français (French)',
+    'ja': '日本語 (Japanese)',
+    'ru': 'Русский (Russian)',
+    'th': 'ไทย (Thai)',
+    'zh': '中文 (Chinese)',
+}
+
+
+def get_language_name(language_code: str) -> str:
+    """Convert language code to full language name for LLM prompts.
+
+    Args:
+        language_code: Language code (en, de, es, etc.)
+
+    Returns:
+        Full language name, defaults to English if code not found
+    """
+    return LANGUAGE_NAMES.get(language_code.lower(), 'English')
+
+
 def _get_taro_services():
     """Get Taro service instances with LLM adapter from plugin config."""
     arcana_repo = ArcanaRepository(db.session)
@@ -396,7 +421,8 @@ def ask_follow_up_question(session_id: str):
 
     Request body:
         {
-            "question": "User's follow-up question"
+            "question": "User's follow-up question",
+            "language": "en" (optional, defaults to "en")
         }
 
     Returns:
@@ -408,6 +434,7 @@ def ask_follow_up_question(session_id: str):
         data = request.get_json() or {}
 
         question = data.get("question", "").strip()
+        language = data.get("language", "en").lower()
 
         # Validate question
         if not question:
@@ -456,6 +483,7 @@ def ask_follow_up_question(session_id: str):
         answer = session_service.answer_oracle_question(
             session_id=session_id,
             question=question,
+            language=language,
         )
 
         return (
@@ -491,12 +519,19 @@ def get_card_explanation(session_id: str):
     Args:
         session_id: ID of the session with the 3-card spread
 
+    Request body:
+        {
+            "language": "en" (optional, defaults to "en")
+        }
+
     Returns:
         JSON response with detailed card explanation
     """
     try:
         verify_jwt_in_request()
         user_id = get_jwt_identity()
+        data = request.get_json() or {}
+        language = data.get("language", "en").lower()
         session_service = _get_taro_services()
 
         # Get session
@@ -565,7 +600,8 @@ def get_card_explanation(session_id: str):
 
         try:
             prompt = session_service.prompt_service.render('card_explanation', {
-                'cards_context': cards_context
+                'cards_context': cards_context,
+                'language': get_language_name(language)
             })
 
             response = session_service.llm_adapter.chat(
@@ -622,7 +658,8 @@ def submit_situation(session_id: str):
 
     Request body:
         {
-            "situation_text": "User's situation description (max 100 words)"
+            "situation_text": "User's situation description (max 100 words)",
+            "language": "en" (optional, defaults to "en")
         }
 
     Returns:
@@ -634,6 +671,7 @@ def submit_situation(session_id: str):
         data = request.get_json() or {}
 
         situation_text = data.get("situation_text", "").strip()
+        language = data.get("language", "en").lower()
 
         # Validate situation_text
         if not situation_text:
@@ -693,6 +731,7 @@ def submit_situation(session_id: str):
         interpretation = session_service.generate_situation_reading(
             session_id=session_id,
             situation_text=situation_text,
+            language=language,
         )
 
         return (

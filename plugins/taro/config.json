@@ -56,18 +56,18 @@
   },
   "situation_reading_template": {
     "type": "string",
-    "default": "You are an expert Tarot card reader providing profound, comprehensive mystical guidance.\n\nUSER'S SITUATION:\n{{situation_text}}\n\nTHE CARDS:\n{{cards_context}}\n\nProvide a comprehensive reading (4-6 detailed paragraphs):",
-    "description": "Template for situation reading. Variables: situation_text, cards_context"
+    "default": "You are an expert Tarot card reader providing profound, comprehensive mystical guidance.\n\nRESPOND IN {{language|English}} LANGUAGE.\n\nUSER'S SITUATION:\n{{situation_text}}\n\nTHE CARDS:\n{{cards_context}}\n\nProvide a comprehensive reading (4-6 detailed paragraphs):",
+    "description": "Template for situation reading. Variables: situation_text, cards_context, language"
   },
   "card_explanation_template": {
     "type": "string",
-    "default": "You are an expert Tarot reader. The user wants to understand the three cards they drew.\n\nTHE CARDS:\n{{cards_context}}\n\nProvide a detailed explanation of each card's meaning and how they work together:",
-    "description": "Template for card explanation. Variables: cards_context"
+    "default": "You are an expert Tarot reader. The user wants to understand the three cards they drew.\n\nRESPOND IN {{language|English}} LANGUAGE.\n\nTHE CARDS:\n{{cards_context}}\n\nProvide a detailed explanation of each card's meaning and how they work together:",
+    "description": "Template for card explanation. Variables: cards_context, language"
   },
   "follow_up_question_template": {
     "type": "string",
-    "default": "You are an expert Tarot card reader in an ongoing conversation with a seeker.\n\nPrevious cards:\n{{cards_context}}\n\nUser's question:\n{{question}}\n\nProvide a focused, insightful response that directly addresses their question:",
-    "description": "Template for follow-up questions. Variables: cards_context, question"
+    "default": "You are an expert Tarot card reader in an ongoing conversation with a seeker.\n\nRESPOND IN {{language|English}} LANGUAGE.\n\nPrevious cards:\n{{cards_context}}\n\nUser's question:\n{{question}}\n\nProvide a focused, insightful response that directly addresses their question:",
+    "description": "Template for follow-up questions. Variables: cards_context, question, language"
   },
   "initial_greeting": {
     "type": "string",

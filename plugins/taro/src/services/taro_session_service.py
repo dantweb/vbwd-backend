@@ -528,12 +528,14 @@ class TaroSessionService:
         self,
         session_id: str,
         situation_text: str,
+        language: str = "en",
     ) -> str:
         """Generate LLM-powered contextual reading based on situation and cards.
 
         Args:
             session_id: Session ID with the 3-card spread
             situation_text: User-provided situation description (max 100 words)
+            language: Language code (en, de, es, fr, ja, ru, th, zh). LLM will respond in this language.
 
         Returns:
             Contextual interpretation from LLM
@@ -568,10 +570,14 @@ class TaroSessionService:
             raise LLMError("LLM adapter or PromptService not initialized. Cannot generate situation reading.")
 
         try:
-            # Render prompt from PromptService
+            # Convert language code to full language name
+            language_name = self._get_language_name(language)
+
+            # Render prompt from PromptService with language instruction
             prompt = self.prompt_service.render('situation_reading', {
                 'situation_text': situation_text,
-                'cards_context': cards_context
+                'cards_context': cards_context,
+                'language': language_name
             })
 
             response = self.llm_adapter.chat(
@@ -619,16 +625,40 @@ class TaroSessionService:
 
         return "\n\n".join(context_parts)
 
+    @staticmethod
+    def _get_language_name(language_code: str) -> str:
+        """Convert language code to full language name for LLM prompts.
+
+        Args:
+            language_code: Language code (en, de, es, etc.)
+
+        Returns:
+            Full language name, defaults to English if code not found
+        """
+        language_names = {
+            'en': 'English',
+            'de': 'Deutsch (German)',
+            'es': 'Español (Spanish)',
+            'fr': 'Français (French)',
+            'ja': '日本語 (Japanese)',
+            'ru': 'Русский (Russian)',
+            'th': 'ไทย (Thai)',
+            'zh': '中文 (Chinese)',
+        }
+        return language_names.get(language_code.lower(), 'English')
+
     def answer_oracle_question(
         self,
         session_id: str,
         question: str,
+        language: str = "en",
     ) -> str:
         """Answer a follow-up question about the reading in the chat.
 
         Args:
             session_id: Session ID
             question: User's follow-up question
+            language: Language code (en, de, es, fr, ja, ru, th, zh). LLM will respond in this language.
 
         Returns:
             Oracle's answer to the question
@@ -657,10 +687,14 @@ class TaroSessionService:
             raise LLMError("LLM adapter or PromptService not initialized. Cannot answer question.")
 
         try:
-            # Render prompt from PromptService
+            # Convert language code to full language name
+            language_name = self._get_language_name(language)
+
+            # Render prompt from PromptService with language instruction
             prompt = self.prompt_service.render('follow_up_question', {
                 'cards_context': cards_context,
-                'question': question
+                'question': question,
+                'language': language_name
             })
 
             response = self.llm_adapter.chat(
