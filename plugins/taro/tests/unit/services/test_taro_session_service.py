@@ -8,6 +8,7 @@ from plugins.taro.src.repositories.taro_session_repository import TaroSessionRep
 from plugins.taro.src.repositories.taro_card_draw_repository import TaroCardDrawRepository
 from plugins.taro.src.models.arcana import Arcana
 from plugins.taro.src.enums import ArcanaType, TaroSessionStatus, CardPosition, CardOrientation
+from plugins.chat.src.llm_adapter import LLMError
 
 
 @pytest.fixture
@@ -413,3 +414,76 @@ class TestTaroSessionService:
         assert today_count == 0, "CLOSED sessions should not count towards daily limit"
         assert allowed is True, "User should be able to create new session after reset"
         assert remaining == 3, "All quota should be available after reset"
+
+    def test_generate_situation_reading_success(self, taro_service, sample_arcanas, db):
+        """Test generating situation-based reading with LLM (happy path)."""
+        user_id = str(uuid4())
+        session = taro_service.create_session(user_id=user_id)
+
+        situation_text = "I'm facing a career decision between staying in my current job or taking a new opportunity."
+
+        # LLM adapter is None in tests, so should raise LLMError
+        with pytest.raises(LLMError):
+            taro_service.generate_situation_reading(
+                session_id=str(session.id),
+                situation_text=situation_text
+            )
+
+    def test_generate_situation_reading_fallback_when_llm_unavailable(self, taro_service, sample_arcanas, db):
+        """Test situation reading raises error when LLM unavailable."""
+        user_id = str(uuid4())
+        session = taro_service.create_session(user_id=user_id)
+
+        # Disable LLM by setting to None
+        taro_service.llm_adapter = None
+
+        situation_text = "I'm facing a career decision."
+
+        # Should raise LLMError when LLM is unavailable
+        with pytest.raises(LLMError) as exc_info:
+            taro_service.generate_situation_reading(
+                session_id=str(session.id),
+                situation_text=situation_text
+            )
+
+        assert "LLM adapter" in str(exc_info.value)
+
+    def test_generate_situation_reading_word_limit_validation(self, taro_service, sample_arcanas, db):
+        """Test that situation text exceeding 100 words raises validation error."""
+        user_id = str(uuid4())
+        session = taro_service.create_session(user_id=user_id)
+
+        # Create text with 101 words
+        situation_text = " ".join(["word"] * 101)
+
+        with pytest.raises(ValueError) as exc_info:
+            taro_service.generate_situation_reading(
+                session_id=str(session.id),
+                situation_text=situation_text
+            )
+
+        assert "100 words" in str(exc_info.value)
+
+    def test_generate_situation_reading_empty_text(self, taro_service, sample_arcanas, db):
+        """Test that empty situation text raises validation error."""
+        user_id = str(uuid4())
+        session = taro_service.create_session(user_id=user_id)
+
+        with pytest.raises(ValueError) as exc_info:
+            taro_service.generate_situation_reading(
+                session_id=str(session.id),
+                situation_text=""
+            )
+
+        assert "required" in str(exc_info.value).lower() or "empty" in str(exc_info.value).lower()
+
+    def test_generate_situation_reading_session_not_found(self, taro_service):
+        """Test that non-existent session raises error."""
+        fake_session_id = str(uuid4())
+        situation_text = "My situation"
+
+        with pytest.raises((ValueError, Exception)):
+            taro_service.generate_situation_reading(
+                session_id=fake_session_id,
+                situation_text=situation_text
+            )

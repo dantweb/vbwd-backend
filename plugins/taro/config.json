@@ -43,5 +43,35 @@
     "type": "number",
     "default": 5,
     "description": "Base token cost for follow-up questions"
+  },
+  "system_prompt": {
+    "type": "string",
+    "default": "You are an expert Tarot card reader providing mystical insights.",
+    "description": "System prompt for all Tarot LLM operations"
+  },
+  "card_interpretation_template": {
+    "type": "string",
+    "default": "Generate a brief, insightful Tarot card interpretation (1-2 sentences):\n\nCard: {{card_name}}\nOrientation: {{orientation}}\nPosition: {{position}}\nBase Meaning: {{base_meaning}}\nContext: {{position_context}}\n\nProvide a mystical interpretation:",
+    "description": "Template for single card interpretation. Variables: card_name, orientation, position, base_meaning, position_context"
+  },
+  "situation_reading_template": {
+    "type": "string",
+    "default": "You are an expert Tarot card reader providing profound, comprehensive mystical guidance.\n\nUSER'S SITUATION:\n{{situation_text}}\n\nTHE CARDS:\n{{cards_context}}\n\nProvide a comprehensive reading (4-6 detailed paragraphs):",
+    "description": "Template for situation reading. Variables: situation_text, cards_context"
+  },
+  "card_explanation_template": {
+    "type": "string",
+    "default": "You are an expert Tarot reader. The user wants to understand the three cards they drew.\n\nTHE CARDS:\n{{cards_context}}\n\nProvide a detailed explanation of each card's meaning and how they work together:",
+    "description": "Template for card explanation. Variables: cards_context"
+  },
+  "follow_up_question_template": {
+    "type": "string",
+    "default": "You are an expert Tarot card reader in an ongoing conversation with a seeker.\n\nPrevious cards:\n{{cards_context}}\n\nUser's question:\n{{question}}\n\nProvide a focused, insightful response that directly addresses their question:",
+    "description": "Template for follow-up questions. Variables: cards_context, question"
+  },
+  "initial_greeting": {
+    "type": "string",
+    "default": "The cards have spoken. Do you seek a detailed explanation of each card, or shall we explore how they relate to your situation?",
+    "description": "Greeting message shown after cards are drawn"
   }
 }

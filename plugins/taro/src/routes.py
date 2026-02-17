@@ -15,17 +15,19 @@ from plugins.taro.src.services.taro_session_service import TaroSessionService
 from plugins.taro.src.repositories.taro_session_repository import TaroSessionRepository
 from plugins.taro.src.repositories.arcana_repository import ArcanaRepository
 from plugins.taro.src.repositories.taro_card_draw_repository import TaroCardDrawRepository
+from plugins.taro.src.services.prompt_service import PromptService
 
 
 taro_bp = Blueprint("taro", __name__, url_prefix="/api/v1/taro")
 
 
 def _get_taro_services():
-    """Get Taro service instances."""
+    """Get Taro service instances with LLM adapter from plugin config."""
     arcana_repo = ArcanaRepository(db.session)
     session_repo = TaroSessionRepository(db.session)
     card_draw_repo = TaroCardDrawRepository(db.session)
 
+    # TaroSessionService initializes LLM adapter from plugin config
     session_service = TaroSessionService(
         arcana_repo=arcana_repo,
         session_repo=session_repo,
@@ -33,6 +35,24 @@ def _get_taro_services():
     )
 
     return session_service
+
+
+def _get_prompt_service() -> PromptService:
+    """Get PromptService instance for managing LLM prompts.
+
+    Returns:
+        PromptService instance initialized with plugin prompts file
+
+    Raises:
+        FileNotFoundError: If prompts file doesn't exist
+    """
+    import os
+
+    # Get plugins directory (plugin-agnostic location)
+    plugin_base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    prompts_file = os.path.join(plugin_base_dir, "taro-prompts.json")
+
+    return PromptService(prompts_file)
 
 
 def get_user_tarif_plan_limits(user_id: str) -> tuple:
@@ -367,6 +387,340 @@ def create_follow_up(session_id: str):
         )
 
 
+@taro_bp.route("/session/<session_id>/follow-up-question", methods=["POST"])
+def ask_follow_up_question(session_id: str):
+    """Ask a follow-up question about the Tarot reading.
+
+    Args:
+        session_id: ID of the session
+
+    Request body:
+        {
+            "question": "User's follow-up question"
+        }
+
+    Returns:
+        JSON response with Oracle's answer
+    """
+    try:
+        verify_jwt_in_request()
+        user_id = get_jwt_identity()
+        data = request.get_json() or {}
+
+        question = data.get("question", "").strip()
+
+        # Validate question
+        if not question:
+            return (
+                jsonify({
+                    "success": False,
+                    "error": "Question is required",
+                }),
+                400,
+            )
+
+        session_service = _get_taro_services()
+
+        # Get session
+        session = session_service.get_session(session_id)
+        if not session:
+            return (
+                jsonify({
+                    "success": False,
+                    "error": "Session not found",
+                }),
+                404,
+            )
+
+        # Verify user owns session
+        if str(session.user_id) != str(user_id):
+            return (
+                jsonify({
+                    "success": False,
+                    "error": "Unauthorized",
+                }),
+                403,
+            )
+
+        # Check if session is expired or closed
+        if session.status in ["EXPIRED", "CLOSED"]:
+            return (
+                jsonify({
+                    "success": False,
+                    "error": f"Session is {session.status.lower()}",
+                }),
+                410,
+            )
+
+        # Generate answer for follow-up question
+        answer = session_service.answer_oracle_question(
+            session_id=session_id,
+            question=question,
+        )
+
+        return (
+            jsonify({
+                "success": True,
+                "answer": answer,
+            }),
+            200,
+        )
+
+    except ValueError as e:
+        return (
+            jsonify({
+                "success": False,
+                "error": str(e),
+            }),
+            400,
+        )
+    except Exception as e:
+        return (
+            jsonify({
+                "success": False,
+                "error": f"Error processing question: {str(e)}",
+            }),
+            500,
+        )
+
+
+@taro_bp.route("/session/<session_id>/card-explanation", methods=["POST"])
+def get_card_explanation(session_id: str):
+    """Get detailed explanation of the 3 cards in the spread.
+
+    Args:
+        session_id: ID of the session with the 3-card spread
+
+    Returns:
+        JSON response with detailed card explanation
+    """
+    try:
+        verify_jwt_in_request()
+        user_id = get_jwt_identity()
+        session_service = _get_taro_services()
+
+        # Get session
+        session = session_service.get_session(session_id)
+        if not session:
+            return (
+                jsonify({
+                    "success": False,
+                    "error": "Session not found",
+                }),
+                404,
+            )
+
+        # Verify user owns session
+        if str(session.user_id) != str(user_id):
+            return (
+                jsonify({
+                    "success": False,
+                    "error": "Unauthorized",
+                }),
+                403,
+            )
+
+        # Check if session is expired or closed
+        if session.status == "EXPIRED":
+            return (
+                jsonify({
+                    "success": False,
+                    "error": "Session has expired",
+                }),
+                410,
+            )
+
+        if session.status == "CLOSED":
+            return (
+                jsonify({
+                    "success": False,
+                    "error": "Session is closed",
+                }),
+                410,
+            )
+
+        # Generate card explanation using prompt service
+        cards = session_service.get_session_spread(session_id)
+        if len(cards) != 3:
+            return (
+                jsonify({
+                    "success": False,
+                    "error": f"Session must have exactly 3 cards, found {len(cards)}",
+                }),
+                400,
+            )
+
+        # Build cards context
+        cards_context = session_service._build_cards_context(cards)
+
+        # Get explanation from LLM (required)
+        if not session_service.llm_adapter or not session_service.prompt_service:
+            return (
+                jsonify({
+                    "success": False,
+                    "error": "LLM service unavailable. Please try again later.",
+                }),
+                503,
+            )
+
+        try:
+            prompt = session_service.prompt_service.render('card_explanation', {
+                'cards_context': cards_context
+            })
+
+            response = session_service.llm_adapter.chat(
+                messages=[{"role": "user", "content": prompt}]
+            )
+
+            if not response:
+                return (
+                    jsonify({
+                        "success": False,
+                        "error": "Failed to generate explanation. Please try again.",
+                    }),
+                    500,
+                )
+
+            interpretation = response.strip()
+            # Deduct tokens for LLM operation
+            session_service.deduct_tokens(session_id, session_service.CARD_EXPLANATION_TOKENS)
+
+            return (
+                jsonify({
+                    "success": True,
+                    "interpretation": interpretation,
+                }),
+                200,
+            )
+
+        except Exception as e:
+            logger.error(f"Error generating explanation: {e}")
+            return (
+                jsonify({
+                    "success": False,
+                    "error": "Failed to generate explanation. Please try again.",
+                }),
+                500,
+            )
+
+    except Exception as e:
+        return (
+            jsonify({
+                "success": False,
+                "error": f"Error getting explanation: {str(e)}",
+            }),
+            500,
+        )
+
+
+@taro_bp.route("/session/<session_id>/situation", methods=["POST"])
+def submit_situation(session_id: str):
+    """Submit user's situation and get contextual Oracle reading.
+
+    Args:
+        session_id: ID of the session with the 3-card spread
+
+    Request body:
+        {
+            "situation_text": "User's situation description (max 100 words)"
+        }
+
+    Returns:
+        JSON response with Oracle interpretation
+    """
+    try:
+        verify_jwt_in_request()
+        user_id = get_jwt_identity()
+        data = request.get_json() or {}
+
+        situation_text = data.get("situation_text", "").strip()
+
+        # Validate situation_text
+        if not situation_text:
+            return (
+                jsonify({
+                    "success": False,
+                    "error": "Situation text is required",
+                }),
+                400,
+            )
+
+        # Check word count (frontend does this too, but validate server-side)
+        word_count = len(situation_text.split())
+        if word_count > 100:
+            return (
+                jsonify({
+                    "success": False,
+                    "error": f"Situation text must be ≤ 100 words (got {word_count})",
+                }),
+                400,
+            )
+
+        session_service = _get_taro_services()
+
+        # Get session
+        session = session_service.get_session(session_id)
+        if not session:
+            return (
+                jsonify({
+                    "success": False,
+                    "error": "Session not found",
+                }),
+                404,
+            )
+
+        # Verify user owns session
+        if str(session.user_id) != str(user_id):
+            return (
+                jsonify({
+                    "success": False,
+                    "error": "Unauthorized",
+                }),
+                403,
+            )
+
+        # Check if session is expired or closed
+        if session.status in ["EXPIRED", "CLOSED"]:
+            return (
+                jsonify({
+                    "success": False,
+                    "error": f"Session is {session.status.lower()}",
+                }),
+                410,
+            )
+
+        # Generate situation-based reading
+        interpretation = session_service.generate_situation_reading(
+            session_id=session_id,
+            situation_text=situation_text,
+        )
+
+        return (
+            jsonify({
+                "success": True,
+                "interpretation": interpretation,
+            }),
+            200,
+        )
+
+    except ValueError as e:
+        return (
+            jsonify({
+                "success": False,
+                "error": str(e),
+            }),
+            400,
+        )
+    except Exception as e:
+        return (
+            jsonify({
+                "success": False,
+                "error": f"Error processing situation: {str(e)}",
+            }),
+            500,
+        )
+
+
 @taro_bp.route("/history", methods=["GET"])
 def get_session_history():
     """Get user's Taro session history.
@@ -681,4 +1035,297 @@ def admin_reset_user_sessions(user_id):
                 "message": f"Error resetting sessions: {str(e)}",
             }),
             500,
+        )
+
+
+# ============================================================================
+# Admin Prompt Management Endpoints
+# ============================================================================
+
+
+@taro_bp.route("/admin/prompts", methods=["GET"])
+@require_auth
+@require_admin
+def get_all_prompts():
+    """Get all prompts with resolved metadata.
+
+    Returns:
+        JSON response with all prompts and defaults
+        403: Unauthorized (requires admin)
+    """
+    try:
+        prompt_service = _get_prompt_service()
+        prompts = {}
+
+        # Get all non-internal prompts with resolved metadata
+        for slug in prompt_service.prompts:
+            if not slug.startswith('_'):
+                prompts[slug] = prompt_service.get_prompt(slug)
+
+        return (
+            jsonify({
+                "success": True,
+                "prompts": prompts,
+                "defaults": prompt_service.defaults
+            }),
+            200
+        )
+    except Exception as e:
+        return (
+            jsonify({
+                "success": False,
+                "error": str(e)
+            }),
+            500
+        )
+
+
+@taro_bp.route("/admin/prompts/defaults", methods=["GET"])
+@require_auth
+@require_admin
+def get_prompt_defaults():
+    """Get default metadata.
+
+    Returns:
+        JSON response with current defaults
+        403: Unauthorized (requires admin)
+    """
+    try:
+        prompt_service = _get_prompt_service()
+        return (
+            jsonify({
+                "success": True,
+                "defaults": prompt_service.defaults
+            }),
+            200
+        )
+    except Exception as e:
+        return (
+            jsonify({
+                "success": False,
+                "error": str(e)
+            }),
+            500
+        )
+
+
+@taro_bp.route("/admin/prompts/defaults", methods=["PUT"])
+@require_auth
+@require_admin
+def update_prompt_defaults():
+    """Update default metadata.
+
+    Returns:
+        JSON response with updated defaults
+        400: Invalid metadata
+        403: Unauthorized (requires admin)
+    """
+    try:
+        data = request.get_json() or {}
+        prompt_service = _get_prompt_service()
+
+        # Validate metadata fields - only allow specific fields
+        allowed_keys = {'temperature', 'max_tokens', 'timeout'}
+        data = {k: v for k, v in data.items() if k in allowed_keys}
+
+        defaults = prompt_service.update_defaults(data)
+        return (
+            jsonify({
+                "success": True,
+                "defaults": defaults
+            }),
+            200
+        )
+    except Exception as e:
+        return (
+            jsonify({
+                "success": False,
+                "error": str(e)
+            }),
+            400
+        )
+
+
+@taro_bp.route("/admin/prompts/<slug>", methods=["GET"])
+@require_auth
+@require_admin
+def get_prompt(slug):
+    """Get single prompt with resolved metadata.
+
+    Args:
+        slug: Prompt identifier
+
+    Returns:
+        JSON response with prompt
+        404: Prompt not found
+        403: Unauthorized (requires admin)
+    """
+    try:
+        prompt_service = _get_prompt_service()
+        prompt = prompt_service.get_prompt(slug)
+        return (
+            jsonify({
+                "success": True,
+                "prompt": prompt
+            }),
+            200
+        )
+    except ValueError as e:
+        return (
+            jsonify({
+                "success": False,
+                "error": str(e)
+            }),
+            404
+        )
+    except Exception as e:
+        return (
+            jsonify({
+                "success": False,
+                "error": str(e)
+            }),
+            500
+        )
+
+
+@taro_bp.route("/admin/prompts/<slug>", methods=["PUT"])
+@require_auth
+@require_admin
+def update_prompt(slug):
+    """Update a prompt (template + optional metadata overrides).
+
+    Args:
+        slug: Prompt identifier
+
+    Request body:
+        {
+          "template": "...",
+          "variables": [...],
+          "temperature": 0.9,  (optional)
+          "max_tokens": 3000   (optional)
+        }
+
+    Returns:
+        JSON response with updated prompt
+        400: Invalid template or metadata
+        404: Prompt not found
+        403: Unauthorized (requires admin)
+    """
+    try:
+        data = request.get_json() or {}
+        prompt_service = _get_prompt_service()
+
+        # Validate template if provided
+        if 'template' in data:
+            variables = data.get('variables', [])
+            prompt_service.validate_template(data['template'], variables)
+
+        # Only allow specific fields
+        allowed_keys = {'template', 'variables', 'temperature', 'max_tokens', 'timeout'}
+        data = {k: v for k, v in data.items() if k in allowed_keys}
+
+        updated = prompt_service.update_prompt(slug, data)
+        return (
+            jsonify({
+                "success": True,
+                "prompt": updated
+            }),
+            200
+        )
+    except ValueError as e:
+        return (
+            jsonify({
+                "success": False,
+                "error": str(e)
+            }),
+            400
+        )
+    except Exception as e:
+        return (
+            jsonify({
+                "success": False,
+                "error": str(e)
+            }),
+            500
+        )
+
+
+@taro_bp.route("/admin/prompts/reset", methods=["POST"])
+@require_auth
+@require_admin
+def reset_prompts():
+    """Reset all prompts to distribution defaults.
+
+    Returns:
+        JSON response confirming reset
+        400: Reset failed
+        403: Unauthorized (requires admin)
+    """
+    try:
+        prompt_service = _get_prompt_service()
+        prompt_service.reset_to_defaults()
+        return (
+            jsonify({
+                "success": True,
+                "message": "Prompts reset to defaults"
+            }),
+            200
+        )
+    except Exception as e:
+        return (
+            jsonify({
+                "success": False,
+                "error": str(e)
+            }),
+            400
+        )
+
+
+@taro_bp.route("/admin/prompts/validate", methods=["POST"])
+@require_auth
+@require_admin
+def validate_prompt():
+    """Validate prompt template syntax.
+
+    Request body:
+        {
+          "template": "...",
+          "variables": [...]
+        }
+
+    Returns:
+        JSON response with validation result
+        400: Invalid template
+        403: Unauthorized (requires admin)
+    """
+    try:
+        data = request.get_json() or {}
+        template = data.get('template', '')
+        variables = data.get('variables', [])
+
+        prompt_service = _get_prompt_service()
+        prompt_service.validate_template(template, variables)
+
+        return (
+            jsonify({
+                "success": True,
+                "message": "Template is valid"
+            }),
+            200
+        )
+    except ValueError as e:
+        return (
+            jsonify({
+                "success": False,
+                "error": str(e)
+            }),
+            400
+        )
+    except Exception as e:
+        return (
+            jsonify({
+                "success": False,
+                "error": str(e)
+            }),
+            400
         )
