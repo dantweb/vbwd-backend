@@ -470,3 +470,149 @@ class TestPromptServiceReset:
             assert 'Distribution file not found' in str(exc_info.value)
         finally:
             os.unlink(temp_file)
+
+
+class TestLanguageVariableRendering:
+    """Tests for language variable rendering in Taro templates (TDD validation)"""
+
+    def test_render_language_variable_single(self):
+        """Should correctly render {{language}} variable with Russian"""
+        from plugins.taro.src.services.prompt_service import PromptService
+
+        service = PromptService.from_dict({
+            'language_test': {
+                'template': 'RESPOND IN {{language}} LANGUAGE.',
+                'variables': ['language']
+            }
+        })
+
+        result = service.render('language_test', {'language': 'Русский (Russian)'})
+        assert 'RESPOND IN Русский (Russian) LANGUAGE.' in result
+
+    def test_render_situation_reading_with_language(self):
+        """Should render situation_reading template with language variable"""
+        from plugins.taro.src.services.prompt_service import PromptService
+
+        service = PromptService.from_dict({
+            'situation_reading': {
+                'template': 'You are an expert.\n\nRESPOND IN {{language}} LANGUAGE.\n\nSituation: {{situation_text}}',
+                'variables': ['language', 'situation_text']
+            }
+        })
+
+        result = service.render('situation_reading', {
+            'language': 'Русский (Russian)',
+            'situation_text': 'Career decision'
+        })
+
+        assert 'RESPOND IN Русский (Russian) LANGUAGE.' in result
+        assert 'Career decision' in result
+
+    @pytest.mark.parametrize("lang_code,lang_name", [
+        ("en", "English"),
+        ("ru", "Русский (Russian)"),
+        ("de", "Deutsch (German)"),
+        ("fr", "Français (French)"),
+        ("es", "Español (Spanish)"),
+        ("ja", "日本語 (Japanese)"),
+        ("th", "ไทย (Thai)"),
+        ("zh", "中文 (Chinese)"),
+    ])
+    def test_render_language_all_8_supported_languages(self, lang_code, lang_name):
+        """Should correctly render all 8 supported language codes"""
+        from plugins.taro.src.services.prompt_service import PromptService
+
+        service = PromptService.from_dict({
+            'test': {
+                'template': 'RESPOND IN {{language}} LANGUAGE.',
+                'variables': ['language']
+            }
+        })
+
+        result = service.render('test', {'language': lang_name})
+        assert f'RESPOND IN {lang_name} LANGUAGE.' in result
+
+    def test_render_card_explanation_with_language(self):
+        """Should render card_explanation template with language"""
+        from plugins.taro.src.services.prompt_service import PromptService
+
+        service = PromptService.from_dict({
+            'card_explanation': {
+                'template': 'You are an expert.\n\nRESPOND IN {{language}} LANGUAGE.\n\nCards: {{cards_context}}',
+                'variables': ['language', 'cards_context']
+            }
+        })
+
+        result = service.render('card_explanation', {
+            'language': 'Deutsch (German)',
+            'cards_context': 'The Magician, The High Priestess, The Empress'
+        })
+
+        assert 'RESPOND IN Deutsch (German) LANGUAGE.' in result
+        assert 'The Magician' in result
+
+    def test_render_follow_up_question_with_language(self):
+        """Should render follow_up_question template with language"""
+        from plugins.taro.src.services.prompt_service import PromptService
+
+        service = PromptService.from_dict({
+            'follow_up_question': {
+                'template': 'Expert reader.\n\nRESPOND IN {{language}} LANGUAGE.\n\nQuestion: {{question}}',
+                'variables': ['language', 'question']
+            }
+        })
+
+        result = service.render('follow_up_question', {
+            'language': 'Français (French)',
+            'question': 'Will things improve?'
+        })
+
+        assert 'RESPOND IN Français (French) LANGUAGE.' in result
+        assert 'Will things improve?' in result
+
+    def test_render_language_with_empty_string_renders_empty(self):
+        """Should render empty string if language variable not provided"""
+        from plugins.taro.src.services.prompt_service import PromptService
+
+        service = PromptService.from_dict({
+            'test': {
+                'template': 'RESPOND IN {{language}} LANGUAGE.',
+                'variables': ['language']
+            }
+        })
+
+        # Jinja2 renders missing variables as empty by default
+        result = service.render('test', {})
+        assert 'RESPOND IN  LANGUAGE.' in result
+
+    def test_render_language_instruction_appears_in_complex_template(self):
+        """Should preserve language instruction in multi-paragraph template"""
+        from plugins.taro.src.services.prompt_service import PromptService
+
+        template = """You are an expert Tarot reader.
+
+RESPOND IN {{language}} LANGUAGE.
+
+User's situation: {{situation}}
+
+Cards drawn:
+{{cards}}
+
+Provide detailed interpretation."""
+
+        service = PromptService.from_dict({
+            'complex': {
+                'template': template,
+                'variables': ['language', 'situation', 'cards']
+            }
+        })
+
+        result = service.render('complex', {
+            'language': 'Español (Spanish)',
+            'situation': 'Love question',
+            'cards': 'Card 1, Card 2, Card 3'
+        })
+
+        assert 'RESPOND IN Español (Spanish) LANGUAGE.' in result
+        assert 'Love question' in result
+        assert 'Card 1' in result

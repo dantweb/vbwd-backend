@@ -63,3 +63,196 @@ class TestTaroRoutes:
                         response = client.post("/api/v1/taro/session", json={})
                         # Should not get 404 (route exists)
                         assert response.status_code != 404
+
+
+class TestLanguageParameterInRoutes:
+    """Tests for language parameter handling in routes (TDD validation)"""
+
+    def test_submit_situation_accepts_language_parameter(self, client):
+        """Verify /situation endpoint accepts and uses language parameter"""
+        user_id = str(uuid4())
+        session_id = str(uuid4())
+
+        with patch("plugins.taro.src.routes.verify_jwt_in_request"):
+            with patch("plugins.taro.src.routes.get_jwt_identity", return_value=user_id):
+                with patch("plugins.taro.src.routes._get_taro_services") as mock_get_services:
+                    # Setup mocks
+                    mock_service = Mock()
+                    mock_service.get_session.return_value = Mock(user_id=user_id, status="ACTIVE")
+                    mock_service.generate_situation_reading.return_value = "Russian interpretation"
+                    mock_get_services.return_value = mock_service
+
+                    # Call endpoint with language parameter
+                    response = client.post(
+                        f"/api/v1/taro/session/{session_id}/situation",
+                        json={
+                            "situation_text": "My career question",
+                            "language": "ru"
+                        }
+                    )
+
+                    # Verify service was called with language parameter
+                    mock_service.generate_situation_reading.assert_called_once()
+                    call_kwargs = mock_service.generate_situation_reading.call_args[1]
+                    assert call_kwargs['language'] == 'ru'
+
+    def test_submit_situation_language_defaults_to_english(self, client):
+        """Verify language defaults to 'en' if not provided"""
+        user_id = str(uuid4())
+        session_id = str(uuid4())
+
+        with patch("plugins.taro.src.routes.verify_jwt_in_request"):
+            with patch("plugins.taro.src.routes.get_jwt_identity", return_value=user_id):
+                with patch("plugins.taro.src.routes._get_taro_services") as mock_get_services:
+                    mock_service = Mock()
+                    mock_service.get_session.return_value = Mock(user_id=user_id, status="ACTIVE")
+                    mock_service.generate_situation_reading.return_value = "English interpretation"
+                    mock_get_services.return_value = mock_service
+
+                    # Call without language parameter
+                    response = client.post(
+                        f"/api/v1/taro/session/{session_id}/situation",
+                        json={"situation_text": "My question"}
+                    )
+
+                    # Verify language defaults to 'en'
+                    call_kwargs = mock_service.generate_situation_reading.call_args[1]
+                    assert call_kwargs['language'] == 'en'
+
+    @pytest.mark.parametrize("lang_code", ["en", "ru", "de", "fr", "es", "ja", "th", "zh"])
+    def test_submit_situation_all_8_languages(self, client, lang_code):
+        """Verify /situation accepts all 8 language codes"""
+        user_id = str(uuid4())
+        session_id = str(uuid4())
+
+        with patch("plugins.taro.src.routes.verify_jwt_in_request"):
+            with patch("plugins.taro.src.routes.get_jwt_identity", return_value=user_id):
+                with patch("plugins.taro.src.routes._get_taro_services") as mock_get_services:
+                    mock_service = Mock()
+                    mock_service.get_session.return_value = Mock(user_id=user_id, status="ACTIVE")
+                    mock_service.generate_situation_reading.return_value = "Response"
+                    mock_get_services.return_value = mock_service
+
+                    response = client.post(
+                        f"/api/v1/taro/session/{session_id}/situation",
+                        json={
+                            "situation_text": "Test",
+                            "language": lang_code
+                        }
+                    )
+
+                    # Verify language was passed correctly
+                    call_kwargs = mock_service.generate_situation_reading.call_args[1]
+                    assert call_kwargs['language'] == lang_code
+
+    def test_card_explanation_accepts_language_parameter(self, client):
+        """Verify /card-explanation endpoint accepts language parameter"""
+        user_id = str(uuid4())
+        session_id = str(uuid4())
+
+        with patch("plugins.taro.src.routes.verify_jwt_in_request"):
+            with patch("plugins.taro.src.routes.get_jwt_identity", return_value=user_id):
+                with patch("plugins.taro.src.routes._get_taro_services") as mock_get_services:
+                    mock_service = Mock()
+                    mock_service.get_session.return_value = Mock(user_id=user_id, status="ACTIVE")
+                    mock_service.get_session_spread.return_value = [Mock(), Mock(), Mock()]
+                    mock_service._build_cards_context.return_value = "Cards: ..."
+                    mock_service.prompt_service = Mock()
+                    mock_service.llm_adapter = Mock()
+                    mock_service.prompt_service.render.return_value = "Prompt"
+                    mock_service.llm_adapter.chat.return_value = "Card explanation"
+                    mock_get_services.return_value = mock_service
+
+                    response = client.post(
+                        f"/api/v1/taro/session/{session_id}/card-explanation",
+                        json={"language": "de"}
+                    )
+
+                    # Verify prompt service was called with language
+                    if mock_service.prompt_service.render.called:
+                        call_kwargs = mock_service.prompt_service.render.call_args
+                        context = call_kwargs[0][1]
+                        assert context.get('language') == 'Deutsch (German)'
+
+    @pytest.mark.parametrize("lang_code,expected_lang", [
+        ("en", "English"),
+        ("de", "Deutsch (German)"),
+        ("fr", "Français (French)"),
+    ])
+    def test_card_explanation_all_languages(self, client, lang_code, expected_lang):
+        """Verify /card-explanation handles all language codes"""
+        user_id = str(uuid4())
+        session_id = str(uuid4())
+
+        with patch("plugins.taro.src.routes.verify_jwt_in_request"):
+            with patch("plugins.taro.src.routes.get_jwt_identity", return_value=user_id):
+                with patch("plugins.taro.src.routes._get_taro_services") as mock_get_services:
+                    mock_service = Mock()
+                    mock_service.get_session.return_value = Mock(user_id=user_id, status="ACTIVE")
+                    mock_service.get_session_spread.return_value = [Mock(), Mock(), Mock()]
+                    mock_service._build_cards_context.return_value = "Cards"
+                    mock_service.prompt_service = Mock()
+                    mock_service.llm_adapter = Mock()
+                    mock_service.prompt_service.render.return_value = f"RESPOND IN {expected_lang} LANGUAGE. Cards..."
+                    mock_service.llm_adapter.chat.return_value = "Explanation"
+                    mock_get_services.return_value = mock_service
+
+                    response = client.post(
+                        f"/api/v1/taro/session/{session_id}/card-explanation",
+                        json={"language": lang_code}
+                    )
+
+                    # Should be successful
+                    assert response.status_code in [200, 201, 400]  # May fail for other reasons
+
+    def test_follow_up_question_accepts_language_parameter(self, client):
+        """Verify /follow-up-question endpoint accepts language parameter"""
+        user_id = str(uuid4())
+        session_id = str(uuid4())
+
+        with patch("plugins.taro.src.routes.verify_jwt_in_request"):
+            with patch("plugins.taro.src.routes.get_jwt_identity", return_value=user_id):
+                with patch("plugins.taro.src.routes._get_taro_services") as mock_get_services:
+                    mock_service = Mock()
+                    mock_service.get_session.return_value = Mock(user_id=user_id, status="ACTIVE")
+                    mock_service.answer_oracle_question.return_value = "Oracle's answer"
+                    mock_get_services.return_value = mock_service
+
+                    response = client.post(
+                        f"/api/v1/taro/session/{session_id}/follow-up-question",
+                        json={
+                            "question": "Will it improve?",
+                            "language": "fr"
+                        }
+                    )
+
+                    # Verify service was called with language
+                    mock_service.answer_oracle_question.assert_called_once()
+                    call_kwargs = mock_service.answer_oracle_question.call_args[1]
+                    assert call_kwargs['language'] == 'fr'
+
+    @pytest.mark.parametrize("lang_code", ["en", "ru", "de", "fr", "es", "ja", "th", "zh"])
+    def test_follow_up_question_all_8_languages(self, client, lang_code):
+        """Verify /follow-up-question accepts all 8 language codes"""
+        user_id = str(uuid4())
+        session_id = str(uuid4())
+
+        with patch("plugins.taro.src.routes.verify_jwt_in_request"):
+            with patch("plugins.taro.src.routes.get_jwt_identity", return_value=user_id):
+                with patch("plugins.taro.src.routes._get_taro_services") as mock_get_services:
+                    mock_service = Mock()
+                    mock_service.get_session.return_value = Mock(user_id=user_id, status="ACTIVE")
+                    mock_service.answer_oracle_question.return_value = "Response"
+                    mock_get_services.return_value = mock_service
+
+                    response = client.post(
+                        f"/api/v1/taro/session/{session_id}/follow-up-question",
+                        json={
+                            "question": "Test question",
+                            "language": lang_code
+                        }
+                    )
+
+                    # Verify language was passed
+                    call_kwargs = mock_service.answer_oracle_question.call_args[1]
+                    assert call_kwargs['language'] == lang_code

@@ -487,3 +487,234 @@ class TestTaroSessionService:
                 session_id=fake_session_id,
                 situation_text=situation_text
             )
+
+
+class TestLanguageParameterFlow:
+    """Tests validating language parameter flows correctly through service (TDD validation)"""
+
+    def test_get_language_name_conversion_russian(self):
+        """Should convert 'ru' to 'Русский (Russian)'"""
+        result = TaroSessionService._get_language_name('ru')
+        assert result == 'Русский (Russian)'
+
+    def test_get_language_name_conversion_german(self):
+        """Should convert 'de' to 'Deutsch (German)'"""
+        result = TaroSessionService._get_language_name('de')
+        assert result == 'Deutsch (German)'
+
+    @pytest.mark.parametrize("lang_code,expected_name", [
+        ('en', 'English'),
+        ('ru', 'Русский (Russian)'),
+        ('de', 'Deutsch (German)'),
+        ('fr', 'Français (French)'),
+        ('es', 'Español (Spanish)'),
+        ('ja', '日本語 (Japanese)'),
+        ('th', 'ไทย (Thai)'),
+        ('zh', '中文 (Chinese)'),
+    ])
+    def test_get_language_name_all_8_languages(self, lang_code, expected_name):
+        """Should correctly convert all 8 language codes to full names"""
+        result = TaroSessionService._get_language_name(lang_code)
+        assert result == expected_name
+
+    def test_get_language_name_case_insensitive(self):
+        """Should handle uppercase language codes"""
+        result = TaroSessionService._get_language_name('RU')
+        assert result == 'Русский (Russian)'
+
+    def test_get_language_name_invalid_defaults_to_english(self):
+        """Should default to English for unknown language codes"""
+        result = TaroSessionService._get_language_name('invalid')
+        assert result == 'English'
+
+    def test_generate_situation_reading_with_mocked_llm(self, db):
+        """Verify language parameter is passed to mocked LLM adapter"""
+        from unittest.mock import Mock
+        from plugins.taro.src.services.prompt_service import PromptService
+
+        # Setup: Create mocked LLM
+        mock_llm = Mock()
+        mock_llm.chat.return_value = "Мой ответ на русском языке"
+
+        # Setup: Create real repositories
+        arcana_repo = ArcanaRepository(db.session)
+        session_repo = TaroSessionRepository(db.session)
+        card_draw_repo = TaroCardDrawRepository(db.session)
+
+        # Create sample arcanas
+        arcanas = []
+        for i in range(3):
+            arcana = Arcana(
+                number=i,
+                name=f"Card {i}",
+                arcana_type=ArcanaType.MAJOR_ARCANA.value,
+                upright_meaning="Upright",
+                reversed_meaning="Reversed",
+                image_url="https://example.com/card.jpg"
+            )
+            arcanas.append(arcana)
+        db.session.add_all(arcanas)
+        db.session.commit()
+
+        # Create prompt service
+        prompt_service = PromptService.from_dict({
+            'situation_reading': {
+                'template': 'You are expert.\n\nRESPOND IN {{language}} LANGUAGE.\n\nSituation: {{situation_text}}\n\nCards: {{cards_context}}\n\nProvide reading:',
+                'variables': ['language', 'situation_text', 'cards_context']
+            }
+        })
+
+        # Setup: Create service with mocked LLM
+        service = TaroSessionService(
+            arcana_repo=arcana_repo,
+            session_repo=session_repo,
+            card_draw_repo=card_draw_repo,
+            llm_adapter=mock_llm,
+            prompt_service=prompt_service,
+        )
+
+        # Create session
+        user_id = str(uuid4())
+        session = service.create_session(user_id=user_id)
+
+        # Action: Call with Russian language
+        result = service.generate_situation_reading(
+            session_id=str(session.id),
+            situation_text="Career decision",
+            language="ru"
+        )
+
+        # Assert: Mocked LLM was called
+        assert mock_llm.chat.called
+        assert result == "Мой ответ на русском языке"
+
+        # Assert: Language instruction in prompt passed to LLM
+        call_args = mock_llm.chat.call_args
+        prompt_passed_to_llm = call_args[1]['messages'][0]['content']
+        assert "RESPOND IN Русский (Russian) LANGUAGE." in prompt_passed_to_llm
+
+    @pytest.mark.parametrize("lang_code,expected_lang_name", [
+        ("en", "English"),
+        ("ru", "Русский (Russian)"),
+        ("de", "Deutsch (German)"),
+        ("fr", "Français (French)"),
+    ])
+    def test_situation_reading_respects_different_languages(self, db, lang_code, expected_lang_name):
+        """Verify situation_reading passes correct language instruction for each language"""
+        from unittest.mock import Mock
+        from plugins.taro.src.services.prompt_service import PromptService
+
+        # Setup: Mocked LLM
+        mock_llm = Mock()
+        mock_llm.chat.return_value = f"Response in {expected_lang_name}"
+
+        # Setup: Repositories
+        arcana_repo = ArcanaRepository(db.session)
+        session_repo = TaroSessionRepository(db.session)
+        card_draw_repo = TaroCardDrawRepository(db.session)
+
+        # Create sample arcanas
+        arcanas = []
+        for i in range(3):
+            arcana = Arcana(
+                number=i,
+                name=f"Card {i}",
+                arcana_type=ArcanaType.MAJOR_ARCANA.value,
+                upright_meaning="Upright",
+                reversed_meaning="Reversed",
+                image_url="https://example.com/card.jpg"
+            )
+            arcanas.append(arcana)
+        db.session.add_all(arcanas)
+        db.session.commit()
+
+        # Prompt service
+        prompt_service = PromptService.from_dict({
+            'situation_reading': {
+                'template': 'RESPOND IN {{language}} LANGUAGE.\n\nSituation: {{situation_text}}\n\nCards: {{cards_context}}',
+                'variables': ['language', 'situation_text', 'cards_context']
+            }
+        })
+
+        # Service with mocked LLM
+        service = TaroSessionService(
+            arcana_repo=arcana_repo,
+            session_repo=session_repo,
+            card_draw_repo=card_draw_repo,
+            llm_adapter=mock_llm,
+            prompt_service=prompt_service,
+        )
+
+        # Create session
+        user_id = str(uuid4())
+        session = service.create_session(user_id=user_id)
+
+        # Call with specific language
+        result = service.generate_situation_reading(
+            session_id=str(session.id),
+            situation_text="Test situation",
+            language=lang_code
+        )
+
+        # Verify language instruction in prompt
+        call_args = mock_llm.chat.call_args
+        prompt = call_args[1]['messages'][0]['content']
+        assert f"RESPOND IN {expected_lang_name} LANGUAGE." in prompt
+
+    def test_answer_oracle_question_with_mocked_llm(self, db):
+        """Verify follow-up questions pass language to mocked LLM"""
+        from unittest.mock import Mock
+        from plugins.taro.src.services.prompt_service import PromptService
+
+        mock_llm = Mock()
+        mock_llm.chat.return_value = "Oracle's answer"
+
+        arcana_repo = ArcanaRepository(db.session)
+        session_repo = TaroSessionRepository(db.session)
+        card_draw_repo = TaroCardDrawRepository(db.session)
+
+        # Create sample arcanas
+        arcanas = []
+        for i in range(3):
+            arcana = Arcana(
+                number=i,
+                name=f"Card {i}",
+                arcana_type=ArcanaType.MAJOR_ARCANA.value,
+                upright_meaning="Upright",
+                reversed_meaning="Reversed",
+                image_url="https://example.com/card.jpg"
+            )
+            arcanas.append(arcana)
+        db.session.add_all(arcanas)
+        db.session.commit()
+
+        prompt_service = PromptService.from_dict({
+            'follow_up_question': {
+                'template': 'RESPOND IN {{language}} LANGUAGE.\n\nQuestion: {{question}}\n\nCards: {{cards_context}}',
+                'variables': ['language', 'question', 'cards_context']
+            }
+        })
+
+        service = TaroSessionService(
+            arcana_repo=arcana_repo,
+            session_repo=session_repo,
+            card_draw_repo=card_draw_repo,
+            llm_adapter=mock_llm,
+            prompt_service=prompt_service,
+        )
+
+        user_id = str(uuid4())
+        session = service.create_session(user_id=user_id)
+
+        # Call with French language
+        result = service.answer_oracle_question(
+            session_id=str(session.id),
+            question="Will it improve?",
+            language="fr"
+        )
+
+        # Verify language instruction
+        call_args = mock_llm.chat.call_args
+        prompt = call_args[1]['messages'][0]['content']
+        assert "RESPOND IN Français (French) LANGUAGE." in prompt
+        assert "Will it improve?" in prompt
