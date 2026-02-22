@@ -7,6 +7,7 @@
 # - 5 tarif plans (Free, Basic, Pro, Enterprise, Lifetime)
 # - 2 demo users with subscriptions
 # - 10 invoices with various statuses
+# - 2 token bundles (100 tokens, 500 tokens)
 # - 5 add-ons (3 global, 2 plan-dependent)
 
 set -e
@@ -31,6 +32,7 @@ from src.models.subscription import Subscription
 from src.models.invoice import UserInvoice
 from src.models.addon import AddOn
 from src.models.addon_subscription import AddOnSubscription
+from src.models.token_bundle import TokenBundle
 from src.models.enums import (
     UserStatus, UserRole, BillingPeriod,
     SubscriptionStatus, InvoiceStatus
@@ -272,6 +274,41 @@ try:
             session.add(invoice)
             print(f"  Created: {invoice.invoice_number} - {user.email} - €{invoice.amount} - {invoice.status.value}")
 
+    print("\n=== Creating Token Bundles ===")
+
+    token_bundles_data = [
+        {
+            'name': '100 Tokens',
+            'description': 'Starter token pack',
+            'token_amount': 100,
+            'price': Decimal('3.00'),
+            'sort_order': 0,
+        },
+        {
+            'name': '500 Tokens',
+            'description': 'Best value token pack',
+            'token_amount': 500,
+            'price': Decimal('10.00'),
+            'sort_order': 1,
+        },
+    ]
+
+    for bundle_data in token_bundles_data:
+        bundle = session.query(TokenBundle).filter_by(name=bundle_data['name']).first()
+        if not bundle:
+            bundle = TokenBundle()
+            bundle.name = bundle_data['name']
+            bundle.description = bundle_data['description']
+            bundle.token_amount = bundle_data['token_amount']
+            bundle.price = bundle_data['price']
+            bundle.is_active = True
+            bundle.sort_order = bundle_data['sort_order']
+            session.add(bundle)
+            session.flush()
+            print(f"  Created: {bundle.name} - {bundle.token_amount} tokens - €{bundle.price}")
+        else:
+            print(f"  Exists: {bundle.name}")
+
     print("\n=== Creating Add-Ons ===")
 
     # Global add-ons (available to all users)
@@ -404,6 +441,7 @@ try:
     print(f"  Users: {session.query(User).count()}")
     print(f"  Subscriptions: {session.query(Subscription).count()}")
     print(f"  Invoices: {session.query(UserInvoice).count()}")
+    print(f"  Token Bundles: {session.query(TokenBundle).count()}")
     print(f"  Add-Ons: {session.query(AddOn).count()}")
     print(f"  Add-On Subscriptions: {session.query(AddOnSubscription).count()}")
 

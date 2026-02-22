@@ -218,6 +218,7 @@ sys.path.insert(0, '/app')
 
 from src.extensions import Session
 from src.models.user import User
+from src.models.user_details import UserDetails
 from src.models.enums import UserStatus, UserRole
 import bcrypt
 
@@ -230,8 +231,20 @@ try:
     user.status = UserStatus.ACTIVE
     user.role = UserRole.USER
     session.add(user)
+    session.flush()
+
+    details = UserDetails()
+    details.user_id = user.id
+    details.first_name = 'Marc'
+    details.last_name = 'Muster'
+    details.address_line_1 = 'Hugo-Junkers 23'
+    details.city = 'Frankfurt am Main'
+    details.postal_code = '60386'
+    details.country = 'DE'
+    session.add(details)
+
     session.commit()
-    print(f'✓ Created test user: {user.email} (id={user.id})')
+    print(f'✓ Created test user: {user.email} (id={user.id}) - Marc Muster, Frankfurt am Main')
 except Exception as e:
     session.rollback()
     print(f'✗ Failed to create test user: {e}')

@@ -1,10 +1,9 @@
 """Routes for Taro plugin - API endpoints."""
-from flask import Blueprint, request, jsonify, current_app, send_from_directory
+from flask import Blueprint, request, jsonify, current_app, send_from_directory, g
 from datetime import datetime
 from pathlib import Path
 from uuid import UUID
 from src.extensions import db
-from flask_jwt_extended import get_jwt_identity, verify_jwt_in_request
 from src.middleware.auth import require_auth, require_admin
 
 from plugins.taro.src.events import (
@@ -156,6 +155,7 @@ def check_token_balance(user_id: str, tokens_required: int = 10) -> bool:
 
 
 @taro_bp.route("/session", methods=["POST"])
+@require_auth
 def create_session():
     """Create a new Taro reading session.
 
@@ -163,8 +163,7 @@ def create_session():
         JSON response with session_id and initial 3-card spread
     """
     try:
-        verify_jwt_in_request()
-        user_id = get_jwt_identity()
+        user_id = g.user_id
         session_service = _get_taro_services()
 
         # Get daily limit and max follow-ups from user's tarif plan
@@ -272,6 +271,7 @@ def create_session():
 
 
 @taro_bp.route("/session/<session_id>/follow-up", methods=["POST"])
+@require_auth
 def create_follow_up(session_id: str):
     """Create a follow-up question for an active session.
 
@@ -282,8 +282,7 @@ def create_follow_up(session_id: str):
         JSON response with follow-up interpretation
     """
     try:
-        verify_jwt_in_request()
-        user_id = get_jwt_identity()
+        user_id = g.user_id
         data = request.get_json() or {}
 
         question = data.get("question", "")
@@ -413,6 +412,7 @@ def create_follow_up(session_id: str):
 
 
 @taro_bp.route("/session/<session_id>/follow-up-question", methods=["POST"])
+@require_auth
 def ask_follow_up_question(session_id: str):
     """Ask a follow-up question about the Tarot reading.
 
@@ -429,8 +429,7 @@ def ask_follow_up_question(session_id: str):
         JSON response with Oracle's answer
     """
     try:
-        verify_jwt_in_request()
-        user_id = get_jwt_identity()
+        user_id = g.user_id
         data = request.get_json() or {}
 
         question = data.get("question", "").strip()
@@ -513,6 +512,7 @@ def ask_follow_up_question(session_id: str):
 
 
 @taro_bp.route("/session/<session_id>/card-explanation", methods=["POST"])
+@require_auth
 def get_card_explanation(session_id: str):
     """Get detailed explanation of the 3 cards in the spread.
 
@@ -528,8 +528,7 @@ def get_card_explanation(session_id: str):
         JSON response with detailed card explanation
     """
     try:
-        verify_jwt_in_request()
-        user_id = get_jwt_identity()
+        user_id = g.user_id
         data = request.get_json() or {}
         language = data.get("language", "en").lower()
         session_service = _get_taro_services()
@@ -650,6 +649,7 @@ def get_card_explanation(session_id: str):
 
 
 @taro_bp.route("/session/<session_id>/situation", methods=["POST"])
+@require_auth
 def submit_situation(session_id: str):
     """Submit user's situation and get contextual Oracle reading.
 
@@ -666,8 +666,7 @@ def submit_situation(session_id: str):
         JSON response with Oracle interpretation
     """
     try:
-        verify_jwt_in_request()
-        user_id = get_jwt_identity()
+        user_id = g.user_id
         data = request.get_json() or {}
 
         situation_text = data.get("situation_text", "").strip()
@@ -761,6 +760,7 @@ def submit_situation(session_id: str):
 
 
 @taro_bp.route("/history", methods=["GET"])
+@require_auth
 def get_session_history():
     """Get user's Taro session history.
 
@@ -773,8 +773,7 @@ def get_session_history():
         JSON response with list of sessions
     """
     try:
-        verify_jwt_in_request()
-        user_id = get_jwt_identity()
+        user_id = g.user_id
 
         # Get pagination parameters
         limit = request.args.get("limit", 10, type=int)
@@ -848,6 +847,7 @@ def get_session_history():
 
 
 @taro_bp.route("/limits", methods=["GET"])
+@require_auth
 def get_daily_limits():
     """Get user's daily Taro limits and current usage.
 
@@ -855,8 +855,7 @@ def get_daily_limits():
         JSON response with daily limits and remaining sessions
     """
     try:
-        verify_jwt_in_request()
-        user_id = get_jwt_identity()
+        user_id = g.user_id
 
         # Get daily limit from user's tarif plan
         daily_limit, _ = get_user_tarif_plan_limits(user_id)
