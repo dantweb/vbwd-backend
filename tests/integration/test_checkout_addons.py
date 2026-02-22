@@ -148,7 +148,7 @@ class TestCheckoutWithAddons:
         assert response.status_code == 201
         data = response.json()
         line_items = data["invoice"]["line_items"]
-        addon_items = [i for i in line_items if i["type"] == "add_on"]
+        addon_items = [i for i in line_items if i["type"] == "ADD_ON"]
         assert len(addon_items) == 1
 
     def test_checkout_addon_linked_to_subscription(

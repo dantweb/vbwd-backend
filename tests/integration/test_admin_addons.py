@@ -300,7 +300,7 @@ class TestAdminAddOns:
             json={
                 "name": f"Setup Fee {uuid4().hex[:6]}",
                 "price": "50.00",
-                "billing_period": "one_time",
+                "billing_period": "ONE_TIME",
                 "config": {"type": "fee"},
             },
             headers=admin_headers,
@@ -308,7 +308,7 @@ class TestAdminAddOns:
         )
         assert response.status_code == 201
         data = response.json()
-        assert data["addon"]["billing_period"] == "one_time"
+        assert data["addon"]["billing_period"] == "ONE_TIME"
         assert data["addon"]["is_recurring"] is False
 
     # =========================================

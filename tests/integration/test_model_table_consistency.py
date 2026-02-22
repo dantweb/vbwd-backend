@@ -129,12 +129,23 @@ def get_model_unique_constraints(model: Type[BaseModel]) -> list[str]:
 
 
 def get_db_unique_constraints(table_name: str) -> list[str]:
-    """Get all unique constraints from database table."""
+    """Get all unique constraints and unique indexes from database table.
+
+    Unique indexes enforce uniqueness identically to unique constraints in
+    PostgreSQL, even though inspector.get_unique_constraints() only returns
+    explicit UNIQUE CONSTRAINT entries (not standalone UNIQUE INDEX objects).
+    """
     inspector = inspect(db.engine)
     unique = set()
+    # Explicit UNIQUE CONSTRAINTs
     for constraint in inspector.get_unique_constraints(table_name):
         for col in constraint["column_names"]:
             unique.add(col)
+    # Unique indexes (created via op.create_index(..., unique=True))
+    for idx in inspector.get_indexes(table_name):
+        if idx.get("unique"):
+            for col in idx["column_names"]:
+                unique.add(col)
     return sorted(unique)
 
 

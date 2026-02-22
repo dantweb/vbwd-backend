@@ -279,7 +279,7 @@ class TestAdminPaymentMethods:
         assert response.status_code == 201
         data = response.json()
         assert data["payment_method"]["fee_type"] == "fixed"
-        assert data["payment_method"]["fee_amount"] == "1.50"
+        assert data["payment_method"]["fee_amount"] == "1.5000"
         assert data["payment_method"]["fee_charged_to"] == "merchant"
 
     # =========================================

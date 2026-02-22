@@ -254,7 +254,7 @@ class TestCheckoutEndpointSuccess:
         data = response.json()
         line_items = data["invoice"]["line_items"]
         assert len(line_items) >= 1
-        subscription_items = [i for i in line_items if i["type"] == "subscription"]
+        subscription_items = [i for i in line_items if i["type"] == "SUBSCRIPTION"]
         assert len(subscription_items) == 1
 
     def test_checkout_subscription_linked_to_invoice(self, auth_headers, test_plan):

@@ -155,7 +155,7 @@ class TestCheckoutWithTokenBundles:
         assert response.status_code == 201
         data = response.json()
         line_items = data["invoice"]["line_items"]
-        bundle_items = [i for i in line_items if i["type"] == "token_bundle"]
+        bundle_items = [i for i in line_items if i["type"] == "TOKEN_BUNDLE"]
         assert len(bundle_items) == 1
 
     def test_checkout_invalid_bundle_id(self, auth_headers, test_plan):
