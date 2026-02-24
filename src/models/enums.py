@@ -24,6 +24,7 @@ class SubscriptionStatus(enum.Enum):
 
     PENDING = "PENDING"
     ACTIVE = "ACTIVE"
+    TRIALING = "TRIALING"
     PAUSED = "PAUSED"
     CANCELLED = "CANCELLED"
     EXPIRED = "EXPIRED"
@@ -83,6 +84,7 @@ class TokenTransactionType(enum.Enum):
     REFUND = "REFUND"
     BONUS = "BONUS"
     ADJUSTMENT = "ADJUSTMENT"
+    SUBSCRIPTION = "SUBSCRIPTION"
 
 
 class AddonSubscriptionStatus(enum.Enum):

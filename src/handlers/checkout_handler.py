@@ -95,13 +95,15 @@ class CheckoutHandler(IEventHandler):
                 else:
                     plan_price = Decimal(str(plan.price_float))
 
-                # Create PENDING subscription
+                # Create subscription: TRIALING if plan has trial days, else PENDING
                 subscription = Subscription(
                     id=uuid4(),
                     user_id=event.user_id,
                     tarif_plan_id=event.plan_id,
                     status=SubscriptionStatus.PENDING,
                 )
+                if plan.trial_days and plan.trial_days > 0:
+                    subscription.start_trial(plan.trial_days)
                 repos["subscription"].save(subscription)
 
                 # Add subscription line item

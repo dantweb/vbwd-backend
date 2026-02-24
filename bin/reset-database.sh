@@ -11,6 +11,10 @@
 
 set -e
 
+# Change to the directory containing this script's parent (vbwd-backend/)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$SCRIPT_DIR"
+
 # Colors for output
 RED='\033[0;31m'
 YELLOW='\033[1;33m'
@@ -100,9 +104,9 @@ echo -e "${GREEN}╚════════════════════
 echo ""
 
 # Check if containers are running
-if ! docker-compose ps | grep -q "postgres.*Up"; then
+if ! docker compose ps | grep -q "postgres.*Up"; then
     echo -e "${RED}ERROR: PostgreSQL container is not running${NC}"
-    echo "Start the containers first with: docker-compose up -d"
+    echo "Start the containers first with: docker compose up -d"
     exit 1
 fi
 
@@ -116,7 +120,7 @@ echo "Step 1/5: Dropping existing database"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 # Terminate existing connections and drop database
-docker-compose exec -T postgres psql -U "$DB_USER" -d postgres << EOF
+docker compose exec -T postgres psql -U "$DB_USER" -d postgres << EOF
 -- Terminate all connections to the database
 SELECT pg_terminate_backend(pg_stat_activity.pid)
 FROM pg_stat_activity
@@ -140,7 +144,7 @@ echo "Step 2/5: Creating fresh database"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 # Create fresh database
-docker-compose exec -T postgres psql -U "$DB_USER" -d postgres << EOF
+docker compose exec -T postgres psql -U "$DB_USER" -d postgres << EOF
 CREATE DATABASE $DB_NAME
     WITH OWNER = $DB_USER
     ENCODING = 'UTF8'
@@ -161,7 +165,7 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo "Step 3/5: Running database migrations"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-docker-compose exec -T api alembic upgrade head
+docker compose exec -T api alembic upgrade head
 
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}✓ Migrations completed successfully${NC}"
@@ -177,7 +181,7 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 
 # Create admin user
 echo "Creating admin user: ${ADMIN_EMAIL}"
-docker-compose exec -T api python << EOF
+docker compose exec -T api python << EOF
 import sys
 sys.path.insert(0, '/app')
 
@@ -212,7 +216,7 @@ fi
 
 # Create test user
 echo "Creating test user: ${TEST_EMAIL}"
-docker-compose exec -T api python << EOF
+docker compose exec -T api python << EOF
 import sys
 sys.path.insert(0, '/app')
 

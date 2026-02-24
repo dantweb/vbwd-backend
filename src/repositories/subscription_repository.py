@@ -22,12 +22,15 @@ class SubscriptionRepository(BaseRepository[Subscription]):
         )
 
     def find_active_by_user(self, user_id: Union[UUID, str]) -> Optional[Subscription]:
-        """Find active subscription for a user."""
+        """Find active or trialing subscription for a user."""
         return (
             self._session.query(Subscription)
             .filter(
                 Subscription.user_id == user_id,
-                Subscription.status == SubscriptionStatus.ACTIVE,
+                Subscription.status.in_([
+                    SubscriptionStatus.ACTIVE,
+                    SubscriptionStatus.TRIALING,
+                ]),
             )
             .first()
         )
@@ -63,6 +66,17 @@ class SubscriptionRepository(BaseRepository[Subscription]):
             .filter(
                 Subscription.status == SubscriptionStatus.ACTIVE,
                 Subscription.expires_at < datetime.utcnow(),
+            )
+            .all()
+        )
+
+    def find_expired_trials(self) -> List[Subscription]:
+        """Find trialing subscriptions whose trial has ended."""
+        return (
+            self._session.query(Subscription)
+            .filter(
+                Subscription.status == SubscriptionStatus.TRIALING,
+                Subscription.trial_end_at <= datetime.utcnow(),
             )
             .all()
         )

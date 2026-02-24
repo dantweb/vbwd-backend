@@ -116,12 +116,6 @@ class Container(containers.DeclarativeContainer):
         user_details_repository=user_details_repository,
     )
 
-    subscription_service = providers.Factory(
-        SubscriptionService,
-        subscription_repo=subscription_repository,
-        tarif_plan_repo=tarif_plan_repository,
-    )
-
     tarif_plan_service = providers.Factory(
         TarifPlanService, tarif_plan_repository=tarif_plan_repository
     )
@@ -137,6 +131,13 @@ class Container(containers.DeclarativeContainer):
         balance_repo=token_balance_repository,
         transaction_repo=token_transaction_repository,
         purchase_repo=token_bundle_purchase_repository,
+    )
+
+    subscription_service = providers.Factory(
+        SubscriptionService,
+        subscription_repo=subscription_repository,
+        tarif_plan_repo=tarif_plan_repository,
+        token_service=token_service,
     )
 
     invoice_service = providers.Factory(

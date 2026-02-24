@@ -35,6 +35,7 @@ class User(BaseModel):
     payment_customer_id = db.Column(
         db.String(255), unique=True, nullable=True, index=True
     )
+    has_used_trial = db.Column(db.Boolean, nullable=False, default=False)
 
     # Relationships
     details = db.relationship(

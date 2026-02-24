@@ -7,7 +7,7 @@ PASSWORD="${2:-Password123!}"
 
 echo "Creating user: $EMAIL with password: $PASSWORD"
 
-docker-compose exec -T api python << EOF
+docker compose exec -T api python << EOF
 import sys
 sys.path.insert(0, '/app')
 

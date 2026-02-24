@@ -14,7 +14,7 @@ set -e
 
 echo "Installing demo data..."
 
-docker-compose exec -T api python << 'EOF'
+docker compose exec -T api python << 'EOF'
 import sys
 sys.path.insert(0, '/app')
 
@@ -84,7 +84,7 @@ try:
             'description': 'Get started with basic features at no cost',
             'price': Decimal('0.00'),
             'billing_period': BillingPeriod.MONTHLY,
-            'features': {'api_calls': 100, 'storage_gb': 1, 'support': 'community'},
+            'features': {'api_calls': 100, 'storage_gb': 1, 'support': 'community', 'default_tokens': 0},
             'sort_order': 0,
         },
         {
@@ -93,7 +93,7 @@ try:
             'description': 'Perfect for individuals and small projects',
             'price': Decimal('9.99'),
             'billing_period': BillingPeriod.MONTHLY,
-            'features': {'api_calls': 1000, 'storage_gb': 10, 'support': 'email'},
+            'features': {'api_calls': 1000, 'storage_gb': 10, 'support': 'email', 'default_tokens': 50},
             'sort_order': 1,
         },
         {
@@ -102,7 +102,7 @@ try:
             'description': 'Best for growing teams and businesses',
             'price': Decimal('29.99'),
             'billing_period': BillingPeriod.MONTHLY,
-            'features': {'api_calls': 10000, 'storage_gb': 100, 'support': 'priority', 'analytics': True},
+            'features': {'api_calls': 10000, 'storage_gb': 100, 'support': 'priority', 'analytics': True, 'default_tokens': 200},
             'sort_order': 2,
         },
         {
@@ -111,7 +111,7 @@ try:
             'description': 'Advanced features for large organizations',
             'price': Decimal('99.99'),
             'billing_period': BillingPeriod.MONTHLY,
-            'features': {'api_calls': 'unlimited', 'storage_gb': 1000, 'support': 'dedicated', 'analytics': True, 'sso': True},
+            'features': {'api_calls': 'unlimited', 'storage_gb': 1000, 'support': 'dedicated', 'analytics': True, 'sso': True, 'default_tokens': 1000},
             'sort_order': 3,
         },
         {
@@ -120,7 +120,7 @@ try:
             'description': 'One-time payment for lifetime access to Pro features',
             'price': Decimal('499.99'),
             'billing_period': BillingPeriod.ONE_TIME,
-            'features': {'api_calls': 10000, 'storage_gb': 100, 'support': 'priority', 'analytics': True, 'lifetime': True},
+            'features': {'api_calls': 10000, 'storage_gb': 100, 'support': 'priority', 'analytics': True, 'lifetime': True, 'default_tokens': 500},
             'sort_order': 4,
         },
     ]

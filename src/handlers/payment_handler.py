@@ -88,9 +88,10 @@ class PaymentCapturedHandler(IEventHandler):
                 if line_item.item_type == LineItemType.SUBSCRIPTION:
                     # Activate subscription (cancel any existing active one first)
                     subscription = repos["subscription"].find_by_id(line_item.item_id)
-                    if (
-                        subscription
-                        and subscription.status == SubscriptionStatus.PENDING
+                    if subscription and subscription.status in (
+                        SubscriptionStatus.PENDING,
+                        SubscriptionStatus.TRIALING,  # trial → paid conversion
+                        SubscriptionStatus.CANCELLED,  # post-trial conversion
                     ):
                         # Cancel previous active subscription for this user
                         prev = repos["subscription"].find_active_by_user(
@@ -119,6 +120,45 @@ class PaymentCapturedHandler(IEventHandler):
                             )
                         repos["subscription"].save(subscription)
                         items_activated["subscription"] = str(subscription.id)
+
+                        # Credit default tokens from plan features
+                        features = subscription.tarif_plan.features or {}
+                        default_tokens = (
+                            features.get("default_tokens", 0)
+                            if isinstance(features, dict)
+                            else 0
+                        )
+                        if default_tokens > 0:
+                            from src.models.user_token_balance import (
+                                UserTokenBalance,
+                                TokenTransaction,
+                            )
+                            from src.models.enums import TokenTransactionType
+                            from uuid import uuid4
+
+                            balance = repos["token"].find_by_user_id(
+                                invoice.user_id
+                            )
+                            if not balance:
+                                balance = UserTokenBalance(
+                                    id=uuid4(),
+                                    user_id=invoice.user_id,
+                                    balance=0,
+                                )
+                            balance.balance += default_tokens
+                            repos["token"].save(balance)
+
+                            transaction = TokenTransaction(
+                                id=uuid4(),
+                                user_id=invoice.user_id,
+                                amount=default_tokens,
+                                transaction_type=TokenTransactionType.SUBSCRIPTION,
+                                reference_id=subscription.id,
+                                description=f"Plan tokens: {subscription.tarif_plan.name}",
+                            )
+                            repos["token_transaction"].save(transaction)
+
+                            items_activated["tokens_credited"] += default_tokens
 
                 elif line_item.item_type == LineItemType.TOKEN_BUNDLE:
                     # Complete token bundle purchase and credit tokens

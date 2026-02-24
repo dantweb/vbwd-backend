@@ -74,8 +74,6 @@ def create_subscription():
     else:
         started_at = datetime.utcnow()
 
-    # Get optional parameters
-    trial_days = data.get("trial_days")
     requested_status = data.get("status", "active")
 
     user_repo = UserRepository(db.session)
@@ -97,28 +95,41 @@ def create_subscription():
     if existing:
         return jsonify({"error": "User already has an active subscription"}), 409
 
-    # Calculate expiration based on status
+    # Handle trialing status via SubscriptionService
+    if requested_status == "trialing":
+        sub_service = SubscriptionService(
+            subscription_repo=sub_repo,
+            tarif_plan_repo=plan_repo,
+        )
+        result = sub_service.start_trial(user.id, plan.id, user_repo)
+        if not result.success:
+            status_code = 409 if "active subscription" in result.error.lower() or "already used" in result.error.lower() else 400
+            return jsonify({"error": result.error}), status_code
+
+        subscription = result.subscription
+        return jsonify({
+            "id": str(subscription.id),
+            "user_id": str(subscription.user_id),
+            "tarif_plan_id": str(subscription.tarif_plan_id),
+            "status": subscription.status.value,
+            "started_at": subscription.started_at.isoformat() if subscription.started_at else None,
+            "expires_at": subscription.expires_at.isoformat() if subscription.expires_at else None,
+            "trial_end_at": subscription.trial_end_at.isoformat() if subscription.trial_end_at else None,
+            "created_at": subscription.created_at.isoformat() if subscription.created_at else None,
+        }), 201
+
+    # Calculate expiration based on billing period
     billing_months = data.get("billing_period_months") or _get_billing_months(
         plan.billing_period
     )
-
-    # Handle trialing status with trial_days
-    if requested_status == "trialing" and trial_days:
-        expires_at = started_at + timedelta(days=int(trial_days))
-        status = SubscriptionStatus.TRIALING
-    else:
-        expires_at = started_at + relativedelta(months=billing_months)
-        now = datetime.utcnow()
-        status = (
-            SubscriptionStatus.ACTIVE
-            if started_at <= now
-            else SubscriptionStatus.PENDING
-        )
-
-    # Override status if explicitly requested
-    if requested_status == "trialing":
-        status = SubscriptionStatus.TRIALING
-    elif requested_status == "active":
+    expires_at = started_at + relativedelta(months=billing_months)
+    now = datetime.utcnow()
+    status = (
+        SubscriptionStatus.ACTIVE
+        if started_at <= now
+        else SubscriptionStatus.PENDING
+    )
+    if requested_status == "active":
         status = SubscriptionStatus.ACTIVE
 
     # Create subscription
@@ -130,50 +141,22 @@ def create_subscription():
     subscription.expires_at = expires_at
 
     db.session.add(subscription)
-    db.session.flush()  # Get subscription.id without committing
+    db.session.flush()
 
-    # Create invoice (skip for trialing subscriptions)
-    invoice = None
-    if status != SubscriptionStatus.TRIALING:
-        invoice = UserInvoice()
-        invoice.user_id = user.id
-        invoice.tarif_plan_id = plan.id
-        invoice.subscription_id = subscription.id
-        invoice.invoice_number = UserInvoice.generate_invoice_number()
-        invoice.amount = plan.price or plan.price_float or 0
-        invoice.currency = plan.currency or "EUR"
-        invoice.status = InvoiceStatus.PENDING
-        invoice.invoiced_at = datetime.utcnow()
-        invoice.expires_at = datetime.utcnow() + timedelta(days=30)
-        db.session.add(invoice)
+    # Create invoice
+    invoice = UserInvoice()
+    invoice.user_id = user.id
+    invoice.tarif_plan_id = plan.id
+    invoice.subscription_id = subscription.id
+    invoice.invoice_number = UserInvoice.generate_invoice_number()
+    invoice.amount = plan.price or plan.price_float or 0
+    invoice.currency = plan.currency or "EUR"
+    invoice.status = InvoiceStatus.PENDING
+    invoice.invoiced_at = datetime.utcnow()
+    invoice.expires_at = datetime.utcnow() + timedelta(days=30)
+    db.session.add(invoice)
 
     db.session.commit()
-
-    # Dispatch events
-    try:
-        dispatcher = current_app.container.event_dispatcher()
-        dispatcher.emit(
-            "subscription:created",
-            {
-                "subscription_id": str(subscription.id),
-                "user_id": str(user.id),
-                "plan_id": str(plan.id),
-                "status": status.value,
-            },
-        )
-        if invoice:
-            dispatcher.emit(
-                "invoice:created",
-                {
-                    "invoice_id": str(invoice.id),
-                    "user_id": str(user.id),
-                    "subscription_id": str(subscription.id),
-                    "amount": str(invoice.amount),
-                    "currency": invoice.currency,
-                },
-            )
-    except Exception:
-        pass  # Don't fail if event dispatcher not configured
 
     # Build response
     response = {
@@ -190,16 +173,14 @@ def create_subscription():
         "created_at": subscription.created_at.isoformat()
         if subscription.created_at
         else None,
-    }
-
-    if invoice:
-        response["invoice"] = {
+        "invoice": {
             "id": str(invoice.id),
             "invoice_number": invoice.invoice_number,
             "amount": str(invoice.amount),
             "currency": invoice.currency,
             "status": invoice.status.value,
-        }
+        },
+    }
 
     return jsonify(response), 201
 
@@ -328,6 +309,10 @@ def get_subscription(subscription_id):
     sub_dict["created_at"] = (
         subscription.created_at.isoformat() if subscription.created_at else None
     )
+    sub_dict["trial_end_at"] = (
+        subscription.trial_end_at.isoformat() if subscription.trial_end_at else None
+    )
+    sub_dict["is_trialing"] = subscription.is_trialing
 
     # Get payment history (invoices for this subscription)
     invoices = invoice_repo.find_by_subscription(str(subscription.id))
@@ -438,8 +423,24 @@ def activate_subscription(subscription_id):
         200: Subscription activated
         404: Subscription not found
     """
+    from src.services.token_service import TokenService
+    from src.repositories.token_repository import (
+        TokenBalanceRepository,
+        TokenTransactionRepository,
+    )
+    from src.repositories.token_bundle_purchase_repository import (
+        TokenBundlePurchaseRepository,
+    )
+
     sub_repo = SubscriptionRepository(db.session)
-    sub_service = SubscriptionService(subscription_repo=sub_repo)
+    token_service = TokenService(
+        balance_repo=TokenBalanceRepository(db.session),
+        transaction_repo=TokenTransactionRepository(db.session),
+        purchase_repo=TokenBundlePurchaseRepository(db.session),
+    )
+    sub_service = SubscriptionService(
+        subscription_repo=sub_repo, token_service=token_service
+    )
 
     result = sub_service.activate_subscription(subscription_id)
 

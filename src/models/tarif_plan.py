@@ -48,6 +48,7 @@ class TarifPlan(BaseModel):
         nullable=False,
     )
     features = db.Column(db.JSON, default=list)
+    trial_days = db.Column(db.Integer, nullable=False, default=0)
     is_active = db.Column(db.Boolean, nullable=False, default=True, index=True)
     sort_order = db.Column(db.Integer, default=0)
 
@@ -92,6 +93,7 @@ class TarifPlan(BaseModel):
             "price_float": self.price_float,
             "billing_period": self.billing_period.value,
             "features": self.features,
+            "trial_days": self.trial_days,
             "is_active": self.is_active,
             "is_recurring": self.is_recurring,
         }

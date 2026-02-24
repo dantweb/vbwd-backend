@@ -2,13 +2,13 @@
 # Populate Tarot Card Database
 # ============================
 # Populates the Tarot plugin database with 78 arcana cards.
-# Runs the populate_arcanas.py script inside the backend API container via docker-compose.
+# Runs the populate_arcanas.py script inside the backend API container via docker compose.
 #
 # Usage:
 #   ./plugins/taro/bin/populate-db.sh           # Populate all arcana cards
 #
 # Requirements:
-#   - docker-compose running with api service
+#   - docker compose running with api service
 #   - PostgreSQL database running and migrated
 #
 # This script:
@@ -36,8 +36,8 @@ echo -e "${BLUE}║  Populate Arcana Table                 ║${NC}"
 echo -e "${BLUE}╚════════════════════════════════════════╝${NC}"
 echo ""
 
-# Check if docker-compose is running and api service is available
-if ! docker-compose ps 2>/dev/null | grep -q "api.*Up"; then
+# Check if docker compose is running and api service is available
+if ! docker compose ps 2>/dev/null | grep -q "api.*Up"; then
     echo -e "${RED}✗ Error: api service is not running${NC}"
     echo ""
     echo "Please start the services first:"
@@ -51,7 +51,7 @@ echo ""
 
 # Run the populate_arcanas.py script inside the api container
 # The script is located at /app/plugins/taro/src/bin/populate_arcanas.py inside the container
-docker-compose exec -T api python /app/plugins/taro/src/bin/populate_arcanas.py
+docker compose exec -T api python /app/plugins/taro/src/bin/populate_arcanas.py
 
 if [ $? -eq 0 ]; then
     echo ""

@@ -8,6 +8,7 @@ from src.models.enums import (
     LineItemType,
     SubscriptionStatus,
     PurchaseStatus,
+    TokenTransactionType,
 )
 from src.repositories.invoice_repository import InvoiceRepository
 from src.repositories.subscription_repository import SubscriptionRepository
@@ -82,11 +83,25 @@ class RefundService:
                 error=f"Cannot refund: invoice status is {invoice.status.value}",
             )
 
-        # 2. Mark invoice as refunded
+        # 2. Pre-check: ensure user has enough tokens to cover subscription default_tokens
+        total_tokens_to_debit = self._calculate_tokens_to_debit(invoice)
+        if total_tokens_to_debit > 0:
+            current_balance = self._token_service.get_balance(invoice.user_id)
+            if current_balance < total_tokens_to_debit:
+                return RefundResult(
+                    success=False,
+                    error=(
+                        f"Insufficient token balance for refund. "
+                        f"User has {current_balance} tokens but {total_tokens_to_debit} "
+                        f"need to be deducted. User must purchase more tokens first."
+                    ),
+                )
+
+        # 3. Mark invoice as refunded
         invoice.mark_refunded()
         self._invoice_repo.save(invoice)
 
-        # 3. Reverse line items
+        # 4. Reverse line items
         items_reversed: dict[str, object] = {
             "subscription": None,
             "token_bundles": [],
@@ -96,7 +111,7 @@ class RefundService:
 
         for line_item in invoice.line_items:  # type: ignore[attr-defined]
             if line_item.item_type == LineItemType.SUBSCRIPTION:
-                self._reverse_subscription(line_item, items_reversed)
+                self._reverse_subscription(line_item, invoice.user_id, items_reversed)
             elif line_item.item_type == LineItemType.TOKEN_BUNDLE:
                 self._reverse_token_bundle(line_item, invoice.user_id, items_reversed)
             elif line_item.item_type == LineItemType.ADD_ON:
@@ -108,10 +123,49 @@ class RefundService:
             items_reversed=items_reversed,
         )
 
-    def _reverse_subscription(self, line_item, items_reversed):
-        """Cancel an active subscription."""
+    def _calculate_tokens_to_debit(self, invoice) -> int:
+        """Calculate total tokens that need to be deducted for this refund."""
+        total = 0
+        for line_item in invoice.line_items:
+            if line_item.item_type == LineItemType.SUBSCRIPTION:
+                subscription = self._subscription_repo.find_by_id(line_item.item_id)
+                if subscription and subscription.status == SubscriptionStatus.ACTIVE:
+                    if subscription.tarif_plan:
+                        features = subscription.tarif_plan.features or {}
+                        default_tokens = (
+                            features.get("default_tokens", 0)
+                            if isinstance(features, dict)
+                            else 0
+                        )
+                        total += default_tokens
+            elif line_item.item_type == LineItemType.TOKEN_BUNDLE:
+                purchase = self._purchase_repo.find_by_id(line_item.item_id)
+                if purchase and purchase.status == PurchaseStatus.COMPLETED:
+                    total += purchase.token_amount
+        return total
+
+    def _reverse_subscription(self, line_item, user_id, items_reversed):
+        """Cancel an active subscription and debit default tokens."""
         subscription = self._subscription_repo.find_by_id(line_item.item_id)
         if subscription and subscription.status == SubscriptionStatus.ACTIVE:
+            # Debit default_tokens from user balance
+            if subscription.tarif_plan:
+                features = subscription.tarif_plan.features or {}
+                default_tokens = (
+                    features.get("default_tokens", 0)
+                    if isinstance(features, dict)
+                    else 0
+                )
+                if default_tokens > 0:
+                    self._token_service.debit_tokens(
+                        user_id=user_id,
+                        amount=default_tokens,
+                        transaction_type=TokenTransactionType.REFUND,
+                        reference_id=subscription.id,
+                        description=f"Refund plan tokens: {subscription.tarif_plan.name}",
+                    )
+                    items_reversed["tokens_debited"] += default_tokens
+
             subscription.status = SubscriptionStatus.CANCELLED
             subscription.cancelled_at = datetime.utcnow()
             self._subscription_repo.save(subscription)

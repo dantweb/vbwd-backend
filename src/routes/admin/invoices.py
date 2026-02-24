@@ -125,8 +125,12 @@ def get_invoice(invoice_id):
             inv_dict["subscription_end_date"] = (
                 subscription.expires_at.isoformat() if subscription.expires_at else None
             )
-            inv_dict["subscription_is_trial"] = False  # No trial flag in current model
-            inv_dict["subscription_trial_end"] = None
+            inv_dict["subscription_is_trial"] = subscription.trial_end_at is not None
+            inv_dict["subscription_trial_end"] = (
+                subscription.trial_end_at.isoformat()
+                if subscription.trial_end_at
+                else None
+            )
 
     # Add due_date and created_at
     inv_dict["due_date"] = (
@@ -306,6 +310,21 @@ def refund_invoice(invoice_id):
     invoice = invoice_repo.find_by_id(UUID(invoice_id))
     if not invoice:
         return jsonify({"error": "Invoice not found"}), 404
+
+    # Pre-check: ensure user has enough tokens before calling payment provider
+    refund_service = container.refund_service()
+    tokens_needed = refund_service._calculate_tokens_to_debit(invoice)
+    if tokens_needed > 0:
+        token_service = container.token_service()
+        current_balance = token_service.get_balance(invoice.user_id)
+        if current_balance < tokens_needed:
+            return jsonify({
+                "error": (
+                    f"Insufficient token balance for refund. "
+                    f"User has {current_balance} tokens but {tokens_needed} "
+                    f"need to be deducted. User must purchase more tokens first."
+                )
+            }), 400
 
     # Call the payment provider API to process the actual refund
     provider_error = _refund_via_provider(invoice)

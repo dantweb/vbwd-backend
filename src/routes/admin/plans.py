@@ -70,6 +70,10 @@ def create_plan():
             slug = re.sub(r"[^a-z0-9]+", "-", data["name"].lower()).strip("-")
 
         price_decimal = Decimal(str(data["price"]))
+        features = data.get("features", {})
+        if isinstance(features, dict) and "default_tokens" not in features:
+            features["default_tokens"] = 0
+
         plan = TarifPlan(
             name=data["name"],
             slug=slug,
@@ -78,7 +82,8 @@ def create_plan():
             price_float=float(price_decimal),
             currency=data.get("currency", "EUR"),
             billing_period=data.get("billing_period", "MONTHLY").upper(),
-            features=data.get("features", {}),
+            features=features,
+            trial_days=int(data.get("trial_days", 0)),
             is_active=data.get("is_active", True),
         )
 
@@ -156,14 +161,20 @@ def update_plan(plan_id):
         plan.description = data["description"]
     if "price" in data:
         plan.price = Decimal(str(data["price"]))
+        plan.price_float = float(data["price"])
     if "currency" in data:
         plan.currency = data["currency"]
     if "billing_period" in data:
         plan.billing_period = data["billing_period"]
     if "features" in data:
-        plan.features = data["features"]
+        features = data["features"]
+        if isinstance(features, dict) and "default_tokens" not in features:
+            features["default_tokens"] = 0
+        plan.features = features
     if "is_active" in data:
         plan.is_active = data["is_active"]
+    if "trial_days" in data:
+        plan.trial_days = int(data["trial_days"])
 
     saved_plan = plan_repo.save(plan)
 
@@ -326,6 +337,7 @@ def copy_plan(plan_id):
         currency=source_plan.currency,
         billing_period=source_plan.billing_period,
         features=source_plan.features,
+        trial_days=source_plan.trial_days,
         is_active=True,  # New copy is active by default
     )
 

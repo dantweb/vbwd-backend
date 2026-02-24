@@ -1,12 +1,18 @@
 """Subscription service implementation."""
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Optional, List
 from uuid import UUID
 from src.repositories.subscription_repository import SubscriptionRepository
 from src.repositories.tarif_plan_repository import TarifPlanRepository
 from src.models.subscription import Subscription
-from src.models.enums import SubscriptionStatus, BillingPeriod
+from src.models.invoice import UserInvoice
+from src.models.enums import (
+    SubscriptionStatus,
+    BillingPeriod,
+    InvoiceStatus,
+    TokenTransactionType,
+)
 
 
 class SubscriptionResult:
@@ -67,15 +73,18 @@ class SubscriptionService:
         self,
         subscription_repo: SubscriptionRepository,
         tarif_plan_repo: Optional[TarifPlanRepository] = None,
+        token_service=None,
     ):
         """Initialize SubscriptionService.
 
         Args:
             subscription_repo: Repository for subscription data access
             tarif_plan_repo: Optional repository for tariff plan validation
+            token_service: Optional TokenService for crediting plan tokens
         """
         self._subscription_repo = subscription_repo
         self._tarif_plan_repo = tarif_plan_repo
+        self._token_service = token_service
 
     def get_active_subscription(self, user_id: UUID) -> Optional[Subscription]:
         """Get user's active subscription.
@@ -132,6 +141,49 @@ class SubscriptionService:
 
         return self._subscription_repo.save(subscription)
 
+    def start_trial(self, user_id: UUID, tarif_plan_id: UUID, user_repo) -> SubscriptionResult:
+        """
+        Start a trial subscription for a user.
+
+        Args:
+            user_id: User UUID
+            tarif_plan_id: Tariff plan UUID
+            user_repo: UserRepository (passed, not owned by this service)
+
+        Returns:
+            SubscriptionResult with trialing subscription
+        """
+        user = user_repo.find_by_id(user_id)
+        if not user:
+            return SubscriptionResult(success=False, error="User not found")
+
+        if user.has_used_trial:
+            return SubscriptionResult(success=False, error="User has already used a trial")
+
+        existing = self._subscription_repo.find_active_by_user(user_id)
+        if existing:
+            return SubscriptionResult(
+                success=False, error="User already has an active subscription"
+            )
+
+        plan = self._tarif_plan_repo.find_by_id(tarif_plan_id)
+        if not plan:
+            return SubscriptionResult(success=False, error="Plan not found")
+        if plan.trial_days <= 0:
+            return SubscriptionResult(success=False, error="Plan has no trial period")
+
+        subscription = Subscription()
+        subscription.user_id = user_id
+        subscription.tarif_plan_id = tarif_plan_id
+        subscription.start_trial(plan.trial_days)
+
+        saved = self._subscription_repo.save(subscription)
+
+        user.has_used_trial = True
+        user_repo.save(user)
+
+        return SubscriptionResult(success=True, subscription=saved)
+
     def activate_subscription(self, subscription_id: UUID) -> SubscriptionResult:
         """
         Activate subscription after payment.
@@ -149,12 +201,31 @@ class SubscriptionService:
         if not subscription:
             return SubscriptionResult(success=False, error="Subscription not found")
 
+        if subscription.status == SubscriptionStatus.TRIALING:
+            return SubscriptionResult(
+                success=False,
+                error="Trial subscriptions can only be activated via invoice payment",
+            )
+
         # Get plan for duration
         plan = subscription.tarif_plan
         duration_days = self.PERIOD_DAYS.get(plan.billing_period, 30)
 
         # Activate using model method
         subscription.activate(duration_days)
+
+        # Credit default tokens from plan features
+        features = plan.features or {}
+        default_tokens = features.get("default_tokens", 0) if isinstance(features, dict) else 0
+        if self._token_service and default_tokens > 0:
+            self._token_service.credit_tokens(
+                user_id=subscription.user_id,
+                amount=default_tokens,
+                transaction_type=TokenTransactionType.SUBSCRIPTION,
+                reference_id=subscription.id,
+                description=f"Plan tokens: {plan.name}",
+            )
+
         saved = self._subscription_repo.save(subscription)
 
         return SubscriptionResult(success=True, subscription=saved)
@@ -233,6 +304,43 @@ class SubscriptionService:
             self._subscription_repo.save(subscription)
 
         return expired
+
+    def expire_trials(self, invoice_repo) -> list:
+        """
+        Find and cancel expired trial subscriptions, creating pending invoices.
+
+        Args:
+            invoice_repo: InvoiceRepository for creating invoices
+
+        Returns:
+            List of dicts with subscription_id and invoice_id
+        """
+        expired_trials = self._subscription_repo.find_expired_trials()
+        results = []
+
+        for subscription in expired_trials:
+            subscription.cancel()
+            self._subscription_repo.save(subscription)
+
+            plan = subscription.tarif_plan
+            invoice = UserInvoice()
+            invoice.user_id = subscription.user_id
+            invoice.tarif_plan_id = plan.id
+            invoice.subscription_id = subscription.id
+            invoice.invoice_number = UserInvoice.generate_invoice_number()
+            invoice.amount = plan.price or plan.price_float or 0
+            invoice.currency = plan.currency or "EUR"
+            invoice.status = InvoiceStatus.PENDING
+            invoice.invoiced_at = datetime.utcnow()
+            invoice.expires_at = datetime.utcnow() + timedelta(days=30)
+            invoice_repo.save(invoice)
+
+            results.append({
+                "subscription_id": str(subscription.id),
+                "invoice_id": str(invoice.id),
+            })
+
+        return results
 
     def pause_subscription(self, subscription_id: UUID) -> SubscriptionResult:
         """

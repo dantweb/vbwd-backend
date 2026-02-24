@@ -61,24 +61,31 @@ class TestRefundServiceProcessRefund:
         invoice_repo.save.assert_called_once_with(invoice)
 
     def test_refund_reverses_subscription(self):
-        """Refund cancels an active subscription."""
+        """Refund cancels an active subscription and debits default tokens."""
         from src.services.refund_service import RefundService
 
         sub_id = uuid4()
         line_item = _make_line_item(LineItemType.SUBSCRIPTION, sub_id)
         invoice = _make_invoice(InvoiceStatus.PAID, [line_item])
 
+        tarif_plan = MagicMock()
+        tarif_plan.features = {"default_tokens": 50}
+        tarif_plan.name = "Basic"
         subscription = MagicMock()
         subscription.id = sub_id
         subscription.status = SubscriptionStatus.ACTIVE
+        subscription.tarif_plan = tarif_plan
 
         sub_repo = MagicMock()
         sub_repo.find_by_id.return_value = subscription
 
+        token_service = MagicMock()
+        token_service.get_balance.return_value = 50
+
         service = RefundService(
             invoice_repo=MagicMock(find_by_id=MagicMock(return_value=invoice)),
             subscription_repo=sub_repo,
-            token_service=MagicMock(),
+            token_service=token_service,
             purchase_repo=MagicMock(),
             addon_sub_repo=MagicMock(),
         )
@@ -92,6 +99,45 @@ class TestRefundServiceProcessRefund:
         assert subscription.cancelled_at is not None
         sub_repo.save.assert_called_with(subscription)
         assert result.items_reversed["subscription"] == str(sub_id)
+        assert result.items_reversed["tokens_debited"] == 50
+        token_service.debit_tokens.assert_called_once()
+
+    def test_refund_rejects_insufficient_balance(self):
+        """Refund is rejected when user has insufficient token balance."""
+        from src.services.refund_service import RefundService
+
+        sub_id = uuid4()
+        line_item = _make_line_item(LineItemType.SUBSCRIPTION, sub_id)
+        invoice = _make_invoice(InvoiceStatus.PAID, [line_item])
+
+        tarif_plan = MagicMock()
+        tarif_plan.features = {"default_tokens": 100}
+        subscription = MagicMock()
+        subscription.id = sub_id
+        subscription.status = SubscriptionStatus.ACTIVE
+        subscription.tarif_plan = tarif_plan
+
+        sub_repo = MagicMock()
+        sub_repo.find_by_id.return_value = subscription
+
+        token_service = MagicMock()
+        token_service.get_balance.return_value = 30  # less than 100 needed
+
+        service = RefundService(
+            invoice_repo=MagicMock(find_by_id=MagicMock(return_value=invoice)),
+            subscription_repo=sub_repo,
+            token_service=token_service,
+            purchase_repo=MagicMock(),
+            addon_sub_repo=MagicMock(),
+        )
+
+        result = service.process_refund(
+            invoice_id=invoice.id, refund_reference="REF_FAIL"
+        )
+
+        assert result.success is False
+        assert "insufficient token balance" in result.error.lower()
+        invoice.mark_refunded.assert_not_called()
 
     def test_refund_debits_tokens(self):
         """Refund debits tokens for token bundle purchase."""
@@ -111,6 +157,7 @@ class TestRefundServiceProcessRefund:
         purchase_repo.find_by_id.return_value = purchase
 
         token_service = MagicMock()
+        token_service.get_balance.return_value = 500
         token_service.refund_tokens.return_value = 500
 
         service = RefundService(
@@ -226,6 +273,7 @@ class TestRefundServiceProcessRefund:
         purchase_repo.find_by_id.return_value = purchase
 
         token_service = MagicMock()
+        token_service.get_balance.return_value = 1000
         token_service.refund_tokens.return_value = 800  # user spent 200
 
         service = RefundService(
@@ -262,7 +310,10 @@ class TestRefundServiceProcessRefund:
             InvoiceStatus.PAID, [li_sub, li_token, li_addon], user_id=user_id
         )
 
-        subscription = MagicMock(id=sub_id, status=SubscriptionStatus.ACTIVE)
+        tarif_plan = MagicMock()
+        tarif_plan.features = {"default_tokens": 100}
+        tarif_plan.name = "Pro"
+        subscription = MagicMock(id=sub_id, status=SubscriptionStatus.ACTIVE, tarif_plan=tarif_plan)
         purchase = MagicMock(
             id=purchase_id, status=PurchaseStatus.COMPLETED, token_amount=200
         )
@@ -271,7 +322,9 @@ class TestRefundServiceProcessRefund:
         sub_repo = MagicMock(find_by_id=MagicMock(return_value=subscription))
         purchase_repo = MagicMock(find_by_id=MagicMock(return_value=purchase))
         addon_repo = MagicMock(find_by_id=MagicMock(return_value=addon_sub))
-        token_service = MagicMock(refund_tokens=MagicMock(return_value=200))
+        token_service = MagicMock()
+        token_service.get_balance.return_value = 500
+        token_service.refund_tokens.return_value = 200
 
         service = RefundService(
             invoice_repo=MagicMock(find_by_id=MagicMock(return_value=invoice)),
@@ -289,4 +342,5 @@ class TestRefundServiceProcessRefund:
         assert result.items_reversed["subscription"] == str(sub_id)
         assert str(purchase_id) in result.items_reversed["token_bundles"]
         assert str(addon_id) in result.items_reversed["add_ons"]
-        assert result.items_reversed["tokens_debited"] == 200
+        # 100 (subscription default_tokens) + 200 (token bundle) = 300
+        assert result.items_reversed["tokens_debited"] == 300

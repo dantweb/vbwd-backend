@@ -61,7 +61,7 @@ def create_user():
         return jsonify({"error": f"Invalid status: {status_str}"}), 400
 
     # Parse role
-    role_str = data.get("role", "user")
+    role_str = data.get("role", "USER")
     try:
         role = UserRole(role_str)
     except ValueError:

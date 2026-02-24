@@ -113,7 +113,7 @@ run_static_analysis() {
     if $IN_DOCKER; then
         black --check --diff src/ tests/ 2>&1 || failed=1
     else
-        docker-compose run --rm -T test black --check --diff src/ tests/ 2>&1 || failed=1
+        docker compose run --rm -T test black --check --diff src/ tests/ 2>&1 || failed=1
     fi
     print_result "Black formatter check" $failed
 
@@ -128,7 +128,7 @@ run_static_analysis() {
     if $IN_DOCKER; then
         flake8 src/ tests/ --max-line-length=120 --extend-ignore=E203,W503 2>&1 || flake_failed=1
     else
-        docker-compose run --rm -T test flake8 src/ tests/ --max-line-length=120 --extend-ignore=E203,W503 2>&1 || flake_failed=1
+        docker compose run --rm -T test flake8 src/ tests/ --max-line-length=120 --extend-ignore=E203,W503 2>&1 || flake_failed=1
     fi
     print_result "Flake8 style check" $flake_failed
     [ $flake_failed -ne 0 ] && failed=1
@@ -140,7 +140,7 @@ run_static_analysis() {
     if $IN_DOCKER; then
         mypy src/ --ignore-missing-imports --no-error-summary 2>&1 || mypy_failed=1
     else
-        docker-compose run --rm -T test mypy src/ --ignore-missing-imports --no-error-summary 2>&1 || mypy_failed=1
+        docker compose run --rm -T test mypy src/ --ignore-missing-imports --no-error-summary 2>&1 || mypy_failed=1
     fi
     print_result "Mypy type check" $mypy_failed
     [ $mypy_failed -ne 0 ] && failed=1
@@ -169,7 +169,7 @@ run_unit_tests() {
     if $IN_DOCKER; then
         pytest tests/unit/ plugins/*/tests/unit/ -q --tb=line 2>&1 || failed=1
     else
-        docker-compose run --rm test pytest tests/unit/ plugins/*/tests/unit/ -q --tb=line 2>&1 || failed=1
+        docker compose run --rm test pytest tests/unit/ plugins/*/tests/unit/ -q --tb=line 2>&1 || failed=1
     fi
 
     echo ""
@@ -192,9 +192,9 @@ run_integration_tests() {
     # Ensure services are running
     if ! $IN_DOCKER; then
         echo "Checking if services are running..."
-        if ! docker-compose ps | grep -q "api.*Up"; then
+        if ! docker compose ps | grep -q "api.*Up"; then
             echo -e "${YELLOW}Starting services...${NC}"
-            docker-compose up -d
+            docker compose up -d
             echo "Waiting for services to be ready..."
             sleep 5
         fi
@@ -205,7 +205,7 @@ run_integration_tests() {
         pytest tests/integration/ plugins/*/tests/integration/ -q --tb=line 2>&1 || failed=1
     else
         # Outside Docker, use the test-integration service
-        docker-compose --profile test-integration run --rm test-integration \
+        docker compose --profile test-integration run --rm test-integration \
             pytest tests/integration/test_api_endpoints.py plugins/*/tests/integration/ -q --tb=line 2>&1 || failed=1
     fi
 
