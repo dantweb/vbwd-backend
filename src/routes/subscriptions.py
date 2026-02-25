@@ -33,6 +33,10 @@ def list_subscriptions():
     result = []
     for sub in subscriptions:
         data = sub.to_dict()
+        # Include created_at for reliable frontend sorting (started_at may be null)
+        data["created_at"] = (
+            sub.created_at.isoformat() if sub.created_at else None
+        )
         # Enrich with plan details
         if sub.tarif_plan_id:
             plan = tarif_plan_repo.find_by_id(sub.tarif_plan_id)
@@ -45,6 +49,15 @@ def list_subscriptions():
                     "billing_period": plan.billing_period.value
                     if plan.billing_period
                     else None,
+                    "categories": [
+                        {
+                            "id": str(c.id),
+                            "slug": c.slug,
+                            "name": c.name,
+                            "is_single": c.is_single,
+                        }
+                        for c in getattr(plan, "categories", [])
+                    ],
                 }
         result.append(data)
 
@@ -116,6 +129,54 @@ def get_active_subscription():
         ),
         200,
     )
+
+
+@subscriptions_bp.route("/active-all", methods=["GET"])
+@require_auth
+def get_all_active_subscriptions():
+    """
+    Get all active subscriptions for the user, enriched with plan and category info.
+
+    GET /api/v1/user/subscriptions/active-all
+    Authorization: Bearer <token>
+
+    Returns:
+        200: List of all active/trialing subscriptions with plan + categories
+    """
+    subscription_repo = SubscriptionRepository(db.session)
+    tarif_plan_repo = TarifPlanRepository(db.session)
+    subscription_service = SubscriptionService(subscription_repo=subscription_repo)
+
+    subscriptions = subscription_service.get_active_subscriptions(g.user_id)
+
+    result = []
+    for sub in subscriptions:
+        data = sub.to_dict()
+        if sub.tarif_plan_id:
+            plan = tarif_plan_repo.find_by_id(sub.tarif_plan_id)
+            if plan:
+                categories = [
+                    {
+                        "id": str(c.id),
+                        "slug": c.slug,
+                        "name": c.name,
+                        "is_single": c.is_single,
+                    }
+                    for c in getattr(plan, "categories", [])
+                ]
+                data["plan"] = {
+                    "id": str(plan.id),
+                    "name": plan.name,
+                    "slug": plan.slug,
+                    "price": float(plan.price) if plan.price else 0,
+                    "billing_period": plan.billing_period.value
+                    if plan.billing_period
+                    else None,
+                    "categories": categories,
+                }
+        result.append(data)
+
+    return jsonify({"subscriptions": result}), 200
 
 
 @subscriptions_bp.route("/<subscription_id>/cancel", methods=["POST"])

@@ -3,6 +3,7 @@ import uuid
 from flask import Blueprint, request, jsonify
 from src.extensions import db
 from src.repositories.tarif_plan_repository import TarifPlanRepository
+from src.repositories.tarif_plan_category_repository import TarifPlanCategoryRepository
 from src.repositories.currency_repository import CurrencyRepository
 from src.repositories.tax_repository import TaxRepository
 from src.services.tarif_plan_service import TarifPlanService
@@ -17,17 +18,19 @@ def list_plans():
     """
     List active tariff plans.
 
-    GET /api/v1/tarif-plans?currency=USD&country=DE
+    GET /api/v1/tarif-plans?currency=USD&country=DE&category=root
 
     Query params:
         currency: Currency code for pricing (default: EUR)
         country: Country code for tax calculation (optional)
+        category: Category slug to filter plans (optional)
 
     Returns:
         200: List of plans with pricing in specified currency
     """
     currency_code = request.args.get("currency", "EUR").upper()
     country_code = request.args.get("country", "").upper() or None
+    category_slug = request.args.get("category")
 
     # Initialize services
     plan_repo = TarifPlanRepository(db.session)
@@ -42,8 +45,15 @@ def list_plans():
         tax_service=tax_service,
     )
 
-    # Get active plans
-    plans = tarif_plan_service.get_active_plans()
+    # Get active plans, optionally filtered by category
+    if category_slug:
+        category_repo = TarifPlanCategoryRepository(db.session)
+        category = category_repo.find_by_slug(category_slug)
+        if not category:
+            return jsonify({"error": f"Category '{category_slug}' not found"}), 404
+        plans = [p for p in category.tarif_plans if p.is_active]
+    else:
+        plans = tarif_plan_service.get_active_plans()
 
     # Add pricing info to each plan
     result = []

@@ -101,6 +101,17 @@ class BasePlugin(ABC):
         """Return Flask blueprint for admin-specific routes. None if no admin routes."""
         return None
 
+    def register_categories(self) -> List[Dict[str, Any]]:
+        """
+        Return category definitions to register on plugin enable.
+
+        Each dict should have: name, slug, and optionally
+        description, parent_slug, is_single, sort_order.
+
+        Returns empty list by default (no categories).
+        """
+        return []
+
     def get_config(self, key: str, default: Any = None) -> Any:
         """Get configuration value."""
         return self._config.get(key, default)

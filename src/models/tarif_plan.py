@@ -78,6 +78,24 @@ class TarifPlan(BaseModel):
         lazy="dynamic",
     )
 
+    def _serialize_categories(self) -> list:
+        """Safely serialize categories, returning [] if not loaded or unavailable."""
+        try:
+            cats = getattr(self, "categories", None)
+            if cats is None:
+                return []
+            return [
+                {
+                    "id": str(c.id),
+                    "name": c.name,
+                    "slug": c.slug,
+                    "is_single": c.is_single,
+                }
+                for c in cats
+            ]
+        except Exception:
+            return []
+
     @property
     def is_recurring(self) -> bool:
         """Check if this is a recurring subscription plan."""
@@ -96,6 +114,7 @@ class TarifPlan(BaseModel):
             "trial_days": self.trial_days,
             "is_active": self.is_active,
             "is_recurring": self.is_recurring,
+            "categories": self._serialize_categories(),
         }
 
         # Include Price object if available

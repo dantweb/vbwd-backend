@@ -22,10 +22,12 @@ class PluginManager:
         self,
         event_dispatcher: Optional[EventDispatcher] = None,
         config_repo: Optional[PluginConfigStore] = None,
+        category_service=None,
     ):
         self._plugins: Dict[str, BasePlugin] = {}
         self._event_dispatcher = event_dispatcher or EventDispatcher()
         self._config_repo = config_repo
+        self._category_service = category_service
 
     @property
     def event_dispatcher(self) -> EventDispatcher:
@@ -115,6 +117,29 @@ class PluginManager:
                 raise ValueError(f"Dependency '{dep}' not enabled")
 
         plugin.enable()
+
+        # Register plugin categories (idempotent)
+        if self._category_service:
+            for cat_def in plugin.register_categories():
+                try:
+                    existing = self._category_service.get_by_slug(cat_def["slug"])
+                    if not existing:
+                        self._category_service.create(
+                            name=cat_def["name"],
+                            slug=cat_def["slug"],
+                            description=cat_def.get("description"),
+                            is_single=cat_def.get("is_single", True),
+                            sort_order=cat_def.get("sort_order", 0),
+                        )
+                        logger.info(
+                            f"Registered category '{cat_def['slug']}' "
+                            f"from plugin '{name}'"
+                        )
+                except Exception as e:
+                    logger.warning(
+                        f"Failed to register category '{cat_def.get('slug')}' "
+                        f"from plugin '{name}': {e}"
+                    )
 
         # Persist state
         if self._config_repo:

@@ -1,81 +1,265 @@
 # VBWD Backend
 
-Python/Flask API for the VBWD SaaS platform.
+Python/Flask REST API for the VBWD SaaS platform — subscription billing, user management, invoicing, token economy, and a plugin system for payment providers and extensions.
+
+## Features
+
+### Subscription Billing
+- Tarif plans with billing periods (monthly, yearly, weekly, one-time)
+- Plan categories with `is_single` enforcement — one active subscription per user in exclusive categories, unlimited in open categories
+- Hierarchical categories (parent/child) with plugin-registerable categories
+- Upgrade, downgrade, pause, resume, cancel flows with proration calculation
+- Trial periods — automatic trial activation on checkout, conversion to paid on payment
+- Zero-price plans activated instantly without payment
+
+### Invoicing
+- Auto-generated invoice numbers
+- Line items: subscription, token bundle, add-on
+- Multi-payment-method support (Stripe, PayPal, YooKassa, bank transfer)
+- PDF generation
+- Overdue detection and status tracking
+- Tax calculation per country
+
+### Token Economy
+- Per-user token balance with full transaction ledger
+- Token bundles — one-time purchases credited on payment
+- Subscription default tokens — credited on activation
+- Transaction types: purchase, subscription, usage, adjustment, refund
+
+### Add-ons
+- Global and subscription-scoped add-ons
+- Pending → active lifecycle tied to invoice payment
+- Cancel with expiry-date access continuation
+
+### User Management
+- JWT authentication with refresh tokens
+- Role-based access (user / admin)
+- Profile with billing address, company, VAT
+- Password change
+
+### Admin API
+- Full CRUD for plans, categories, add-ons, token bundles
+- User management (list, detail, edit, create subscription)
+- Invoice management with manual payment marking
+- Analytics (revenue, subscriptions, users)
+- Webhook management
+- Payment method configuration per country/currency
+- Plugin management (enable, disable, configure)
+- Settings (company info, tax, terms)
+
+### Plugin System
+- Auto-discovery of `BasePlugin` subclasses in `src/plugins/providers/`
+- Dynamic Flask blueprint registration at enable time
+- DB-persisted enable/disable state, restored on startup
+- Plugins can register plan categories, payment SDK adapters, webhooks
+- Built-in plugins: Stripe, PayPal, YooKassa, analytics, Taro AI, chat
+
+### Event-Driven Architecture
+- Domain events: `CheckoutRequestedEvent`, `PaymentCapturedEvent`, `PaymentFailedEvent`, `PaymentRefundedEvent`
+- Handlers: `CheckoutHandler` (creates pending items + invoice), `PaymentCapturedHandler` (activates all line items)
+
+---
 
 ## Tech Stack
 
-- **Framework**: Flask 3.0
-- **Database**: PostgreSQL 16
-- **Cache**: Redis 7
-- **ORM**: SQLAlchemy 2.0
-- **Testing**: pytest
+| Layer | Technology |
+|-------|-----------|
+| Framework | Flask 3.0 |
+| Database | PostgreSQL 16 |
+| Cache / Queue | Redis 7 |
+| ORM | SQLAlchemy 2.0 |
+| Migrations | Alembic |
+| Auth | JWT (PyJWT) |
+| Testing | pytest (300+ tests) |
+| Server | Gunicorn |
+| Container | Docker + Docker Compose |
+
+---
 
 ## Quick Start
 
+### Via monorepo install script (recommended)
+
 ```bash
-# Clone the repository
+# From the vbwd-sdk-2 root:
+./recipes/dev-install-ce.sh
+
+# On a remote server with a domain:
+./recipes/dev-install-ce.sh --domain myapp.com --ssl
+```
+
+### Standalone
+
+```bash
 git clone https://github.com/dantweb/vbwd-backend.git
 cd vbwd-backend
 
-# Copy environment variables
-cp .env.example .env
+cp .env.example .env   # edit secrets, DB credentials, SMTP
 
-# Start services
-make up
-
-# Run tests
-make test
+make up                # start API + PostgreSQL + Redis
 ```
 
-## Development Commands
+The API is available at `http://localhost:5000`.
+
+---
+
+## Docker
 
 ```bash
-make up           # Start all services
-make up-build     # Start with rebuild
-make down         # Stop services
-make test         # Run all tests
-make test-unit    # Run unit tests only
-make test-coverage # Run tests with coverage
-make logs         # View logs
-make shell        # Shell access to API container
-make clean        # Clean up
+# Start all services (API, PostgreSQL, Redis, Adminer)
+make up
+
+# Start with image rebuild
+make up-build
+
+# Stop
+make down
+
+# Stop and remove volumes (full reset)
+make clean
+
+# View logs
+make logs
+
+# Shell into the API container
+make shell
 ```
+
+### Run migrations manually
+
+```bash
+docker compose exec api alembic upgrade head
+```
+
+### Seed demo data
+
+```bash
+make reset-demo        # 3 plans, 2 add-ons, 3 token bundles, admin + test user
+make seed-test-data    # integration test dataset
+```
+
+---
+
+## Environment Variables
+
+Copy `.env.example` to `.env` and configure:
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `DATABASE_URL` | PostgreSQL DSN | `postgresql://vbwd:vbwd@postgres:5432/vbwd` |
+| `REDIS_URL` | Redis DSN | `redis://redis:6379/0` |
+| `FLASK_SECRET_KEY` | Flask session secret | change in production |
+| `JWT_SECRET_KEY` | JWT signing key | change in production |
+| `FLASK_ENV` | `development` / `production` | `development` |
+| `SMTP_HOST` | SMTP server | — |
+| `SMTP_USER` | SMTP username | — |
+| `SMTP_PASSWORD` | SMTP password | — |
+
+---
+
+## Testing
+
+```bash
+make test              # unit tests (fast, no DB)
+make test-unit         # unit tests only
+make test-integration  # integration tests (requires make up first)
+make test-coverage     # unit tests with coverage report
+make pre-commit        # full check: lint + unit + integration
+make pre-commit-quick  # quick check: lint + unit
+```
+
+Run a specific test file:
+
+```bash
+docker compose run --rm test pytest tests/unit/services/test_subscription_service.py -v
+```
+
+---
 
 ## Project Structure
 
 ```
-├── src/
-│   ├── events/        # Domain events
-│   ├── handlers/      # Event handlers
-│   ├── interfaces/    # Abstract interfaces
-│   ├── models/        # SQLAlchemy models
-│   ├── plugins/       # Plugin system
-│   ├── repositories/  # Data access layer
-│   ├── routes/        # API endpoints
-│   ├── schemas/       # Marshmallow schemas
-│   ├── sdk/           # Payment SDK adapters
-│   ├── services/      # Business logic
-│   ├── webhooks/      # Webhook handling
-│   └── utils/         # Utilities
-├── tests/
-│   ├── unit/          # Unit tests
-│   └── integration/   # Integration tests
-├── alembic/           # Database migrations
-└── container/         # Docker configuration
+src/
+├── events/            # Domain events and dispatcher
+├── handlers/          # CheckoutHandler, PaymentCapturedHandler
+├── models/            # SQLAlchemy ORM models
+│   ├── subscription.py
+│   ├── invoice.py
+│   ├── tarif_plan.py
+│   ├── tarif_plan_category.py
+│   ├── addon.py
+│   ├── token_bundle.py
+│   └── user_token_balance.py
+├── plugins/           # Plugin system
+│   ├── base.py        # BasePlugin, PluginMetadata
+│   ├── manager.py     # PluginManager (discover, enable, disable)
+│   └── providers/     # Built-in plugin implementations
+├── repositories/      # Data access layer (BaseRepository + typed subclasses)
+├── routes/            # Flask blueprints
+│   ├── auth.py
+│   ├── user.py        # checkout, profile, subscriptions
+│   ├── subscriptions.py
+│   ├── tarif_plans.py
+│   ├── invoices.py
+│   └── admin/         # admin-only endpoints
+├── services/          # Business logic
+├── sdk/               # Payment provider SDK adapters
+├── webhooks/          # Incoming webhook processing
+└── middleware/        # Auth, CSRF, error handling
+alembic/               # Database migrations
+tests/
+├── unit/
+└── integration/
+container/
+├── python/Dockerfile
+└── python/Dockerfile.test
 ```
 
-## Architecture
+---
 
-- **TDD**: Test-Driven Development
-- **SOLID**: Single Responsibility, Open/Closed, Liskov, Interface Segregation, DI
-- **Clean Architecture**: Separation of concerns
-- **Event-Driven**: Domain events with handlers
+## API Overview
 
-## Plugin System
+All routes are prefixed `/api/v1/`.
 
-Extensible plugin architecture with auto-discovery, DB persistence, and dynamic route registration.
+### Public / User
 
-### Creating a Plugin
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/auth/register` | Register |
+| POST | `/auth/login` | Login → JWT |
+| POST | `/auth/refresh` | Refresh token |
+| GET | `/tarif-plans` | List plans (optional `?category=<slug>`) |
+| GET | `/user/profile` | Get profile |
+| PUT | `/user/profile` | Update profile |
+| POST | `/user/checkout` | Create invoice + pending items |
+| GET | `/user/subscriptions` | Subscription history |
+| GET | `/user/subscriptions/active` | Active subscription |
+| GET | `/user/subscriptions/active-all` | All active subscriptions |
+| POST | `/user/subscriptions/<id>/cancel` | Cancel |
+| POST | `/user/subscriptions/<id>/upgrade` | Upgrade plan |
+| POST | `/user/subscriptions/<id>/downgrade` | Schedule downgrade |
+| GET | `/user/invoices` | Invoice list |
+| POST | `/user/invoices/<id>/pay` | Pay invoice |
+| GET | `/user/addons` | User add-on subscriptions |
+
+### Admin
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET/POST | `/admin/plans` | List / create plans |
+| PUT/DELETE | `/admin/plans/<id>` | Update / delete plan |
+| GET/POST | `/admin/tarif-plan-categories` | List / create categories |
+| POST | `/admin/tarif-plan-categories/<id>/attach-plans` | Attach plans |
+| GET/POST | `/admin/addons` | List / create add-ons |
+| GET/POST | `/admin/token-bundles` | List / create token bundles |
+| GET | `/admin/users` | User list |
+| GET | `/admin/analytics` | Revenue and usage analytics |
+| GET/POST | `/admin/plugins` | List / enable / disable plugins |
+| GET/PUT | `/admin/settings` | Platform settings |
+
+---
+
+## Plugin Development
 
 ```python
 # src/plugins/providers/my_plugin.py
@@ -84,51 +268,40 @@ from src.plugins.base import BasePlugin, PluginMetadata
 class MyPlugin(BasePlugin):
     @property
     def metadata(self) -> PluginMetadata:
-        return PluginMetadata(name="my-plugin", version="1.0.0", description="...")
+        return PluginMetadata(
+            name="my-plugin",
+            version="1.0.0",
+            description="My custom plugin",
+        )
 
     def on_enable(self):
-        pass  # Called when plugin is enabled
+        pass  # setup, register webhooks, etc.
 
     def on_disable(self):
-        pass  # Called when plugin is disabled
+        pass
 
     def get_blueprint(self):
-        """Optional: return Flask blueprint for API routes."""
         from src.routes.plugins.my_routes import my_bp
         return my_bp
 
     def get_url_prefix(self):
         return "/api/v1/plugins/my-plugin"
+
+    def register_categories(self) -> list:
+        # Optional: register plan categories on enable
+        return [{"name": "My Category", "slug": "my-category", "is_single": False}]
 ```
 
-### Plugin Features
-
-- **Auto-discovery**: `PluginManager.discover()` scans `src/plugins/providers/` for `BasePlugin` subclasses
-- **Dynamic routes**: Plugins declare blueprints via `get_blueprint()`, registered by `app.py` in a loop
-- **DB persistence**: Plugin enable/disable state stored in `plugin_config` table, restored on startup
-- **CLI commands**: `flask plugins list|enable|disable|info`
-
-### CLI
+Manage plugins via CLI:
 
 ```bash
-docker compose exec api flask plugins list       # List all plugins with status
-docker compose exec api flask plugins enable analytics
-docker compose exec api flask plugins disable analytics
-docker compose exec api flask plugins info analytics
+docker compose exec api flask plugins list
+docker compose exec api flask plugins enable my-plugin
+docker compose exec api flask plugins disable my-plugin
+docker compose exec api flask plugins info my-plugin
 ```
 
-## Tests
-
-```bash
-# Run all tests
-docker-compose run --rm test pytest -v
-
-# Run specific test file
-docker-compose run --rm test pytest tests/unit/handlers/test_payment_handlers.py -v
-
-# Run with coverage
-docker-compose run --rm test pytest --cov=src --cov-report=term-missing
-```
+---
 
 ## License
 

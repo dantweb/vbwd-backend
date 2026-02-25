@@ -39,6 +39,7 @@ class CheckoutHandler(IEventHandler):
         return {
             "subscription": self._container.subscription_repository(),
             "tarif_plan": self._container.tarif_plan_repository(),
+            "tarif_plan_category": self._container.tarif_plan_category_repository(),
             "token_bundle": self._container.token_bundle_repository(),
             "token_bundle_purchase": self._container.token_bundle_purchase_repository(),
             "addon": self._container.addon_repository(),
@@ -86,6 +87,24 @@ class CheckoutHandler(IEventHandler):
                     return EventResult.error_result("Plan not found")
                 if not plan.is_active:
                     return EventResult.error_result("Plan is not active")
+
+                # Check is_single category enforcement
+                for category in getattr(plan, "categories", []):
+                    if category.is_single:
+                        category_plan_ids = [
+                            str(p.id) for p in category.tarif_plans
+                        ]
+                        existing = repos[
+                            "subscription"
+                        ].find_active_by_user_in_category(
+                            event.user_id, category_plan_ids
+                        )
+                        if existing:
+                            return EventResult.error_result(
+                                f"User already has an active subscription in "
+                                f"category '{category.name}'. "
+                                f"Please upgrade or downgrade instead."
+                            )
 
                 # Get plan price
                 if plan.price_obj:
@@ -230,12 +249,33 @@ class CheckoutHandler(IEventHandler):
             # Reload invoice to get line items
             invoice = repos["invoice"].find_by_id(invoice.id)
 
+            # 7. Auto-pay if total is zero (free plan / promotional)
+            if total_amount == Decimal("0.00"):
+                from src.events.payment_events import PaymentCapturedEvent
+
+                payment_event = PaymentCapturedEvent(
+                    invoice_id=invoice.id,
+                    payment_reference="zero-price",
+                    amount="0.00",
+                    currency=event.currency,
+                    user_id=event.user_id,
+                )
+                dispatcher = self._container.event_dispatcher()
+                dispatcher.emit(payment_event)
+                # Reload to reflect PAID status set by PaymentCapturedHandler
+                invoice = repos["invoice"].find_by_id(invoice.id)
+
             # Build response
+            message = (
+                "Checkout complete. Free plan activated."
+                if total_amount == Decimal("0.00")
+                else "Checkout created. Awaiting payment."
+            )
             result_data: Dict[str, Any] = {
                 "invoice": invoice.to_dict(),
                 "token_bundles": [p.to_dict() for p in bundle_purchases],
                 "add_ons": [a.to_dict() for a in addon_subscriptions],
-                "message": "Checkout created. Awaiting payment.",
+                "message": message,
             }
 
             if subscription and plan:

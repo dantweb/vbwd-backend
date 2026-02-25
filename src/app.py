@@ -129,6 +129,7 @@ def create_app(config: Optional[Dict[str, Any]] = None) -> Flask:
         admin_payment_methods_bp,
         admin_countries_bp,
         admin_plugins_bp,
+        admin_categories_bp,
     )
     from src.routes.config import config_bp
     from src.routes.addons import addons_bp
@@ -153,6 +154,7 @@ def create_app(config: Optional[Dict[str, Any]] = None) -> Flask:
     csrf.exempt(admin_payment_methods_bp)
     csrf.exempt(admin_countries_bp)
     csrf.exempt(admin_plugins_bp)
+    csrf.exempt(admin_categories_bp)
     csrf.exempt(addons_bp)
     csrf.exempt(token_bundles_bp)
     csrf.exempt(config_bp)
@@ -242,6 +244,7 @@ def create_app(config: Optional[Dict[str, Any]] = None) -> Flask:
     app.register_blueprint(admin_payment_methods_bp)
     app.register_blueprint(admin_countries_bp)
     app.register_blueprint(admin_plugins_bp)
+    app.register_blueprint(admin_categories_bp)
     app.register_blueprint(addons_bp)
     app.register_blueprint(token_bundles_bp)
     app.register_blueprint(config_bp)

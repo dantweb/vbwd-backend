@@ -86,24 +86,36 @@ class PaymentCapturedHandler(IEventHandler):
             # 3. Process each line item
             for line_item in invoice.line_items:
                 if line_item.item_type == LineItemType.SUBSCRIPTION:
-                    # Activate subscription (cancel any existing active one first)
+                    # Activate subscription
                     subscription = repos["subscription"].find_by_id(line_item.item_id)
                     if subscription and subscription.status in (
                         SubscriptionStatus.PENDING,
                         SubscriptionStatus.TRIALING,  # trial → paid conversion
                         SubscriptionStatus.CANCELLED,  # post-trial conversion
                     ):
-                        # Cancel previous active subscription for this user
-                        prev = repos["subscription"].find_active_by_user(
-                            invoice.user_id
-                        )
-                        if prev and str(prev.id) != str(subscription.id):
-                            prev.status = SubscriptionStatus.CANCELLED
-                            prev.cancelled_at = datetime.utcnow()
-                            repos["subscription"].save(prev)
+                        # Cancel subscriptions in the same is_single categories only.
+                        # Multi-subscription categories (is_single=False) allow
+                        # concurrent subscriptions and must not be cancelled.
+                        plan = subscription.tarif_plan
+                        categories = getattr(plan, "categories", []) if plan else []
+                        for category in categories:
+                            if category.is_single:
+                                category_plan_ids = [
+                                    str(p.id) for p in category.tarif_plans
+                                ]
+                                conflicting = repos[
+                                    "subscription"
+                                ].find_active_by_user_in_category(
+                                    invoice.user_id, category_plan_ids
+                                )
+                                for prev in conflicting:
+                                    if str(prev.id) != str(subscription.id):
+                                        prev.status = SubscriptionStatus.CANCELLED
+                                        prev.cancelled_at = datetime.utcnow()
+                                        repos["subscription"].save(prev)
 
                         subscription.status = SubscriptionStatus.ACTIVE
-                        subscription.starts_at = datetime.utcnow()
+                        subscription.started_at = datetime.utcnow()
                         # Calculate expiration based on plan
                         if subscription.tarif_plan:
                             from src.services.subscription_service import (

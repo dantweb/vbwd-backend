@@ -86,6 +86,17 @@ class SubscriptionService:
         self._tarif_plan_repo = tarif_plan_repo
         self._token_service = token_service
 
+    def get_active_subscriptions(self, user_id: UUID) -> List[Subscription]:
+        """Get all active/trialing subscriptions for a user (all categories).
+
+        Args:
+            user_id: User UUID
+
+        Returns:
+            List of active subscriptions
+        """
+        return self._subscription_repo.find_all_active_by_user(user_id)
+
     def get_active_subscription(self, user_id: UUID) -> Optional[Subscription]:
         """Get user's active subscription.
 

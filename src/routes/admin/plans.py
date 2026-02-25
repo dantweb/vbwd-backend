@@ -1,11 +1,14 @@
 """Admin tariff plan management routes."""
 from flask import Blueprint, jsonify, request
 from decimal import Decimal
+from sqlalchemy import func
 from src.middleware.auth import require_auth, require_admin
 from src.repositories.tarif_plan_repository import TarifPlanRepository
 from src.repositories.subscription_repository import SubscriptionRepository
 from src.extensions import db
 from src.models import TarifPlan
+from src.models.subscription import Subscription
+from src.models.enums import SubscriptionStatus
 
 admin_plans_bp = Blueprint(
     "admin_plans", __name__, url_prefix="/api/v1/admin/tarif-plans"
@@ -30,7 +33,35 @@ def list_plans():
     # Admin sees all plans, including inactive
     plans = plan_repo.find_all()
 
-    return jsonify({"plans": [plan.to_dict() for plan in plans]}), 200
+    # Batch-count active subscribers per plan (single query, no N+1)
+    plan_ids = [plan.id for plan in plans]
+    if plan_ids:
+        counts = (
+            db.session.query(
+                Subscription.tarif_plan_id,
+                func.count(Subscription.id).label("cnt"),
+            )
+            .filter(
+                Subscription.tarif_plan_id.in_(plan_ids),
+                Subscription.status.in_([
+                    SubscriptionStatus.ACTIVE,
+                    SubscriptionStatus.TRIALING,
+                ]),
+            )
+            .group_by(Subscription.tarif_plan_id)
+            .all()
+        )
+        count_map = {str(row.tarif_plan_id): row.cnt for row in counts}
+    else:
+        count_map = {}
+
+    result = []
+    for plan in plans:
+        data = plan.to_dict()
+        data["subscriber_count"] = count_map.get(str(plan.id), 0)
+        result.append(data)
+
+    return jsonify({"plans": result}), 200
 
 
 @admin_plans_bp.route("/", methods=["POST"])

@@ -15,6 +15,7 @@ from src.repositories.token_bundle_purchase_repository import (
     TokenBundlePurchaseRepository,
 )
 from src.repositories.addon_repository import AddOnRepository
+from src.repositories.tarif_plan_category_repository import TarifPlanCategoryRepository
 from src.repositories.addon_subscription_repository import AddOnSubscriptionRepository
 from src.repositories.token_repository import (
     TokenBalanceRepository,
@@ -32,6 +33,7 @@ from src.services.activity_logger import ActivityLogger
 from src.services.token_service import TokenService
 from src.services.invoice_service import InvoiceService
 from src.services.refund_service import RefundService
+from src.services.tarif_plan_category_service import TarifPlanCategoryService
 
 from src.events.domain import DomainEventDispatcher
 
@@ -88,6 +90,10 @@ class Container(containers.DeclarativeContainer):
 
     addon_repository = providers.Factory(AddOnRepository, session=db_session)
 
+    tarif_plan_category_repository = providers.Factory(
+        TarifPlanCategoryRepository, session=db_session
+    )
+
     addon_subscription_repository = providers.Factory(
         AddOnSubscriptionRepository, session=db_session
     )
@@ -138,6 +144,12 @@ class Container(containers.DeclarativeContainer):
         subscription_repo=subscription_repository,
         tarif_plan_repo=tarif_plan_repository,
         token_service=token_service,
+    )
+
+    tarif_plan_category_service = providers.Factory(
+        TarifPlanCategoryService,
+        category_repo=tarif_plan_category_repository,
+        tarif_plan_repo=tarif_plan_repository,
     )
 
     invoice_service = providers.Factory(

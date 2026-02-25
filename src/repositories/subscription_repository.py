@@ -81,6 +81,57 @@ class SubscriptionRepository(BaseRepository[Subscription]):
             .all()
         )
 
+    def find_active_by_user_and_plan(
+        self, user_id: Union[UUID, str], plan_id: Union[UUID, str]
+    ) -> Optional[Subscription]:
+        """Find active subscription for a user with a specific plan."""
+        return (
+            self._session.query(Subscription)
+            .filter(
+                Subscription.user_id == user_id,
+                Subscription.tarif_plan_id == plan_id,
+                Subscription.status.in_([
+                    SubscriptionStatus.ACTIVE,
+                    SubscriptionStatus.TRIALING,
+                ]),
+            )
+            .first()
+        )
+
+    def find_active_by_user_in_category(
+        self, user_id: Union[UUID, str], category_plan_ids: list
+    ) -> List[Subscription]:
+        """Find all active subscriptions for a user within a set of plan IDs (category)."""
+        if not category_plan_ids:
+            return []
+        return (
+            self._session.query(Subscription)
+            .filter(
+                Subscription.user_id == user_id,
+                Subscription.tarif_plan_id.in_(category_plan_ids),
+                Subscription.status.in_([
+                    SubscriptionStatus.ACTIVE,
+                    SubscriptionStatus.TRIALING,
+                ]),
+            )
+            .all()
+        )
+
+    def find_all_active_by_user(self, user_id: Union[UUID, str]) -> List[Subscription]:
+        """Find all active/trialing subscriptions for a user (across all categories)."""
+        return (
+            self._session.query(Subscription)
+            .filter(
+                Subscription.user_id == user_id,
+                Subscription.status.in_([
+                    SubscriptionStatus.ACTIVE,
+                    SubscriptionStatus.TRIALING,
+                ]),
+            )
+            .order_by(Subscription.created_at.desc())
+            .all()
+        )
+
     def find_all_paginated(
         self,
         limit: int = 20,
