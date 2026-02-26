@@ -43,10 +43,12 @@ def list_plans():
             )
             .filter(
                 Subscription.tarif_plan_id.in_(plan_ids),
-                Subscription.status.in_([
-                    SubscriptionStatus.ACTIVE,
-                    SubscriptionStatus.TRIALING,
-                ]),
+                Subscription.status.in_(
+                    [
+                        SubscriptionStatus.ACTIVE,
+                        SubscriptionStatus.TRIALING,
+                    ]
+                ),
             )
             .group_by(Subscription.tarif_plan_id)
             .all()

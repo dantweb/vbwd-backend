@@ -148,9 +148,7 @@ class PaymentCapturedHandler(IEventHandler):
                             from src.models.enums import TokenTransactionType
                             from uuid import uuid4
 
-                            balance = repos["token"].find_by_user_id(
-                                invoice.user_id
-                            )
+                            balance = repos["token"].find_by_user_id(invoice.user_id)
                             if not balance:
                                 balance = UserTokenBalance(
                                     id=uuid4(),

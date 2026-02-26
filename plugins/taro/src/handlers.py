@@ -91,7 +91,7 @@ class TaroSessionCreatedHandler:
                 card_ids=interpreted_card_ids,
                 session_id=event.session_id,
                 tokens_used=total_tokens,
-                created_at=event.created_at,
+                created_at=event.timestamp,
             )
 
         except Exception as e:

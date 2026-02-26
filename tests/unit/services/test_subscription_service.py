@@ -330,9 +330,7 @@ class TestSubscriptionServiceActivateWithTokens:
             description="Plan tokens: Pro",
         )
 
-    def test_activate_skips_tokens_when_zero(
-        self, mock_sub_repo, mock_token_service
-    ):
+    def test_activate_skips_tokens_when_zero(self, mock_sub_repo, mock_token_service):
         """activate_subscription should NOT credit tokens when default_tokens is 0."""
         from src.services.subscription_service import SubscriptionService
 
@@ -348,9 +346,7 @@ class TestSubscriptionServiceActivateWithTokens:
         assert result.success is True
         mock_token_service.credit_tokens.assert_not_called()
 
-    def test_activate_skips_tokens_when_no_key(
-        self, mock_sub_repo, mock_token_service
-    ):
+    def test_activate_skips_tokens_when_no_key(self, mock_sub_repo, mock_token_service):
         """activate_subscription should NOT credit tokens when key is missing."""
         from src.services.subscription_service import SubscriptionService
 
@@ -384,9 +380,7 @@ class TestSubscriptionServiceActivateWithTokens:
         assert result.success is True
         mock_token_service.credit_tokens.assert_not_called()
 
-    def test_activate_skips_tokens_when_no_token_service(
-        self, mock_sub_repo
-    ):
+    def test_activate_skips_tokens_when_no_token_service(self, mock_sub_repo):
         """activate_subscription should work fine without token_service."""
         from src.services.subscription_service import SubscriptionService
 
@@ -465,7 +459,9 @@ def _make_plan(trial_days=14, price=9.99, price_float=9.99, currency="EUR"):
     return plan
 
 
-def _make_trial_subscription(status=SubscriptionStatus.TRIALING, trial_end_at=None, plan=None):
+def _make_trial_subscription(
+    status=SubscriptionStatus.TRIALING, trial_end_at=None, plan=None
+):
     sub = MagicMock()
     sub.id = uuid4()
     sub.user_id = uuid4()
@@ -513,9 +509,7 @@ class TestStartTrial:
     def test_rejects_user_with_active_subscription(self):
         user = _make_user()
         user_repo = MagicMock(find_by_id=MagicMock(return_value=user))
-        sub_repo = MagicMock(
-            find_active_by_user=MagicMock(return_value=MagicMock())
-        )
+        sub_repo = MagicMock(find_active_by_user=MagicMock(return_value=MagicMock()))
 
         service = SubscriptionService(
             subscription_repo=sub_repo, tarif_plan_repo=MagicMock()
@@ -626,7 +620,7 @@ class TestExpireTrials:
         invoice_repo.save = MagicMock(side_effect=lambda i: i)
 
         service = SubscriptionService(subscription_repo=sub_repo)
-        results = service.expire_trials(invoice_repo)
+        service.expire_trials(invoice_repo)
 
         invoice_repo.save.assert_called_once()
         saved_invoice = invoice_repo.save.call_args[0][0]

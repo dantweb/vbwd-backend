@@ -48,7 +48,7 @@ class Arcana(BaseModel):
             "name": self.name,
             "suit": self.suit,
             "rank": self.rank,
-            "arcana_type": self.arcana_type,
+            "arcana_type": self.arcana_type.value if isinstance(self.arcana_type, ArcanaType) else self.arcana_type,
             "upright_meaning": self.upright_meaning,
             "reversed_meaning": self.reversed_meaning,
             "image_url": self.image_url,

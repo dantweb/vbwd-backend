@@ -27,10 +27,12 @@ class SubscriptionRepository(BaseRepository[Subscription]):
             self._session.query(Subscription)
             .filter(
                 Subscription.user_id == user_id,
-                Subscription.status.in_([
-                    SubscriptionStatus.ACTIVE,
-                    SubscriptionStatus.TRIALING,
-                ]),
+                Subscription.status.in_(
+                    [
+                        SubscriptionStatus.ACTIVE,
+                        SubscriptionStatus.TRIALING,
+                    ]
+                ),
             )
             .first()
         )
@@ -90,10 +92,12 @@ class SubscriptionRepository(BaseRepository[Subscription]):
             .filter(
                 Subscription.user_id == user_id,
                 Subscription.tarif_plan_id == plan_id,
-                Subscription.status.in_([
-                    SubscriptionStatus.ACTIVE,
-                    SubscriptionStatus.TRIALING,
-                ]),
+                Subscription.status.in_(
+                    [
+                        SubscriptionStatus.ACTIVE,
+                        SubscriptionStatus.TRIALING,
+                    ]
+                ),
             )
             .first()
         )
@@ -109,10 +113,12 @@ class SubscriptionRepository(BaseRepository[Subscription]):
             .filter(
                 Subscription.user_id == user_id,
                 Subscription.tarif_plan_id.in_(category_plan_ids),
-                Subscription.status.in_([
-                    SubscriptionStatus.ACTIVE,
-                    SubscriptionStatus.TRIALING,
-                ]),
+                Subscription.status.in_(
+                    [
+                        SubscriptionStatus.ACTIVE,
+                        SubscriptionStatus.TRIALING,
+                    ]
+                ),
             )
             .all()
         )
@@ -123,10 +129,12 @@ class SubscriptionRepository(BaseRepository[Subscription]):
             self._session.query(Subscription)
             .filter(
                 Subscription.user_id == user_id,
-                Subscription.status.in_([
-                    SubscriptionStatus.ACTIVE,
-                    SubscriptionStatus.TRIALING,
-                ]),
+                Subscription.status.in_(
+                    [
+                        SubscriptionStatus.ACTIVE,
+                        SubscriptionStatus.TRIALING,
+                    ]
+                ),
             )
             .order_by(Subscription.created_at.desc())
             .all()

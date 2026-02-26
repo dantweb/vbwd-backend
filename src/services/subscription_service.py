@@ -152,7 +152,9 @@ class SubscriptionService:
 
         return self._subscription_repo.save(subscription)
 
-    def start_trial(self, user_id: UUID, tarif_plan_id: UUID, user_repo) -> SubscriptionResult:
+    def start_trial(
+        self, user_id: UUID, tarif_plan_id: UUID, user_repo
+    ) -> SubscriptionResult:
         """
         Start a trial subscription for a user.
 
@@ -169,12 +171,19 @@ class SubscriptionService:
             return SubscriptionResult(success=False, error="User not found")
 
         if user.has_used_trial:
-            return SubscriptionResult(success=False, error="User has already used a trial")
+            return SubscriptionResult(
+                success=False, error="User has already used a trial"
+            )
 
         existing = self._subscription_repo.find_active_by_user(user_id)
         if existing:
             return SubscriptionResult(
                 success=False, error="User already has an active subscription"
+            )
+
+        if not self._tarif_plan_repo:
+            return SubscriptionResult(
+                success=False, error="Plan repository not available"
             )
 
         plan = self._tarif_plan_repo.find_by_id(tarif_plan_id)
@@ -227,7 +236,9 @@ class SubscriptionService:
 
         # Credit default tokens from plan features
         features = plan.features or {}
-        default_tokens = features.get("default_tokens", 0) if isinstance(features, dict) else 0
+        default_tokens = (
+            features.get("default_tokens", 0) if isinstance(features, dict) else 0
+        )
         if self._token_service and default_tokens > 0:
             self._token_service.credit_tokens(
                 user_id=subscription.user_id,
@@ -346,10 +357,12 @@ class SubscriptionService:
             invoice.expires_at = datetime.utcnow() + timedelta(days=30)
             invoice_repo.save(invoice)
 
-            results.append({
-                "subscription_id": str(subscription.id),
-                "invoice_id": str(invoice.id),
-            })
+            results.append(
+                {
+                    "subscription_id": str(subscription.id),
+                    "invoice_id": str(invoice.id),
+                }
+            )
 
         return results
 

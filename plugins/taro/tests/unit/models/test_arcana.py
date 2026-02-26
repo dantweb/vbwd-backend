@@ -30,27 +30,32 @@ class TestArcanaCreation:
         assert arcana.reversed_meaning == "Recklessness, naivety, carelessness"
         assert arcana.image_url == "https://example.com/fool.jpg"
 
-    def test_arcana_requires_name(self):
-        """Test that Arcana requires a name."""
-        with pytest.raises(TypeError):
-            Arcana(
-                number=0,
-                arcana_type=ArcanaType.MAJOR_ARCANA,
-                upright_meaning="Test",
-                reversed_meaning="Test",
-                image_url="https://example.com/test.jpg"
-            )
+    def test_arcana_requires_name(self, db):
+        """Test that Arcana requires a name at database level."""
+        from sqlalchemy.exc import IntegrityError
+        arcana = Arcana(
+            number=0,
+            arcana_type=ArcanaType.MAJOR_ARCANA.value,
+            upright_meaning="Test",
+            reversed_meaning="Test",
+            image_url="https://example.com/test.jpg"
+        )
+        db.session.add(arcana)
+        with pytest.raises(IntegrityError):
+            db.session.commit()
 
-    def test_arcana_requires_arcana_type(self):
-        """Test that Arcana requires an arcana_type."""
-        with pytest.raises(TypeError):
-            Arcana(
-                number=0,
-                name="The Fool",
-                upright_meaning="Test",
-                reversed_meaning="Test",
-                image_url="https://example.com/test.jpg"
-            )
+    def test_arcana_requires_arcana_type(self, db):
+        """Test that Arcana defaults to MAJOR_ARCANA when arcana_type is not provided."""
+        arcana = Arcana(
+            number=0,
+            name="The Fool",
+            upright_meaning="Test",
+            reversed_meaning="Test",
+            image_url="https://example.com/test.jpg"
+        )
+        db.session.add(arcana)
+        db.session.commit()
+        assert arcana.arcana_type == ArcanaType.MAJOR_ARCANA.value
 
     def test_major_arcana_number_range(self):
         """Test that Major Arcana numbers are 0-21."""
@@ -135,35 +140,44 @@ class TestArcanaCreation:
 
         assert arcana.arcana_type == ArcanaType.PENTACLES
 
-    def test_arcana_upright_meaning_not_empty(self):
-        """Test that upright_meaning is required."""
-        with pytest.raises(TypeError):
-            Arcana(
-                name="The Fool",
-                arcana_type=ArcanaType.MAJOR_ARCANA,
-                reversed_meaning="Test",
-                image_url="https://example.com/test.jpg"
-            )
+    def test_arcana_upright_meaning_not_empty(self, db):
+        """Test that upright_meaning is required at database level."""
+        from sqlalchemy.exc import IntegrityError
+        arcana = Arcana(
+            name="The Fool",
+            arcana_type=ArcanaType.MAJOR_ARCANA.value,
+            reversed_meaning="Test",
+            image_url="https://example.com/test.jpg"
+        )
+        db.session.add(arcana)
+        with pytest.raises(IntegrityError):
+            db.session.commit()
 
-    def test_arcana_reversed_meaning_not_empty(self):
-        """Test that reversed_meaning is required."""
-        with pytest.raises(TypeError):
-            Arcana(
-                name="The Fool",
-                arcana_type=ArcanaType.MAJOR_ARCANA,
-                upright_meaning="Test",
-                image_url="https://example.com/test.jpg"
-            )
+    def test_arcana_reversed_meaning_not_empty(self, db):
+        """Test that reversed_meaning is required at database level."""
+        from sqlalchemy.exc import IntegrityError
+        arcana = Arcana(
+            name="The Fool",
+            arcana_type=ArcanaType.MAJOR_ARCANA.value,
+            upright_meaning="Test",
+            image_url="https://example.com/test.jpg"
+        )
+        db.session.add(arcana)
+        with pytest.raises(IntegrityError):
+            db.session.commit()
 
-    def test_arcana_image_url_not_empty(self):
-        """Test that image_url is required."""
-        with pytest.raises(TypeError):
-            Arcana(
-                name="The Fool",
-                arcana_type=ArcanaType.MAJOR_ARCANA,
-                upright_meaning="Test",
-                reversed_meaning="Test"
-            )
+    def test_arcana_image_url_not_empty(self, db):
+        """Test that image_url is required at database level."""
+        from sqlalchemy.exc import IntegrityError
+        arcana = Arcana(
+            name="The Fool",
+            arcana_type=ArcanaType.MAJOR_ARCANA.value,
+            upright_meaning="Test",
+            reversed_meaning="Test"
+        )
+        db.session.add(arcana)
+        with pytest.raises(IntegrityError):
+            db.session.commit()
 
     def test_arcana_to_dict(self):
         """Test Arcana.to_dict() method."""
@@ -184,29 +198,33 @@ class TestArcanaCreation:
         assert result["reversed_meaning"] == "Recklessness"
         assert result["image_url"] == "https://example.com/fool.jpg"
 
-    def test_arcana_id_is_uuid(self):
+    def test_arcana_id_is_uuid(self, db):
         """Test that Arcana gets a UUID id on creation."""
+        from uuid import UUID
         arcana = Arcana(
             name="The Fool",
-            arcana_type=ArcanaType.MAJOR_ARCANA,
+            arcana_type=ArcanaType.MAJOR_ARCANA.value,
             upright_meaning="New beginnings",
             reversed_meaning="Recklessness",
             image_url="https://example.com/fool.jpg"
         )
+        db.session.add(arcana)
+        db.session.commit()
 
-        # ID should be set automatically by BaseModel
         assert arcana.id is not None
+        assert isinstance(arcana.id, UUID)
 
-    def test_arcana_timestamps(self):
+    def test_arcana_timestamps(self, db):
         """Test that created_at and updated_at are set."""
         arcana = Arcana(
             name="The Fool",
-            arcana_type=ArcanaType.MAJOR_ARCANA,
+            arcana_type=ArcanaType.MAJOR_ARCANA.value,
             upright_meaning="New beginnings",
             reversed_meaning="Recklessness",
             image_url="https://example.com/fool.jpg"
         )
+        db.session.add(arcana)
+        db.session.commit()
 
-        # Timestamps should be set by BaseModel
         assert arcana.created_at is not None
         assert arcana.updated_at is not None

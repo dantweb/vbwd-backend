@@ -81,7 +81,10 @@ def create_category():
         )
         return (
             jsonify(
-                {"category": category.to_dict(), "message": "Category created successfully"}
+                {
+                    "category": category.to_dict(),
+                    "message": "Category created successfully",
+                }
             ),
             201,
         )

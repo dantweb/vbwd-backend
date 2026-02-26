@@ -6,6 +6,14 @@ from plugins.taro.src.models.arcana import Arcana
 from plugins.taro.src.enums import ArcanaType
 
 
+@pytest.fixture(autouse=True)
+def populated_db(db):
+    """Seed the database with all 78 arcana cards."""
+    from plugins.taro.src.bin.populate_arcanas import populate_arcanas
+    populate_arcanas()
+    yield db
+
+
 class TestArcanaPopulation:
     """Test Arcana table population and data integrity."""
 
@@ -226,8 +234,8 @@ class TestTaroAssetServing:
             .all()
         )
         for card in major_arcana:
-            # Extract the path from the image_url
-            path = card.image_url.replace("/api/v1/taro", "")
+            # Use the full image_url path as registered on the blueprint
+            path = card.image_url
             response = client.get(path)
             assert response.status_code == 200, \
                 f"Failed to fetch asset for {card.name}: {path}"
@@ -240,8 +248,8 @@ class TestTaroAssetServing:
             .all()
         )
         for card in minor_arcana:
-            # Extract the path from the image_url
-            path = card.image_url.replace("/api/v1/taro", "")
+            # Use the full image_url path as registered on the blueprint
+            path = card.image_url
             response = client.get(path)
             assert response.status_code == 200, \
                 f"Failed to fetch asset for {card.name}: {path}"

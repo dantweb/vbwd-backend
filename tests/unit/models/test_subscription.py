@@ -1,6 +1,6 @@
 """Tests for Subscription model trial methods."""
 from datetime import datetime, timedelta
-from unittest.mock import patch
+from unittest.mock import patch  # noqa: F401
 
 from src.models.enums import SubscriptionStatus
 from src.models.subscription import Subscription

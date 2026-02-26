@@ -1,6 +1,12 @@
 """TarifPlanCategory domain model — hierarchical grouping for tariff plans."""
+from __future__ import annotations
+from typing import TYPE_CHECKING, List
+from sqlalchemy.orm import Mapped, relationship
 from src.extensions import db
 from src.models.base import BaseModel
+
+if TYPE_CHECKING:
+    from src.models.tarif_plan import TarifPlan
 
 # Many-to-many junction table: category <-> tarif_plan
 tarif_plan_category_plans = db.Table(
@@ -44,14 +50,14 @@ class TarifPlanCategory(BaseModel):
     sort_order = db.Column(db.Integer, nullable=False, default=0)
 
     # Self-referential relationship
-    children = db.relationship(
+    children: Mapped[List[TarifPlanCategory]] = relationship(
         "TarifPlanCategory",
         backref=db.backref("parent", remote_side="TarifPlanCategory.id"),
         lazy="selectin",
     )
 
     # Many-to-many relationship to tariff plans
-    tarif_plans = db.relationship(
+    tarif_plans: Mapped[List[TarifPlan]] = relationship(
         "TarifPlan",
         secondary=tarif_plan_category_plans,
         backref=db.backref("categories", lazy="selectin"),

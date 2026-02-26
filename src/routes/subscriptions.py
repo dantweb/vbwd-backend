@@ -34,9 +34,7 @@ def list_subscriptions():
     for sub in subscriptions:
         data = sub.to_dict()
         # Include created_at for reliable frontend sorting (started_at may be null)
-        data["created_at"] = (
-            sub.created_at.isoformat() if sub.created_at else None
-        )
+        data["created_at"] = sub.created_at.isoformat() if sub.created_at else None
         # Enrich with plan details
         if sub.tarif_plan_id:
             plan = tarif_plan_repo.find_by_id(sub.tarif_plan_id)

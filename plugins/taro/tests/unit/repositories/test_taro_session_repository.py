@@ -8,9 +8,9 @@ from plugins.taro.src.enums import TaroSessionStatus
 
 
 @pytest.fixture
-def session_repo():
+def session_repo(db):
     """Fixture providing TaroSessionRepository instance."""
-    return TaroSessionRepository()
+    return TaroSessionRepository(db.session)
 
 
 @pytest.fixture
@@ -22,7 +22,7 @@ def sample_sessions(db):
     # Active session
     active_session = TaroSession(
         user_id=user_id,
-        status=TaroSessionStatus.ACTIVE,
+        status=TaroSessionStatus.ACTIVE.value,
         started_at=datetime.utcnow(),
         expires_at=datetime.utcnow() + timedelta(minutes=30),
         spread_id="spread-001",
@@ -34,7 +34,7 @@ def sample_sessions(db):
     # Expired session
     expired_session = TaroSession(
         user_id=user_id,
-        status=TaroSessionStatus.EXPIRED,
+        status=TaroSessionStatus.EXPIRED.value,
         started_at=datetime.utcnow() - timedelta(hours=1),
         expires_at=datetime.utcnow() - timedelta(minutes=30),
         spread_id="spread-002",
@@ -46,7 +46,7 @@ def sample_sessions(db):
     # Closed session
     closed_session = TaroSession(
         user_id=user_id,
-        status=TaroSessionStatus.CLOSED,
+        status=TaroSessionStatus.CLOSED.value,
         started_at=datetime.utcnow() - timedelta(hours=2),
         expires_at=datetime.utcnow() - timedelta(hours=1, minutes=30),
         ended_at=datetime.utcnow() - timedelta(hours=1, minutes=45),
@@ -59,7 +59,7 @@ def sample_sessions(db):
     # Another user's active session
     other_user_session = TaroSession(
         user_id=user_id_2,
-        status=TaroSessionStatus.ACTIVE,
+        status=TaroSessionStatus.ACTIVE.value,
         started_at=datetime.utcnow(),
         expires_at=datetime.utcnow() + timedelta(minutes=30),
         spread_id="spread-004",
@@ -91,7 +91,7 @@ class TestTaroSessionRepository:
 
         result = session_repo.create(
             user_id=user_id,
-            status=TaroSessionStatus.ACTIVE,
+            status=TaroSessionStatus.ACTIVE.value,
             started_at=datetime.utcnow(),
             expires_at=expires_at,
             spread_id="spread-new",
@@ -99,7 +99,7 @@ class TestTaroSessionRepository:
         )
 
         assert result.id is not None
-        assert result.user_id == user_id
+        assert str(result.user_id) == user_id
         assert result.spread_id == "spread-new"
 
     def test_get_session_by_id(self, session_repo, sample_sessions):
@@ -124,7 +124,7 @@ class TestTaroSessionRepository:
         results = session_repo.get_user_sessions(user_id)
 
         assert len(results) == 3  # active, expired, closed
-        assert all(s.user_id == user_id for s in results)
+        assert all(str(s.user_id) == user_id for s in results)
 
     def test_get_user_sessions_empty(self, session_repo):
         """Test retrieving sessions for user with no sessions."""
@@ -140,7 +140,7 @@ class TestTaroSessionRepository:
 
         assert result is not None
         assert result.status == TaroSessionStatus.ACTIVE.value
-        assert result.user_id == user_id
+        assert str(result.user_id) == user_id
 
     def test_get_active_session_none_exist(self, session_repo, sample_sessions):
         """Test getting active session when none exist."""

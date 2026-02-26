@@ -63,8 +63,8 @@ class TaroCardDraw(BaseModel):
             "card_id": str(self.id),  # Frontend expects card_id
             "session_id": str(self.session_id) if self.session_id else None,
             "arcana_id": str(self.arcana_id) if self.arcana_id else None,
-            "position": self.position,
-            "orientation": self.orientation,
+            "position": self.position.value if isinstance(self.position, CardPosition) else self.position,
+            "orientation": self.orientation.value if isinstance(self.orientation, CardOrientation) else self.orientation,
             "ai_interpretation": self.ai_interpretation,
             "arcana": self.arcana.to_dict() if self.arcana else None,
             "created_at": self.created_at.isoformat() if self.created_at else None,

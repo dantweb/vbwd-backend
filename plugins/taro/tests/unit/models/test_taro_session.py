@@ -16,7 +16,7 @@ class TestTaroSessionCreation:
 
         session = TaroSession(
             user_id=user_id,
-            status=TaroSessionStatus.ACTIVE,
+            status=TaroSessionStatus.ACTIVE.value,
             spread_id="spread-001",
             expires_at=expires_at,
             tokens_consumed=10,
@@ -25,7 +25,7 @@ class TestTaroSessionCreation:
         )
 
         assert session.user_id == user_id
-        assert session.status == TaroSessionStatus.ACTIVE
+        assert session.status == TaroSessionStatus.ACTIVE.value
         assert session.spread_id == "spread-001"
         assert session.expires_at == expires_at
         assert session.tokens_consumed == 10

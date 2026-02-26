@@ -10,9 +10,9 @@ from plugins.taro.src.enums import ArcanaType, CardPosition, CardOrientation, Ta
 
 
 @pytest.fixture
-def card_draw_repo():
+def card_draw_repo(db):
     """Fixture providing TaroCardDrawRepository instance."""
-    return TaroCardDrawRepository()
+    return TaroCardDrawRepository(db.session)
 
 
 @pytest.fixture
@@ -53,7 +53,7 @@ def sample_cards(db):
     # Create session
     session = TaroSession(
         user_id=user_id,
-        status=TaroSessionStatus.ACTIVE,
+        status=TaroSessionStatus.ACTIVE.value,
         started_at=datetime.utcnow(),
         expires_at=datetime.utcnow() + timedelta(minutes=30),
         spread_id="spread-001",
@@ -105,10 +105,19 @@ class TestTaroCardDrawRepository:
     def test_create_card_draw(self, card_draw_repo, db):
         """Test creating a TaroCardDraw."""
         user_id = str(uuid4())
-        session_id = str(uuid4())
-        arcana_id = str(uuid4())
 
-        # Create session first
+        # Create arcana first (FK constraint on arcana_id)
+        arcana = Arcana(
+            name="Test Card",
+            arcana_type=ArcanaType.MAJOR_ARCANA.value,
+            upright_meaning="Test",
+            reversed_meaning="Test",
+            image_url="https://example.com/test.jpg"
+        )
+        db.session.add(arcana)
+        db.session.commit()
+
+        # Create session
         session = TaroSession(
             user_id=user_id,
             started_at=datetime.utcnow(),
@@ -120,7 +129,7 @@ class TestTaroCardDrawRepository:
 
         result = card_draw_repo.create(
             session_id=str(session.id),
-            arcana_id=arcana_id,
+            arcana_id=str(arcana.id),
             position=CardPosition.PAST.value,
             orientation=CardOrientation.UPRIGHT.value,
             ai_interpretation="Test interpretation"
@@ -151,7 +160,7 @@ class TestTaroCardDrawRepository:
         results = card_draw_repo.get_session_cards(session_id)
 
         assert len(results) == 3
-        assert all(c.session_id == session_id for c in results)
+        assert all(str(c.session_id) == session_id for c in results)
 
     def test_get_session_cards_ordered(self, card_draw_repo, sample_cards):
         """Test that session cards are ordered by position."""
@@ -183,7 +192,7 @@ class TestTaroCardDrawRepository:
 
         assert result is not None
         assert result.position == CardPosition.PAST.value
-        assert result.session_id == session_id
+        assert str(result.session_id) == session_id
 
     def test_get_card_by_position_not_found(self, card_draw_repo):
         """Test getting card that doesn't exist."""
@@ -234,7 +243,7 @@ class TestTaroCardDrawRepository:
         results = card_draw_repo.get_by_arcana(fool_id)
 
         assert len(results) >= 1
-        assert results[0].arcana_id == fool_id
+        assert str(results[0].arcana_id) == fool_id
 
     def test_delete_session_cards_cascade(self, card_draw_repo, sample_cards, db):
         """Test that deleting session cascades to cards."""

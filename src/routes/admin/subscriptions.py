@@ -1,5 +1,5 @@
 """Admin subscription management routes."""
-from flask import Blueprint, jsonify, request, current_app
+from flask import Blueprint, jsonify, request
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta  # type: ignore[import-untyped]
 from src.middleware.auth import require_auth, require_admin
@@ -103,20 +103,38 @@ def create_subscription():
         )
         result = sub_service.start_trial(user.id, plan.id, user_repo)
         if not result.success:
-            status_code = 409 if "active subscription" in result.error.lower() or "already used" in result.error.lower() else 400
+            status_code = (
+                409
+                if "active subscription" in result.error.lower()
+                or "already used" in result.error.lower()
+                else 400
+            )
             return jsonify({"error": result.error}), status_code
 
         subscription = result.subscription
-        return jsonify({
-            "id": str(subscription.id),
-            "user_id": str(subscription.user_id),
-            "tarif_plan_id": str(subscription.tarif_plan_id),
-            "status": subscription.status.value,
-            "started_at": subscription.started_at.isoformat() if subscription.started_at else None,
-            "expires_at": subscription.expires_at.isoformat() if subscription.expires_at else None,
-            "trial_end_at": subscription.trial_end_at.isoformat() if subscription.trial_end_at else None,
-            "created_at": subscription.created_at.isoformat() if subscription.created_at else None,
-        }), 201
+        return (
+            jsonify(
+                {
+                    "id": str(subscription.id),
+                    "user_id": str(subscription.user_id),
+                    "tarif_plan_id": str(subscription.tarif_plan_id),
+                    "status": subscription.status.value,
+                    "started_at": subscription.started_at.isoformat()
+                    if subscription.started_at
+                    else None,
+                    "expires_at": subscription.expires_at.isoformat()
+                    if subscription.expires_at
+                    else None,
+                    "trial_end_at": subscription.trial_end_at.isoformat()
+                    if subscription.trial_end_at
+                    else None,
+                    "created_at": subscription.created_at.isoformat()
+                    if subscription.created_at
+                    else None,
+                }
+            ),
+            201,
+        )
 
     # Calculate expiration based on billing period
     billing_months = data.get("billing_period_months") or _get_billing_months(
@@ -125,9 +143,7 @@ def create_subscription():
     expires_at = started_at + relativedelta(months=billing_months)
     now = datetime.utcnow()
     status = (
-        SubscriptionStatus.ACTIVE
-        if started_at <= now
-        else SubscriptionStatus.PENDING
+        SubscriptionStatus.ACTIVE if started_at <= now else SubscriptionStatus.PENDING
     )
     if requested_status == "active":
         status = SubscriptionStatus.ACTIVE

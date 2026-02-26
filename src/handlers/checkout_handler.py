@@ -1,6 +1,6 @@
 """Checkout event handler."""
-from typing import List, Dict, Any
-from uuid import uuid4
+from typing import List, Dict, Any, cast
+from uuid import uuid4, UUID
 from decimal import Decimal
 from src.events.domain import IEventHandler, DomainEvent, EventResult
 from src.events.checkout_events import CheckoutRequestedEvent
@@ -91,9 +91,7 @@ class CheckoutHandler(IEventHandler):
                 # Check is_single category enforcement
                 for category in getattr(plan, "categories", []):
                     if category.is_single:
-                        category_plan_ids = [
-                            str(p.id) for p in category.tarif_plans
-                        ]
+                        category_plan_ids = [str(p.id) for p in category.tarif_plans]
                         existing = repos[
                             "subscription"
                         ].find_active_by_user_in_category(
@@ -254,7 +252,7 @@ class CheckoutHandler(IEventHandler):
                 from src.events.payment_events import PaymentCapturedEvent
 
                 payment_event = PaymentCapturedEvent(
-                    invoice_id=invoice.id,
+                    invoice_id=cast(UUID, invoice.id),
                     payment_reference="zero-price",
                     amount="0.00",
                     currency=event.currency,

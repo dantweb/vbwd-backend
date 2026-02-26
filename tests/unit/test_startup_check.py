@@ -137,6 +137,14 @@ class TestValidateEnvironment:
 class TestGetMissingVars:
     """Tests for get_missing_vars helper function."""
 
+    @pytest.fixture(autouse=True)
+    def reset_env(self):
+        """Reset environment before each test."""
+        original = os.environ.copy()
+        yield
+        os.environ.clear()
+        os.environ.update(original)
+
     def test_returns_empty_list_when_all_present(self):
         """Returns empty list when all vars are present."""
         from src.utils.startup_check import get_missing_vars

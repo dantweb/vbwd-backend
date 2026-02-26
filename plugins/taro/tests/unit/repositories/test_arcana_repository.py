@@ -6,9 +6,9 @@ from plugins.taro.src.enums import ArcanaType
 
 
 @pytest.fixture
-def arcana_repo():
+def arcana_repo(db):
     """Fixture providing ArcanaRepository instance."""
-    return ArcanaRepository()
+    return ArcanaRepository(db.session)
 
 
 @pytest.fixture

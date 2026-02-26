@@ -416,13 +416,16 @@ class TestTaroSessionService:
         assert remaining == 3, "All quota should be available after reset"
 
     def test_generate_situation_reading_success(self, taro_service, sample_arcanas, db):
-        """Test generating situation-based reading with LLM (happy path)."""
+        """Test generating situation-based reading raises LLMError when adapter not configured."""
         user_id = str(uuid4())
         session = taro_service.create_session(user_id=user_id)
 
         situation_text = "I'm facing a career decision between staying in my current job or taking a new opportunity."
 
-        # LLM adapter is None in tests, so should raise LLMError
+        # Ensure LLM adapter is None so LLMError is raised
+        taro_service.llm_adapter = None
+        taro_service.prompt_service = None
+
         with pytest.raises(LLMError):
             taro_service.generate_situation_reading(
                 session_id=str(session.id),

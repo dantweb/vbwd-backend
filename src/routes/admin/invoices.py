@@ -318,13 +318,18 @@ def refund_invoice(invoice_id):
         token_service = container.token_service()
         current_balance = token_service.get_balance(invoice.user_id)
         if current_balance < tokens_needed:
-            return jsonify({
-                "error": (
-                    f"Insufficient token balance for refund. "
-                    f"User has {current_balance} tokens but {tokens_needed} "
-                    f"need to be deducted. User must purchase more tokens first."
-                )
-            }), 400
+            return (
+                jsonify(
+                    {
+                        "error": (
+                            f"Insufficient token balance for refund. "
+                            f"User has {current_balance} tokens but {tokens_needed} "
+                            f"need to be deducted. User must purchase more tokens first."
+                        )
+                    }
+                ),
+                400,
+            )
 
     # Call the payment provider API to process the actual refund
     provider_error = _refund_via_provider(invoice)

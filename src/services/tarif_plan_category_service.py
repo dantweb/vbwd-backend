@@ -97,7 +97,9 @@ class TarifPlanCategoryService:
         if "slug" in kwargs and kwargs["slug"] != category.slug:
             existing = self._category_repo.find_by_slug(kwargs["slug"])
             if existing:
-                raise ValueError(f"Category with slug '{kwargs['slug']}' already exists")
+                raise ValueError(
+                    f"Category with slug '{kwargs['slug']}' already exists"
+                )
 
         if "parent_id" in kwargs and kwargs["parent_id"]:
             if str(kwargs["parent_id"]) == str(category_id):
@@ -106,7 +108,14 @@ class TarifPlanCategoryService:
             if not parent:
                 raise ValueError(f"Parent category {kwargs['parent_id']} not found")
 
-        for key in ("name", "slug", "description", "parent_id", "is_single", "sort_order"):
+        for key in (
+            "name",
+            "slug",
+            "description",
+            "parent_id",
+            "is_single",
+            "sort_order",
+        ):
             if key in kwargs:
                 setattr(category, key, kwargs[key])
 
@@ -128,11 +137,15 @@ class TarifPlanCategoryService:
 
         children = self._category_repo.find_children(category_id)
         if children:
-            raise ValueError("Cannot delete category with children. Delete children first.")
+            raise ValueError(
+                "Cannot delete category with children. Delete children first."
+            )
 
         return self._category_repo.delete(category_id)
 
-    def attach_plans(self, category_id: UUID, plan_ids: List[UUID]) -> TarifPlanCategory:
+    def attach_plans(
+        self, category_id: UUID, plan_ids: List[UUID]
+    ) -> TarifPlanCategory:
         """
         Attach plans to a category.
 
@@ -155,7 +168,9 @@ class TarifPlanCategoryService:
 
         return self._category_repo.save(category)
 
-    def detach_plans(self, category_id: UUID, plan_ids: List[UUID]) -> TarifPlanCategory:
+    def detach_plans(
+        self, category_id: UUID, plan_ids: List[UUID]
+    ) -> TarifPlanCategory:
         """
         Detach plans from a category.
 

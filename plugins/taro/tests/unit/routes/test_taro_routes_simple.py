@@ -1,7 +1,24 @@
 """Tests for Taro plugin routes - simplified version without complex mocking."""
 import pytest
+from contextlib import contextmanager
 from unittest.mock import Mock, patch
 from uuid import uuid4
+
+_AUTH_HEADER = {"Authorization": "Bearer test-token"}
+
+
+@contextmanager
+def auth_as(user_id):
+    """Patches require_auth internals so the route runs as user_id."""
+    mock_user = Mock()
+    mock_user.status = Mock(value="ACTIVE")
+    mock_user.id = user_id
+
+    with patch("src.middleware.auth.AuthService") as mock_auth_cls:
+        with patch("src.middleware.auth.UserRepository") as mock_repo_cls:
+            mock_auth_cls.return_value.verify_token.return_value = user_id
+            mock_repo_cls.return_value.find_by_id.return_value = mock_user
+            yield
 
 
 @pytest.fixture
@@ -25,7 +42,7 @@ def client(app):
 @pytest.fixture
 def mock_auth_header():
     """Fixture providing valid auth header."""
-    return {"Authorization": "Bearer test-token"}
+    return _AUTH_HEADER
 
 
 @pytest.fixture
@@ -55,11 +72,13 @@ class TestTaroRoutes:
     def test_session_route_exists(self, client):
         """Test that session route is accessible."""
         # This tests that the route exists and is registered
-        with patch("plugins.taro.src.routes.verify_jwt_in_request") as mock_verify_jwt:
-            with patch("plugins.taro.src.routes.get_jwt_identity", return_value=str(uuid4())):
-                with patch("plugins.taro.src.routes.get_user_tarif_plan_limits", return_value=(3, 3)):
-                    with patch("plugins.taro.src.routes.check_token_balance", return_value=True):
-                        # The route should exist and handle the request
-                        response = client.post("/api/v1/taro/session", json={})
-                        # Should not get 404 (route exists)
-                        assert response.status_code != 404
+        user_id = str(uuid4())
+        with auth_as(user_id):
+            with patch("plugins.taro.src.routes.get_user_tarif_plan_limits", return_value=(3, 3)):
+                with patch("plugins.taro.src.routes.check_token_balance", return_value=True):
+                    # The route should exist and handle the request
+                    response = client.post(
+                        "/api/v1/taro/session", json={}, headers=_AUTH_HEADER
+                    )
+                    # Should not get 404 (route exists)
+                    assert response.status_code != 404

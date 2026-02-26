@@ -20,7 +20,7 @@ def interpretation_service(mock_llm_client):
     """Fixture providing ArcanaInterpretationService instance."""
     service = ArcanaInterpretationService(
         llm_client=mock_llm_client,
-        card_draw_repo=TaroCardDrawRepository(),
+        card_draw_repo=Mock(spec=TaroCardDrawRepository),
     )
     return service
 
@@ -85,10 +85,14 @@ class TestArcanaInterpretationService:
 
     def test_interpret_3_card_spread(self, interpretation_service, sample_arcana, mock_llm_client, db):
         """Test generating cohesive interpretation for 3-card spread."""
+        from uuid import uuid4
+        # Persist arcana so FK constraint is satisfied
+        db.session.add(sample_arcana)
+        db.session.flush()
         # Create cards
         from plugins.taro.src.models.taro_session import TaroSession
         session = TaroSession(
-            user_id="user-123",
+            user_id=str(uuid4()),
             started_at=__import__('datetime').datetime.utcnow(),
             expires_at=__import__('datetime').datetime.utcnow() + __import__('datetime').timedelta(minutes=30),
             spread_id="spread-001",
@@ -183,10 +187,15 @@ class TestArcanaInterpretationService:
 
     def test_update_card_interpretation(self, interpretation_service, sample_arcana, mock_llm_client, db):
         """Test updating card's interpretation after generation."""
+        from uuid import uuid4
+        from plugins.taro.src.repositories.taro_card_draw_repository import TaroCardDrawRepository
+        # Persist arcana so FK constraint is satisfied
+        db.session.add(sample_arcana)
+        db.session.flush()
         # Create card
         from plugins.taro.src.models.taro_session import TaroSession
         session = TaroSession(
-            user_id="user-123",
+            user_id=str(uuid4()),
             started_at=__import__('datetime').datetime.utcnow(),
             expires_at=__import__('datetime').datetime.utcnow() + __import__('datetime').timedelta(minutes=30),
             spread_id="spread-001",
@@ -203,6 +212,10 @@ class TestArcanaInterpretationService:
         )
         db.session.add(card)
         db.session.commit()
+
+        # Use a real repo backed by db so update and get_by_id work against actual data
+        real_repo = TaroCardDrawRepository(db.session)
+        interpretation_service.card_draw_repo = real_repo
 
         new_interpretation = "New, improved interpretation"
         interpretation_service.card_draw_repo.update_interpretation(
@@ -243,7 +256,7 @@ class TestArcanaInterpretationService:
         """Test that service can be configured with different LLM models."""
         service = ArcanaInterpretationService(
             llm_client=mock_llm_client,
-            card_draw_repo=TaroCardDrawRepository(),
+            card_draw_repo=Mock(spec=TaroCardDrawRepository),
             model_name="gpt-4",
             temperature=0.7,
             max_tokens=500,

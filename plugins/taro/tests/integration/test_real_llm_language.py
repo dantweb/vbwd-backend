@@ -45,16 +45,6 @@ def load_taro_config():
 @pytest.fixture
 def taro_config():
     """Fixture providing loaded Taro configuration"""
-    if os.getenv("SKIP_LLM_TESTS", "0") == "1":
-        pytest.skip("SKIP_LLM_TESTS=1 — skipping real LLM tests")
-    config_path = os.path.join(
-        os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(
-            os.path.abspath(__file__)
-        )))),
-        "config.json"
-    )
-    if not os.path.exists(config_path):
-        pytest.skip("plugins/config.json not found — skipping real LLM tests")
     return load_taro_config()
 
 
@@ -360,10 +350,7 @@ class TestLLMConfigurationLoading:
 
     def test_load_taro_config_from_file(self):
         """Test loading Taro config from plugins/config.json"""
-        try:
-            config = load_taro_config()
-        except FileNotFoundError:
-            pytest.skip("plugins/config.json not found — skipping real LLM tests")
+        config = load_taro_config()
 
         # Validate required fields exist
         assert 'llm_api_endpoint' in config
@@ -373,10 +360,7 @@ class TestLLMConfigurationLoading:
 
     def test_taro_config_has_language_templates(self):
         """Test that config has templates with language support"""
-        try:
-            config = load_taro_config()
-        except FileNotFoundError:
-            pytest.skip("plugins/config.json not found — skipping real LLM tests")
+        config = load_taro_config()
 
         # Note: The current config may not have {{language}} yet
         # This test documents what we expect after the fix

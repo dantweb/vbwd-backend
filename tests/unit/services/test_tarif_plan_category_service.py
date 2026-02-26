@@ -1,6 +1,6 @@
 """Tests for TarifPlanCategoryService."""
 import pytest
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock
 from uuid import uuid4
 
 from src.services.tarif_plan_category_service import TarifPlanCategoryService
@@ -235,7 +235,9 @@ class TestTarifPlanCategoryServiceAttachDetach:
         with pytest.raises(ValueError, match="not found"):
             service.attach_plans(uuid4(), [uuid4()])
 
-    def test_attach_plans_plan_not_found(self, service, mock_category_repo, mock_plan_repo):
+    def test_attach_plans_plan_not_found(
+        self, service, mock_category_repo, mock_plan_repo
+    ):
         """attach_plans should raise ValueError if plan not found."""
         category = TarifPlanCategory(name="Test", slug="test")
         category.id = uuid4()
@@ -266,7 +268,9 @@ class TestTarifPlanCategoryServiceAttachDetach:
         assert len(result.tarif_plans) == 1
         mock_category_repo.save.assert_called_once()
 
-    def test_attach_plans_skips_duplicates(self, service, mock_category_repo, mock_plan_repo):
+    def test_attach_plans_skips_duplicates(
+        self, service, mock_category_repo, mock_plan_repo
+    ):
         """attach_plans should skip plans already attached."""
         plan = TarifPlan()
         plan.id = uuid4()

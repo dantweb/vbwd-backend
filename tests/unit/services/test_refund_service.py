@@ -313,7 +313,9 @@ class TestRefundServiceProcessRefund:
         tarif_plan = MagicMock()
         tarif_plan.features = {"default_tokens": 100}
         tarif_plan.name = "Pro"
-        subscription = MagicMock(id=sub_id, status=SubscriptionStatus.ACTIVE, tarif_plan=tarif_plan)
+        subscription = MagicMock(
+            id=sub_id, status=SubscriptionStatus.ACTIVE, tarif_plan=tarif_plan
+        )
         purchase = MagicMock(
             id=purchase_id, status=PurchaseStatus.COMPLETED, token_amount=200
         )

@@ -6,7 +6,8 @@
 # Used by developers locally and GitHub Actions CI/CD.
 #
 # Usage:
-#   ./bin/pre-commit-check.sh           # Run all checks
+#   ./bin/pre-commit-check.sh           # Run all checks (lint + unit + integration)
+#   ./bin/pre-commit-check.sh --full    # Explicit full run (lint + unit + integration)
 #   ./bin/pre-commit-check.sh --quick   # Skip integration tests
 #   ./bin/pre-commit-check.sh --lint    # Only static analysis
 #   ./bin/pre-commit-check.sh --unit    # Only unit tests
@@ -47,6 +48,11 @@ RUN_INTEGRATION=true
 
 for arg in "$@"; do
     case $arg in
+        --full)
+            RUN_LINT=true
+            RUN_UNIT=true
+            RUN_INTEGRATION=true
+            ;;
         --quick)
             RUN_INTEGRATION=false
             ;;
