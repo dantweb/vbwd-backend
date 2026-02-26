@@ -107,10 +107,10 @@ def get_user_tarif_plan_limits(user_id: str) -> tuple:
         if not user:
             return DEFAULT_DAILY_LIMIT, DEFAULT_MAX_FOLLOW_UPS
 
-        # Get user's active subscription
+        # Get user's active subscription (ACTIVE or TRIALING both grant plan features)
         subscription = Subscription.query.filter(
             Subscription.user_id == user_id,
-            Subscription.status == SubscriptionStatus.ACTIVE,
+            Subscription.status.in_([SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIALING]),
         ).first()
 
         if not subscription or not subscription.tarif_plan:
@@ -867,7 +867,7 @@ def get_daily_limits():
         plan_name = "Unknown"
         subscription = Subscription.query.filter(
             Subscription.user_id == user_id,
-            Subscription.status == SubscriptionStatus.ACTIVE,
+            Subscription.status.in_([SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIALING]),
         ).first()
         if subscription and subscription.tarif_plan:
             plan_name = subscription.tarif_plan.name

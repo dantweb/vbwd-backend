@@ -1,6 +1,6 @@
 """LLM adapter — HTTP calls to OpenAI-compatible chat completions API."""
 import logging
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 import requests
 
@@ -22,12 +22,14 @@ class LLMAdapter:
         model: str,
         system_prompt: str = "You are a helpful assistant.",
         timeout: int = 30,
+        max_tokens: Optional[int] = None,
     ):
         self.api_endpoint = self._normalize_endpoint(api_endpoint)
         self.api_key = api_key
         self.model = model
         self.system_prompt = system_prompt
         self.timeout = timeout
+        self.max_tokens = max_tokens
 
     @staticmethod
     def _normalize_endpoint(endpoint: str) -> str:
@@ -68,6 +70,8 @@ class LLMAdapter:
                 *messages,
             ],
         }
+        if self.max_tokens is not None:
+            payload["max_tokens"] = self.max_tokens
 
         headers = {
             "Authorization": f"Bearer {self.api_key}",

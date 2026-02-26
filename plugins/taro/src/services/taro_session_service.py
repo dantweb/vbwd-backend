@@ -70,6 +70,7 @@ class TaroSessionService:
             api_endpoint = taro_config.get('llm_api_endpoint')
             api_key = taro_config.get('llm_api_key')
             model = taro_config.get('llm_model', 'gpt-4')
+            max_tokens = taro_config.get('llm_max_tokens', 800)
 
             if not api_endpoint or not api_key:
                 logger.warning(
@@ -84,6 +85,7 @@ class TaroSessionService:
                 model=model,
                 system_prompt="You are an expert Tarot card reader providing mystical insights.",
                 timeout=30,
+                max_tokens=max_tokens,
             )
         except Exception as e:
             logger.error(f"Failed to initialize LLM adapter: {e}")
