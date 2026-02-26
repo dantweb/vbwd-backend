@@ -4,11 +4,13 @@
 #
 # Creates:
 # - 2 currencies (EUR, USD)
-# - 5 tarif plans (Free, Basic, Pro, Enterprise, Lifetime)
+# - 5 tarif plans (Free, Basic, Pro, Enterprise, Lifetime) + 7 plugin plans
+# - 4 plan categories (Backend, FE Admin, FE User, Payments)
 # - 2 demo users with subscriptions
 # - 10 invoices with various statuses
 # - 2 token bundles (100 tokens, 500 tokens)
 # - 5 add-ons (3 global, 2 plan-dependent)
+# - Admin user profile filled
 
 set -e
 
@@ -25,9 +27,11 @@ import uuid
 
 from src.extensions import Session
 from src.models.user import User
+from src.models.user_details import UserDetails
 from src.models.currency import Currency
 from src.models.price import Price
 from src.models.tarif_plan import TarifPlan
+from src.models.tarif_plan_category import TarifPlanCategory
 from src.models.subscription import Subscription
 from src.models.invoice import UserInvoice
 from src.models.addon import AddOn
@@ -102,6 +106,7 @@ try:
             'description': 'Best for growing teams and businesses',
             'price': Decimal('29.99'),
             'billing_period': BillingPeriod.MONTHLY,
+            'trial_days': 3,
             'features': {'api_calls': 10000, 'storage_gb': 100, 'support': 'priority', 'analytics': True, 'default_tokens': 200},
             'sort_order': 2,
         },
@@ -111,6 +116,7 @@ try:
             'description': 'Advanced features for large organizations',
             'price': Decimal('99.99'),
             'billing_period': BillingPeriod.MONTHLY,
+            'trial_days': 5,
             'features': {'api_calls': 'unlimited', 'storage_gb': 1000, 'support': 'dedicated', 'analytics': True, 'sso': True, 'default_tokens': 1000},
             'sort_order': 3,
         },
@@ -150,6 +156,7 @@ try:
             plan.price = plan_data['price']
             plan.currency = 'EUR'
             plan.billing_period = plan_data['billing_period']
+            plan.trial_days = plan_data.get('trial_days', 0)
             plan.features = plan_data['features']
             plan.is_active = True
             plan.sort_order = plan_data['sort_order']
@@ -157,8 +164,162 @@ try:
             session.flush()
             print(f"  Created: {plan.name} ({plan.slug}) - €{plan.price_float}")
         else:
+            # Update trial_days on existing plan if specified
+            if plan_data.get('trial_days', 0) != 0:
+                plan.trial_days = plan_data['trial_days']
+                session.flush()
             print(f"  Exists: {plan.name} ({plan.slug})")
         plans[plan_data['slug']] = plan
+
+    print("\n=== Creating Plugin Plans ===")
+
+    plugin_plans_data = [
+        {
+            'name': 'Stripe',
+            'slug': 'plugin-stripe',
+            'description': 'Stripe payment gateway integration.',
+            'price': Decimal('0.00'),
+            'billing_period': BillingPeriod.YEARLY,
+            'trial_days': 0,
+            'features': {},
+            'sort_order': 10,
+            'categories': ['backend', 'fe-admin', 'fe-user', 'payments'],
+        },
+        {
+            'name': 'Paypal',
+            'slug': 'plugin-paypal',
+            'description': 'PayPal payment gateway integration.',
+            'price': Decimal('0.00'),
+            'billing_period': BillingPeriod.YEARLY,
+            'trial_days': 0,
+            'features': {},
+            'sort_order': 11,
+            'categories': ['backend', 'fe-admin', 'fe-user', 'payments'],
+        },
+        {
+            'name': 'Theme-Switcher',
+            'slug': 'plugin-theme-switcher',
+            'description': 'Frontend theme switcher for the user portal.',
+            'price': Decimal('0.00'),
+            'billing_period': BillingPeriod.YEARLY,
+            'trial_days': 0,
+            'features': {},
+            'sort_order': 12,
+            'categories': ['fe-user'],
+        },
+        {
+            'name': 'LLM Chat',
+            'slug': 'plugin-llm-chat',
+            'description': 'AI-powered chat assistant for the user portal.',
+            'price': Decimal('0.00'),
+            'billing_period': BillingPeriod.YEARLY,
+            'trial_days': 0,
+            'features': {},
+            'sort_order': 13,
+            'categories': ['fe-user'],
+        },
+        {
+            'name': 'AI Tarot',
+            'slug': 'plugin-ai-tarot',
+            'description': 'AI Tarot card reading plugin.',
+            'price': Decimal('0.00'),
+            'billing_period': BillingPeriod.YEARLY,
+            'trial_days': 0,
+            'features': {},
+            'sort_order': 14,
+            'categories': ['fe-user', 'backend', 'fe-admin'],
+        },
+        {
+            'name': 'Import-Export',
+            'slug': 'plugin-import-export',
+            'description': 'Data import and export tools for the backend.',
+            'price': Decimal('0.00'),
+            'billing_period': BillingPeriod.YEARLY,
+            'trial_days': 0,
+            'features': {},
+            'sort_order': 15,
+            'categories': ['backend'],
+        },
+        {
+            'name': 'Analytics',
+            'slug': 'plugin-analytics',
+            'description': 'Analytics dashboard plugin for backend and admin.',
+            'price': Decimal('0.00'),
+            'billing_period': BillingPeriod.YEARLY,
+            'trial_days': 0,
+            'features': {},
+            'sort_order': 16,
+            'categories': ['backend', 'fe-admin'],
+        },
+    ]
+
+    print("\n=== Creating Plan Categories ===")
+
+    categories_data = [
+        {'name': 'Backend',  'slug': 'backend',   'description': 'Backend server plugins.',           'sort_order': 1},
+        {'name': 'FE Admin', 'slug': 'fe-admin',  'description': 'Admin frontend plugins.',           'sort_order': 2},
+        {'name': 'FE User',  'slug': 'fe-user',   'description': 'User-facing frontend plugins.',     'sort_order': 3},
+        {'name': 'Payments', 'slug': 'payments',  'description': 'Payment gateway integrations.',     'sort_order': 4},
+    ]
+
+    categories = {}
+    for cat_data in categories_data:
+        cat = session.query(TarifPlanCategory).filter_by(slug=cat_data['slug']).first()
+        if not cat:
+            cat = TarifPlanCategory(
+                name=cat_data['name'],
+                slug=cat_data['slug'],
+                description=cat_data['description'],
+                sort_order=cat_data['sort_order'],
+                is_single=False,
+            )
+            session.add(cat)
+            session.flush()
+            print(f"  Created category: {cat.name}")
+        else:
+            print(f"  Exists category: {cat.name}")
+        categories[cat_data['slug']] = cat
+
+    for plan_data in plugin_plans_data:
+        plan = session.query(TarifPlan).filter_by(slug=plan_data['slug']).first()
+        if not plan:
+            price_obj = Price()
+            price_obj.price_float = float(plan_data['price'])
+            price_obj.price_decimal = plan_data['price']
+            price_obj.currency_id = eur.id
+            price_obj.net_amount = plan_data['price']
+            price_obj.gross_amount = plan_data['price']
+            price_obj.taxes = {}
+            session.add(price_obj)
+            session.flush()
+
+            plan = TarifPlan()
+            plan.name = plan_data['name']
+            plan.slug = plan_data['slug']
+            plan.description = plan_data['description']
+            plan.price_float = float(plan_data['price'])
+            plan.price_id = price_obj.id
+            plan.price = plan_data['price']
+            plan.currency = 'EUR'
+            plan.billing_period = plan_data['billing_period']
+            plan.trial_days = plan_data['trial_days']
+            plan.features = plan_data['features']
+            plan.is_active = True
+            plan.sort_order = plan_data['sort_order']
+            session.add(plan)
+            session.flush()
+            print(f"  Created plugin plan: {plan.name} ({plan.slug})")
+        else:
+            print(f"  Exists plugin plan: {plan.name} ({plan.slug})")
+        plans[plan_data['slug']] = plan
+
+        # Attach categories
+        for cat_slug in plan_data['categories']:
+            cat = categories[cat_slug]
+            if plan not in cat.tarif_plans:
+                cat.tarif_plans.append(plan)
+
+    session.flush()
 
     print("\n=== Creating Demo Users ===")
 
@@ -434,9 +595,33 @@ try:
         else:
             print(f"  Exists: {pro_user.email} -> {addon.name}")
 
+    print("\n=== Filling Admin Profile ===")
+
+    admin_user = session.query(User).filter_by(email='admin@example.com').first()
+    if admin_user:
+        admin_details = session.query(UserDetails).filter_by(user_id=admin_user.id).first()
+        if not admin_details:
+            admin_details = UserDetails()
+            admin_details.user_id = admin_user.id
+            session.add(admin_details)
+        admin_details.first_name = 'Admin'
+        admin_details.last_name = 'Superuser'
+        admin_details.company = 'VBWD Platform'
+        admin_details.address_line_1 = 'Hauptstraße 1'
+        admin_details.city = 'Berlin'
+        admin_details.postal_code = '10115'
+        admin_details.country = 'DE'
+        admin_details.phone = '+49 30 12345678'
+        admin_details.tax_number = 'DE123456789'
+        session.flush()
+        print(f"  Admin profile filled: {admin_details.full_name}")
+    else:
+        print("  Admin user (admin@example.com) not found — skipping profile")
+
     session.commit()
     print("\n=== Demo Data Installation Complete ===")
     print(f"  Currencies: {session.query(Currency).count()}")
+    print(f"  Plan Categories: {session.query(TarifPlanCategory).count()}")
     print(f"  Tarif Plans: {session.query(TarifPlan).count()}")
     print(f"  Users: {session.query(User).count()}")
     print(f"  Subscriptions: {session.query(Subscription).count()}")
@@ -461,3 +646,12 @@ echo ""
 echo "Demo Users:"
 echo "  user.free@demo.local / demo123 (Free plan)"
 echo "  user.pro@demo.local / demo123 (Pro plan)"
+echo ""
+echo "Admin:"
+echo "  admin@example.com (profile: Admin Superuser, VBWD Platform, Berlin DE)"
+echo ""
+echo "Plugin Plans (free, yearly) by category:"
+echo "  Backend:  Stripe, Paypal, AI Tarot, Import-Export, Analytics"
+echo "  FE Admin: Stripe, Paypal, AI Tarot, Analytics"
+echo "  FE User:  Stripe, Paypal, Theme-Switcher, LLM Chat, AI Tarot"
+echo "  Payments: Stripe, Paypal"
