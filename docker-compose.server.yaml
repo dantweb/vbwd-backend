@@ -1,0 +1,93 @@
+services:
+  vbwd_backend:
+    image: ghcr.io/dantweb/vbwd_backend:latest
+    restart: always
+    ports:
+      - "5001:5000"
+    environment:
+      FLASK_ENV: production
+      FLASK_SECRET_KEY: "${VBWD_FLASK_SECRET}"
+      JWT_SECRET_KEY: "${VBWD_JWT_SECRET}"
+      DATABASE_URL: "postgresql://vbwd:${VBWD_DB_PASSWORD}@vbwd_postgres:5432/vbwd"
+      REDIS_URL: "redis://vbwd_redis:6379/0"
+    depends_on:
+      vbwd_postgres:
+        condition: service_healthy
+      vbwd_redis:
+        condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  vbwd_fe_user:
+    image: ghcr.io/dantweb/vbwd_fe_user:latest
+    restart: always
+    ports:
+      - "8082:80"
+    environment:
+      API_UPSTREAM: "vbwd_backend:5000"
+    depends_on:
+      - vbwd_backend
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  vbwd_fe_admin:
+    image: ghcr.io/dantweb/vbwd_fe_admin:latest
+    restart: always
+    ports:
+      - "8081:80"
+    environment:
+      API_UPSTREAM: "vbwd_backend:5000"
+    depends_on:
+      - vbwd_backend
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  vbwd_postgres:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: vbwd
+      POSTGRES_PASSWORD: "${VBWD_DB_PASSWORD}"
+      POSTGRES_DB: vbwd
+    volumes:
+      - vbwd_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vbwd -d vbwd"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  vbwd_redis:
+    image: redis:7-alpine
+    restart: always
+    command: redis-server --appendonly yes
+    volumes:
+      - vbwd_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  vbwd_postgres_data:
+  vbwd_redis_data:
