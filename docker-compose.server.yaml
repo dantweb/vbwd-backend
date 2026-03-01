@@ -1,9 +1,27 @@
 services:
+  vbwd_proxy:
+    image: nginx:alpine
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.proxy.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro          # mount certs here when ready
+    depends_on:
+      - vbwd_fe_user
+      - vbwd_fe_admin
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   vbwd_backend:
     image: ghcr.io/dantweb/vbwd_backend:latest
     restart: always
     ports:
-      - "5001:5000"
+      - "127.0.0.1:5001:5000"           # local-only, for migrations/debug
     environment:
       FLASK_ENV: production
       FLASK_SECRET_KEY: "${VBWD_FLASK_SECRET}"
@@ -24,8 +42,8 @@ services:
   vbwd_fe_user:
     image: ghcr.io/dantweb/vbwd_fe_user:latest
     restart: always
-    ports:
-      - "8082:80"
+    expose:
+      - "80"                             # internal only, proxy handles the outside
     environment:
       API_UPSTREAM: "vbwd_backend:5000"
     depends_on:
@@ -39,8 +57,8 @@ services:
   vbwd_fe_admin:
     image: ghcr.io/dantweb/vbwd_fe_admin:latest
     restart: always
-    ports:
-      - "8081:80"
+    expose:
+      - "80"                             # internal only, proxy handles the outside
     environment:
       API_UPSTREAM: "vbwd_backend:5000"
     depends_on:

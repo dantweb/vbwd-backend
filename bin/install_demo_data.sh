@@ -16,7 +16,13 @@ set -e
 
 echo "Installing demo data..."
 
-docker compose exec -T api python << 'EOF'
+docker compose exec -T api python /app/bin/install_demo_data.py
+echo ""
+echo "Demo data installation completed!"
+exit 0
+
+# Legacy inline script kept below for reference only:
+: << 'EOF'
 import sys
 sys.path.insert(0, '/app')
 

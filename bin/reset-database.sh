@@ -181,33 +181,8 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 
 # Create admin user
 echo "Creating admin user: ${ADMIN_EMAIL}"
-docker compose exec -T api python << EOF
-import sys
-sys.path.insert(0, '/app')
-
-from src.extensions import Session
-from src.models.user import User
-from src.models.enums import UserStatus, UserRole
-import bcrypt
-
-session = Session()
-try:
-    password_hash = bcrypt.hashpw('${ADMIN_PASSWORD}'.encode(), bcrypt.gensalt()).decode()
-    user = User()
-    user.email = '${ADMIN_EMAIL}'
-    user.password_hash = password_hash
-    user.status = UserStatus.ACTIVE
-    user.role = UserRole.ADMIN
-    session.add(user)
-    session.commit()
-    print(f'✓ Created admin user: {user.email} (id={user.id})')
-except Exception as e:
-    session.rollback()
-    print(f'✗ Failed to create admin user: {e}')
-    sys.exit(1)
-finally:
-    session.close()
-EOF
+docker compose exec -T api python /app/bin/create_admin.py \
+    --email "${ADMIN_EMAIL}" --password "${ADMIN_PASSWORD}"
 
 if [ $? -ne 0 ]; then
     echo -e "${RED}✗ Failed to create admin user${NC}"
@@ -216,46 +191,8 @@ fi
 
 # Create test user
 echo "Creating test user: ${TEST_EMAIL}"
-docker compose exec -T api python << EOF
-import sys
-sys.path.insert(0, '/app')
-
-from src.extensions import Session
-from src.models.user import User
-from src.models.user_details import UserDetails
-from src.models.enums import UserStatus, UserRole
-import bcrypt
-
-session = Session()
-try:
-    password_hash = bcrypt.hashpw('${TEST_PASSWORD}'.encode(), bcrypt.gensalt()).decode()
-    user = User()
-    user.email = '${TEST_EMAIL}'
-    user.password_hash = password_hash
-    user.status = UserStatus.ACTIVE
-    user.role = UserRole.USER
-    session.add(user)
-    session.flush()
-
-    details = UserDetails()
-    details.user_id = user.id
-    details.first_name = 'Marc'
-    details.last_name = 'Muster'
-    details.address_line_1 = 'Hugo-Junkers 23'
-    details.city = 'Frankfurt am Main'
-    details.postal_code = '60386'
-    details.country = 'DE'
-    session.add(details)
-
-    session.commit()
-    print(f'✓ Created test user: {user.email} (id={user.id}) - Marc Muster, Frankfurt am Main')
-except Exception as e:
-    session.rollback()
-    print(f'✗ Failed to create test user: {e}')
-    sys.exit(1)
-finally:
-    session.close()
-EOF
+docker compose exec -T api python /app/bin/create_user.py \
+    --email "${TEST_EMAIL}" --password "${TEST_PASSWORD}"
 
 if [ $? -ne 0 ]; then
     echo -e "${RED}✗ Failed to create test user${NC}"

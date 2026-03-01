@@ -5,9 +5,13 @@
 EMAIL="${1:-admin@vbwd.local}"
 PASSWORD="${2:-admin123}"
 
-echo "Creating admin user: $EMAIL with password: $PASSWORD"
+echo "Creating admin user: $EMAIL"
 
-docker compose exec -T api python << EOF
+docker compose exec -T api python /app/bin/create_admin.py --email "$EMAIL" --password "$PASSWORD"
+exit 0
+
+# Legacy inline script kept below for reference only:
+: << EOF
 import sys
 sys.path.insert(0, '/app')
 

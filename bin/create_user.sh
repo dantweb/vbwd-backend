@@ -5,9 +5,13 @@
 EMAIL="${1:-user@example.com}"
 PASSWORD="${2:-Password123!}"
 
-echo "Creating user: $EMAIL with password: $PASSWORD"
+echo "Creating user: $EMAIL"
 
-docker compose exec -T api python << EOF
+docker compose exec -T api python /app/bin/create_user.py --email "$EMAIL" --password "$PASSWORD"
+exit 0
+
+# Legacy inline script kept below for reference only:
+: << EOF
 import sys
 sys.path.insert(0, '/app')
 
