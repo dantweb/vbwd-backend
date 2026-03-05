@@ -41,6 +41,12 @@
       "version": "1.0.0",
       "installedAt": "",
       "source": "local"
+    },
+    "cms": {
+      "enabled": true,
+      "version": "1.0.0",
+      "installedAt": "",
+      "source": "local"
     }
   }
 }
