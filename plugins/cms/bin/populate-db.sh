@@ -2,19 +2,30 @@
 # Populate CMS Demo Data
 # ======================
 # Populates the CMS plugin database with demo styles, widgets, layouts, and pages.
-# Runs the populate_cms.py script inside the backend API container via docker compose.
+# Runs Alembic migrations first, then populate_cms.py inside the backend API container.
+#
+# Behaviour: UPSERT — safe to re-run at any time. Existing records are updated
+# to reflect the current canonical data (correct base64 HTML / extracted CSS).
+# New records are inserted. Nothing is deleted.
 #
 # Usage:
 #   ./plugins/cms/bin/populate-db.sh
 #
 # Requirements:
 #   - docker compose running with api service
-#   - PostgreSQL database running and migrated (including cms_templates migration)
+#   - PostgreSQL database running
+#   - Required migrations (applied automatically by this script):
+#       20260302_create_cms_tables
+#       20260305_cms_templates
+#       20260308_cms_page_content_html
+#       20260308_cms_widget_refactor   (drops content_html, adds source_css to cms_widget)
+#       20260308_cms_page_source_css   (adds source_css to cms_page)
 #
-# This script creates:
+# This script creates/updates:
 #   - 10 CSS themes (5 light: clean/warm/cool/soft/paper, 5 dark: midnight/charcoal/forest/purple/carbon)
 #   - 8 widgets: header-nav, footer-nav, hero-home1, hero-home2, cta-primary,
 #                features-3col, pricing-2col, testimonials
+#     HTML widgets store content as base64 in content_json.content, CSS in source_css
 #   - 4 layouts: home-v1, home-v2, landing, content-page
 #   - 5 demo pages: home1, home2, landing2, landing3, about
 
@@ -45,7 +56,19 @@ if ! docker compose ps 2>/dev/null | grep -q "api.*Up"; then
     exit 1
 fi
 
-echo -e "${YELLOW}Populating CMS demo data...${NC}"
+echo -e "${YELLOW}Step 1/2 — Running Alembic migrations...${NC}"
+echo ""
+
+docker compose exec -T api python -m alembic upgrade head
+
+if [ $? -ne 0 ]; then
+    echo ""
+    echo -e "${RED}✗ Alembic migrations failed — aborting population${NC}"
+    exit 1
+fi
+
+echo ""
+echo -e "${YELLOW}Step 2/2 — Populating CMS demo data (upsert)...${NC}"
 echo ""
 
 docker compose exec -T api python /app/plugins/cms/src/bin/populate_cms.py
@@ -56,12 +79,13 @@ if [ $? -eq 0 ]; then
     echo -e "${GREEN}║   CMS Demo Data Population Complete   ║${NC}"
     echo -e "${GREEN}╚════════════════════════════════════════╝${NC}"
     echo ""
-    echo -e "${GREEN}✓ Styles: 5 light + 5 dark themes${NC}"
-    echo -e "${GREEN}✓ Widgets: 8 reusable content blocks${NC}"
+    echo -e "${GREEN}✓ Styles:  5 light + 5 dark themes${NC}"
+    echo -e "${GREEN}✓ Widgets: 8 blocks (HTML stored as base64 + source_css)${NC}"
     echo -e "${GREEN}✓ Layouts: home-v1, home-v2, landing, content-page${NC}"
-    echo -e "${GREEN}✓ Pages: home1, home2, landing2, landing3, about${NC}"
+    echo -e "${GREEN}✓ Pages:   home1, home2, landing2, landing3, about${NC}"
     echo ""
-    echo "View in admin: http://localhost:8081/admin/cms/styles"
+    echo "  Admin:   http://localhost:8081/admin/cms/styles"
+    echo "  Preview: http://localhost:8080/home1"
     echo ""
     exit 0
 else
