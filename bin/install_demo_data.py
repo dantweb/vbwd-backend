@@ -86,10 +86,11 @@ try:
     print("\n=== Creating Plan Categories ===")
 
     categories_data = [
-        {'name': 'Backend',  'slug': 'backend',  'description': 'Backend server plugins.',       'sort_order': 1},
-        {'name': 'FE Admin', 'slug': 'fe-admin', 'description': 'Admin frontend plugins.',       'sort_order': 2},
-        {'name': 'FE User',  'slug': 'fe-user',  'description': 'User-facing frontend plugins.', 'sort_order': 3},
-        {'name': 'Payments', 'slug': 'payments', 'description': 'Payment gateway integrations.', 'sort_order': 4},
+        {'name': 'Root',     'slug': 'root',     'description': 'Core subscription plans.',       'sort_order': 0},
+        {'name': 'Backend',  'slug': 'backend',  'description': 'Backend server plugins.',        'sort_order': 1},
+        {'name': 'FE Admin', 'slug': 'fe-admin', 'description': 'Admin frontend plugins.',        'sort_order': 2},
+        {'name': 'FE User',  'slug': 'fe-user',  'description': 'User-facing frontend plugins.',  'sort_order': 3},
+        {'name': 'Payments', 'slug': 'payments', 'description': 'Payment gateway integrations.',  'sort_order': 4},
     ]
 
     categories = {}
@@ -104,6 +105,19 @@ try:
         else:
             print(f"  Exists: {cat.name}")
         categories[d['slug']] = cat
+
+    print("\n=== Assigning Core Plans to Root Category ===")
+
+    root_cat = categories.get('root')
+    if root_cat:
+        for slug in ('free', 'basic', 'pro', 'enterprise'):
+            plan = plans.get(slug)
+            if plan and plan not in root_cat.tarif_plans:
+                root_cat.tarif_plans.append(plan)
+                print(f"  Assigned: {plan.name} → root")
+            else:
+                print(f"  Already assigned or missing: {slug}")
+        session.flush()
 
     print("\n=== Creating Plugin Plans ===")
 
@@ -193,6 +207,85 @@ try:
         else:
             print(f"  Exists: {bundle.name}")
 
+    print("\n=== Creating Add-Ons ===")
+
+    addons_data = [
+        {
+            'name': 'Extra Storage — 50 GB',
+            'slug': 'extra-storage-50gb',
+            'description': 'Add 50 GB of storage to your account.',
+            'price': Decimal('4.99'),
+            'billing_period': BillingPeriod.MONTHLY,
+            'sort_order': 0,
+            'config': {'storage_gb': 50},
+        },
+        {
+            'name': 'Extra Storage — 200 GB',
+            'slug': 'extra-storage-200gb',
+            'description': 'Add 200 GB of storage to your account.',
+            'price': Decimal('14.99'),
+            'billing_period': BillingPeriod.MONTHLY,
+            'sort_order': 1,
+            'config': {'storage_gb': 200},
+        },
+        {
+            'name': 'Priority Support',
+            'slug': 'priority-support',
+            'description': 'Get priority email and chat support with a 4-hour response SLA.',
+            'price': Decimal('9.99'),
+            'billing_period': BillingPeriod.MONTHLY,
+            'sort_order': 2,
+            'config': {'sla_hours': 4},
+        },
+        {
+            'name': 'Extra API Calls — 10k',
+            'slug': 'extra-api-calls-10k',
+            'description': 'Add 10,000 additional API calls per month.',
+            'price': Decimal('2.99'),
+            'billing_period': BillingPeriod.MONTHLY,
+            'sort_order': 3,
+            'config': {'api_calls': 10000},
+        },
+        {
+            'name': 'White Label',
+            'slug': 'white-label',
+            'description': 'Remove VBWD branding and use your own logo and domain.',
+            'price': Decimal('29.99'),
+            'billing_period': BillingPeriod.MONTHLY,
+            'sort_order': 4,
+            'config': {'remove_branding': True, 'custom_domain': True},
+        },
+        {
+            'name': 'Dedicated Onboarding',
+            'slug': 'dedicated-onboarding',
+            'description': 'One-time 2-hour onboarding session with a solutions engineer.',
+            'price': Decimal('199.00'),
+            'billing_period': BillingPeriod.ONE_TIME,
+            'sort_order': 5,
+            'config': {'sessions': 1, 'duration_hours': 2},
+        },
+    ]
+
+    for d in addons_data:
+        addon = session.query(AddOn).filter_by(slug=d['slug']).first()
+        if not addon:
+            addon = AddOn(
+                name=d['name'],
+                slug=d['slug'],
+                description=d['description'],
+                price=d['price'],
+                currency='EUR',
+                billing_period=d['billing_period'].value,
+                config=d['config'],
+                is_active=True,
+                sort_order=d['sort_order'],
+            )
+            session.add(addon)
+            session.flush()
+            print(f"  Created: {addon.name} - €{addon.price}")
+        else:
+            print(f"  Exists: {addon.name}")
+
     print("\n=== Filling Admin Profile ===")
 
     admin = session.query(User).filter_by(email='admin@example.com').first()
@@ -214,6 +307,7 @@ try:
     print(f"  Plans:    {session.query(TarifPlan).count()}")
     print(f"  Users:    {session.query(User).count()}")
     print(f"  Bundles:  {session.query(TokenBundle).count()}")
+    print(f"  Add-Ons:  {session.query(AddOn).count()}")
 
 except Exception as e:
     session.rollback()

@@ -443,6 +443,32 @@ PRICING_2COL_HTML = """
 </style>
 """
 
+TARIF_PLANS_ROOT_HTML = """
+<div id="vbwd-iframe-root"></div>
+<script
+  src="/embed/widget.js"
+  data-embed="landing1"
+  data-category="root"
+  data-container="vbwd-iframe-root"
+  data-locale="en"
+  data-theme="light"
+  data-height="700"
+></script>
+"""
+
+TARIF_PLANS_BACKEND_HTML = """
+<div id="vbwd-iframe-backend"></div>
+<script
+  src="/embed/widget.js"
+  data-embed="landing1"
+  data-category="backend"
+  data-container="vbwd-iframe-backend"
+  data-locale="en"
+  data-theme="light"
+  data-height="700"
+></script>
+"""
+
 TESTIMONIALS_HTML = """
 <section class="testimonials">
   <div class="container">
@@ -474,36 +500,57 @@ TESTIMONIALS_HTML = """
 """
 
 STANDARD_CONTENT_HTML = """
-<h1>About Us</h1>
-<p>We are a passionate team building the next generation of developer tools. Our mission is to make great software accessible to everyone.</p>
-<h2>Our Story</h2>
-<p>Founded in 2022, we started with a simple idea: development should be joyful. We built the tools we always wished existed, and now we share them with the world.</p>
-<h2>Our Values</h2>
+<h1>About VBWD</h1>
+<p>VBWD is an open-source SaaS platform that gives developers and agencies a production-ready foundation for subscription businesses — without the months of boilerplate. Install it, extend it with plugins, and ship your product.</p>
+
+<h2>What We Build</h2>
+<p>VBWD is a full-stack SDK: a Python/Flask backend, a Vue 3 admin panel, and a Vue 3 user-facing frontend. Everything communicates through a clean REST API and is designed to be extended through a plugin system.</p>
 <ul>
-  <li>Simplicity — less is more</li>
-  <li>Transparency — no hidden fees, no dark patterns</li>
-  <li>Community — we build with our users, not just for them</li>
+  <li><strong>Subscription billing</strong> — Stripe, PayPal, and YooKassa ship out of the box</li>
+  <li><strong>User management</strong> — registration, login, roles, profiles, invoices</li>
+  <li><strong>CMS</strong> — pages, layouts, widgets, styles — all manageable from the admin panel</li>
+  <li><strong>Plugin system</strong> — add features without touching core code</li>
 </ul>
+
+<h2>Our Philosophy</h2>
+<p>We believe the foundation of a SaaS product should be open, auditable, and yours to own. No vendor lock-in, no black boxes. VBWD is released under CC0 — do whatever you want with it.</p>
+
+<h2>Community &amp; Support</h2>
+<p>VBWD is built in the open. Contributions, bug reports, and feature requests are welcome on GitHub. For commercial support, managed hosting, and custom plugin development, check our plans below.</p>
+
+<h2>Contact</h2>
+<p>Questions? Reach us at <a href="mailto:hello@vbwd.dev">hello@vbwd.dev</a> or open an issue on GitHub.</p>
 """
 
 STANDARD_CONTENT_JSON = {
     "type": "doc",
     "content": [
         {"type": "heading", "attrs": {"level": 1},
-         "content": [{"type": "text", "text": "About Us"}]},
+         "content": [{"type": "text", "text": "About VBWD"}]},
         {"type": "paragraph",
-         "content": [{"type": "text", "text": "We are a passionate team building the next generation of developer tools. Our mission is to make great software accessible to everyone."}]},
+         "content": [{"type": "text", "text": "VBWD is an open-source SaaS platform that gives developers and agencies a production-ready foundation for subscription businesses — without the months of boilerplate. Install it, extend it with plugins, and ship your product."}]},
         {"type": "heading", "attrs": {"level": 2},
-         "content": [{"type": "text", "text": "Our Story"}]},
+         "content": [{"type": "text", "text": "What We Build"}]},
         {"type": "paragraph",
-         "content": [{"type": "text", "text": "Founded in 2022, we started with a simple idea: development should be joyful. We built the tools we always wished existed, and now we share them with the world."}]},
-        {"type": "heading", "attrs": {"level": 2},
-         "content": [{"type": "text", "text": "Our Values"}]},
+         "content": [{"type": "text", "text": "VBWD is a full-stack SDK: a Python/Flask backend, a Vue 3 admin panel, and a Vue 3 user-facing frontend. Everything communicates through a clean REST API and is designed to be extended through a plugin system."}]},
         {"type": "bulletList", "content": [
-            {"type": "listItem", "content": [{"type": "paragraph", "content": [{"type": "text", "text": "Simplicity — less is more"}]}]},
-            {"type": "listItem", "content": [{"type": "paragraph", "content": [{"type": "text", "text": "Transparency — no hidden fees, no dark patterns"}]}]},
-            {"type": "listItem", "content": [{"type": "paragraph", "content": [{"type": "text", "text": "Community — we build with our users, not just for them"}]}]},
+            {"type": "listItem", "content": [{"type": "paragraph", "content": [{"type": "text", "text": "Subscription billing — Stripe, PayPal, and YooKassa ship out of the box"}]}]},
+            {"type": "listItem", "content": [{"type": "paragraph", "content": [{"type": "text", "text": "User management — registration, login, roles, profiles, invoices"}]}]},
+            {"type": "listItem", "content": [{"type": "paragraph", "content": [{"type": "text", "text": "CMS — pages, layouts, widgets, styles — all manageable from the admin panel"}]}]},
+            {"type": "listItem", "content": [{"type": "paragraph", "content": [{"type": "text", "text": "Plugin system — add features without touching core code"}]}]},
         ]},
+        {"type": "heading", "attrs": {"level": 2},
+         "content": [{"type": "text", "text": "Our Philosophy"}]},
+        {"type": "paragraph",
+         "content": [{"type": "text", "text": "We believe the foundation of a SaaS product should be open, auditable, and yours to own. No vendor lock-in, no black boxes. VBWD is released under CC0 — do whatever you want with it."}]},
+        {"type": "heading", "attrs": {"level": 2},
+         "content": [{"type": "text", "text": "Community & Support"}]},
+        {"type": "paragraph",
+         "content": [{"type": "text", "text": "VBWD is built in the open. Contributions, bug reports, and feature requests are welcome on GitHub. For commercial support, managed hosting, and custom plugin development, check our plans below."}]},
+        {"type": "heading", "attrs": {"level": 2},
+         "content": [{"type": "text", "text": "Contact"}]},
+        {"type": "paragraph",
+         "content": [{"type": "text", "text": "Questions? Reach us at hello@vbwd.dev or open an issue on GitHub."}]},
     ],
 }
 
@@ -786,6 +833,14 @@ def populate_cms() -> None:
     widget_map["testimonials"] = _get_or_create_widget(
         "testimonials", "Testimonials", "html", content_html=TESTIMONIALS_HTML,
     )
+    widget_map["tarif-plans-root"] = _get_or_create_widget(
+        "tarif-plans-root", "Tarif Plans — Root (all plans)", "html",
+        content_html=TARIF_PLANS_ROOT_HTML,
+    )
+    widget_map["tarif-plans-backend"] = _get_or_create_widget(
+        "tarif-plans-backend", "Tarif Plans — Backend plugins", "html",
+        content_html=TARIF_PLANS_BACKEND_HTML,
+    )
 
     db.session.commit()
     print(f"  Widgets: {len(widget_map)} total")
@@ -841,6 +896,7 @@ def populate_cms() -> None:
     print(f"  Widgets : {len(widget_map)}")
     print(f"  Layouts : {len(LAYOUTS)}")
     print("  Pages   : 5 (home1, home2, landing2, landing3, about)")
+    print("  Embed widgets: tarif-plans-root (all), tarif-plans-backend (backend category)")
     print("=" * 55)
 
 
