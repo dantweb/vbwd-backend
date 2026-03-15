@@ -206,6 +206,9 @@ class SoftwarePackageService:
         self._sync_repo.save(sync)
         return sync.to_dict()
 
+    def get_by_tariff_plan_id(self, plan_id: str) -> Optional[GhrmSoftwarePackage]:
+        return self._package_repo.find_by_tariff_plan_id(plan_id)
+
     def rotate_api_key(self, pkg_id: str) -> str:
         """Regenerate sync_api_key for a package. Returns new key."""
         pkg = self._package_repo.find_by_id(pkg_id)

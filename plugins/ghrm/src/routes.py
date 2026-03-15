@@ -223,6 +223,14 @@ def get_versions(slug):
         return jsonify({"error": str(e)}), 404
 
 
+@ghrm_bp.route("/api/v1/ghrm/packages/by-plan/<plan_id>", methods=["GET"])
+def get_package_by_plan(plan_id: str):
+    pkg = _pkg_svc().get_by_tariff_plan_id(plan_id)
+    if not pkg:
+        return jsonify({"error": "No package for this plan"}), 404
+    return jsonify(pkg.to_dict())
+
+
 @ghrm_bp.route("/api/v1/ghrm/packages/<slug>/install", methods=["GET"])
 @require_auth
 def get_install(slug):

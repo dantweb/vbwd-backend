@@ -3,6 +3,7 @@ from typing import Optional, List, Dict, Any
 from plugins.ghrm.src.models.ghrm_software_package import GhrmSoftwarePackage
 from src.models.tarif_plan import TarifPlan
 from src.models.tarif_plan_category import TarifPlanCategory, tarif_plan_category_plans
+from src.extensions import db
 
 
 class GhrmSoftwarePackageRepository:
@@ -16,7 +17,12 @@ class GhrmSoftwarePackageRepository:
         return self.session.query(GhrmSoftwarePackage).filter(GhrmSoftwarePackage.id == pkg_id).first()
 
     def find_by_tariff_plan_id(self, plan_id: str) -> Optional[GhrmSoftwarePackage]:
-        return self.session.query(GhrmSoftwarePackage).filter(GhrmSoftwarePackage.tariff_plan_id == plan_id).first()
+        from uuid import UUID as _UUID
+        try:
+            uid = _UUID(str(plan_id))
+        except ValueError:
+            return None
+        return db.session.query(GhrmSoftwarePackage).filter_by(tariff_plan_id=uid).first()
 
     def find_by_sync_key(self, api_key: str) -> Optional[GhrmSoftwarePackage]:
         return self.session.query(GhrmSoftwarePackage).filter(GhrmSoftwarePackage.sync_api_key == api_key).first()
