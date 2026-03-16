@@ -1,6 +1,9 @@
 #!/usr/bin/env python
-"""Install demo data: currencies, plans, categories, users, invoices, bundles, add-ons.
+"""Install demo data: currencies, plans, categories, users, invoices, bundles, add-ons,
+payment methods.
+
 Usage: python /app/bin/install_demo_data.py
+Safe to re-run — all operations are idempotent.
 """
 import sys
 sys.path.insert(0, '/app')
@@ -19,9 +22,12 @@ from src.models.tarif_plan import TarifPlan
 from src.models.tarif_plan_category import TarifPlanCategory
 from src.models.subscription import Subscription
 from src.models.invoice import UserInvoice
+from src.models.invoice_line_item import InvoiceLineItem
 from src.models.addon import AddOn
 from src.models.addon_subscription import AddOnSubscription
 from src.models.token_bundle import TokenBundle
+from src.models.payment_method import PaymentMethod
+from src.models.invoice_line_item import InvoiceLineItem, LineItemType
 from src.models.enums import (
     UserStatus, UserRole, BillingPeriod,
     SubscriptionStatus, InvoiceStatus
@@ -157,6 +163,21 @@ try:
     print("\n=== Creating Demo Users ===")
 
     users_data = [
+        {
+            'email': 'test@example.com',
+            'password': 'TestPass123@',
+            'plan_slug': 'free',
+            'details': {
+                'first_name': 'John',
+                'last_name': 'Bach',
+                'address_line_1': 'Sunshine Street',
+                'city': 'Waldbronn',
+                'postal_code': '76337',
+                'country': 'DE',
+                'phone': '+49123456789',
+                'company': 'Sunshine Resort',
+            },
+        },
         {'email': 'user.free@demo.local', 'password': 'demo123', 'plan_slug': 'free'},
         {'email': 'user.pro@demo.local',  'password': 'demo123', 'plan_slug': 'pro'},
     ]
@@ -173,6 +194,17 @@ try:
         else:
             print(f"  Exists: {user.email}")
         users[d['email']] = {'user': user, 'plan_slug': d['plan_slug']}
+
+        # Upsert user details if provided
+        if d.get('details'):
+            det = session.query(UserDetails).filter_by(user_id=user.id).first()
+            if not det:
+                det = UserDetails(user_id=user.id)
+                session.add(det)
+            for k, v in d['details'].items():
+                setattr(det, k, v)
+            session.flush()
+            print(f"    Details upserted for {user.email}")
 
     print("\n=== Creating Subscriptions ===")
 
@@ -301,6 +333,119 @@ try:
         print(f"  Admin profile updated")
     else:
         print("  admin@example.com not found — skipping")
+
+    print("\n=== Creating Payment Methods ===")
+
+    payment_methods_data = [
+        {
+            'code': 'invoice',
+            'name': 'Invoice',
+            'description': 'Pay by invoice within 14 days',
+            'short_description': 'Pay by invoice',
+            'plugin_id': None,
+            'is_active': True,
+            'is_default': True,
+            'position': 0,
+            'fee_type': 'none',
+            'fee_charged_to': 'customer',
+        },
+        {
+            'code': 'stripe',
+            'name': 'stripe',
+            'description': '',
+            'short_description': 'Pay with Stripe',
+            'plugin_id': 'stripe',
+            'is_active': True,
+            'is_default': False,
+            'position': 0,
+            'fee_type': 'none',
+            'fee_charged_to': 'customer',
+        },
+        {
+            'code': 'paypal',
+            'name': 'Paypal',
+            'description': '',
+            'short_description': 'Pay secure with paypal',
+            'plugin_id': 'paypal',
+            'is_active': True,
+            'is_default': False,
+            'position': 0,
+            'fee_type': 'none',
+            'fee_charged_to': 'customer',
+        },
+    ]
+
+    for d in payment_methods_data:
+        pm = session.query(PaymentMethod).filter_by(code=d['code']).first()
+        if not pm:
+            pm = PaymentMethod(
+                code=d['code'],
+                name=d['name'],
+                description=d['description'],
+                short_description=d['short_description'],
+                plugin_id=d['plugin_id'],
+                is_active=d['is_active'],
+                is_default=d['is_default'],
+                position=d['position'],
+                fee_type=d['fee_type'],
+                fee_charged_to=d['fee_charged_to'],
+                currencies=[],
+                countries=[],
+                config={},
+            )
+            session.add(pm)
+            session.flush()
+            print(f"  Created: {pm.code}")
+        else:
+            print(f"  Exists: {pm.code}")
+
+    print("\n=== Creating Sample Invoice for test@example.com ===")
+
+    test_user = session.query(User).filter_by(email='test@example.com').first()
+    free_plan = session.query(TarifPlan).filter_by(slug='free').first()
+    if test_user and free_plan:
+        existing_inv = session.query(UserInvoice).filter_by(
+            user_id=test_user.id, tarif_plan_id=free_plan.id
+        ).first()
+        if not existing_inv:
+            test_sub = session.query(Subscription).filter_by(
+                user_id=test_user.id, tarif_plan_id=free_plan.id,
+                status=SubscriptionStatus.ACTIVE
+            ).first()
+            inv = UserInvoice(
+                user_id=test_user.id,
+                tarif_plan_id=free_plan.id,
+                subscription_id=test_sub.id if test_sub else None,
+                invoice_number=f"INV-DEMO-FREE-001",
+                amount=Decimal('0.00'),
+                currency='EUR',
+                status=InvoiceStatus.PAID,
+                payment_method='invoice',
+                payment_ref='zero-price',
+                invoiced_at=datetime.utcnow() - timedelta(days=30),
+                paid_at=datetime.utcnow() - timedelta(days=30),
+                subtotal=Decimal('0.00'),
+                tax_amount=Decimal('0.00'),
+                total_amount=Decimal('0.00'),
+            )
+            session.add(inv)
+            session.flush()
+            line = InvoiceLineItem(
+                invoice_id=inv.id,
+                item_id=free_plan.id,
+                description=free_plan.name,
+                quantity=1,
+                unit_price=Decimal('0.00'),
+                total_price=Decimal('0.00'),
+                item_type=LineItemType.SUBSCRIPTION,
+            )
+            session.add(line)
+            session.flush()
+            print(f"  Created: INV-DEMO-FREE-001 for test@example.com")
+        else:
+            print(f"  Exists: invoice for test@example.com / free plan")
+    else:
+        print("  test@example.com or free plan not found — skipping invoice")
 
     session.commit()
     print("\n=== Done ===")

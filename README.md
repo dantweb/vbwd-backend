@@ -91,7 +91,7 @@ Python/Flask REST API for the VBWD SaaS platform — subscription billing, user 
 ### Standalone
 
 ```bash
-git clone https://github.com/dantweb/vbwd-backend.git
+git clone https://github.com/VBWD-platform/vbwd-backend.git
 cd vbwd-backend
 
 cp .env.example .env   # edit secrets, DB credentials, SMTP
@@ -300,6 +300,23 @@ docker compose exec api flask plugins enable my-plugin
 docker compose exec api flask plugins disable my-plugin
 docker compose exec api flask plugins info my-plugin
 ```
+
+---
+
+## Plugin Directory
+
+| Plugin | Repository | Description |
+|--------|-----------|-------------|
+| analytics | [vbwd-plugin-analytics](https://github.com/VBWD-platform/vbwd-plugin-analytics) | Request/event analytics for admin dashboard |
+| chat | [vbwd-plugin-chat](https://github.com/VBWD-platform/vbwd-plugin-chat) | LLM-powered AI chat with token billing |
+| cms | [vbwd-plugin-cms](https://github.com/VBWD-platform/vbwd-plugin-cms) | CMS pages, categories, images, layouts |
+| email | [vbwd-plugin-email](https://github.com/VBWD-platform/vbwd-plugin-email) | Email templates, SMTP sender, event-driven delivery |
+| ghrm | [vbwd-plugin-ghrm](https://github.com/VBWD-platform/vbwd-plugin-ghrm) | GitHub Release Manager — private package marketplace |
+| mailchimp | [vbwd-plugin-mailchimp](https://github.com/VBWD-platform/vbwd-plugin-mailchimp) | Mandrill/Mailchimp email sender backend |
+| paypal | [vbwd-plugin-paypal](https://github.com/VBWD-platform/vbwd-plugin-paypal) | PayPal payment SDK adapter and webhooks |
+| stripe | [vbwd-plugin-stripe](https://github.com/VBWD-platform/vbwd-plugin-stripe) | Stripe payment SDK adapter and webhooks |
+| taro | [vbwd-plugin-taro](https://github.com/VBWD-platform/vbwd-plugin-taro) | Tarot card reading with AI interpretations |
+| yookassa | [vbwd-plugin-yookassa](https://github.com/VBWD-platform/vbwd-plugin-yookassa) | YooKassa payment SDK adapter and auto-renewal |
 
 ---
 

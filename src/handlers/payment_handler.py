@@ -35,6 +35,7 @@ class PaymentCapturedHandler(IEventHandler):
             "token_transaction": self._container.token_transaction_repository(),
             "token_bundle_purchase": self._container.token_bundle_purchase_repository(),
             "addon_subscription": self._container.addon_subscription_repository(),
+            "user": self._container.user_repository(),
         }
 
     def can_handle(self, event: DomainEvent) -> bool:
@@ -224,6 +225,48 @@ class PaymentCapturedHandler(IEventHandler):
                         addon_sub.activated_at = utcnow()
                         repos["addon_subscription"].save(addon_sub)
                         items_activated["add_ons"].append(str(addon_sub.id))
+
+            # Publish bus events so email plugin (and others) can react
+            from src.events.bus import event_bus
+
+            user = repos["user"].find_by_id(invoice.user_id)
+            user_email = user.email if user else ""
+            user_name = user_email
+
+            paid_date = (
+                invoice.paid_at.date().isoformat()
+                if invoice.paid_at
+                else utcnow().date().isoformat()
+            )
+            event_bus.publish(
+                "invoice.paid",
+                {
+                    "user_name": user_name,
+                    "user_email": user_email,
+                    "invoice_id": str(getattr(invoice, "invoice_number", None) or invoice.id),
+                    "amount": str(invoice.amount),
+                    "paid_date": paid_date,
+                    "invoice_url": f"/invoices/{invoice.id}",
+                },
+            )
+
+            if items_activated["subscription"]:
+                sub = repos["subscription"].find_by_id(items_activated["subscription"])
+                if sub and sub.tarif_plan:
+                    plan = sub.tarif_plan
+                    event_bus.publish(
+                        "subscription.activated",
+                        {
+                            "user_name": user_name,
+                            "user_email": user_email,
+                            "plan_name": plan.name,
+                            "plan_price": str(getattr(plan, "price", "") or ""),
+                            "billing_period": getattr(plan, "billing_period", "monthly") or "monthly",
+                            "start_date": sub.started_at.date().isoformat() if sub.started_at else paid_date,
+                            "next_billing_date": sub.expires_at.date().isoformat() if sub.expires_at else "",
+                            "dashboard_url": "/dashboard",
+                        },
+                    )
 
             return EventResult.success_result(
                 {
