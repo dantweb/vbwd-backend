@@ -2,7 +2,7 @@
 import pytest
 from src.plugins.base import BasePlugin, PluginMetadata
 from src.plugins.manager import PluginManager
-from plugins.analytics import AnalyticsPlugin
+from plugins.demoplugin import DemoPlugin
 
 
 class MockPluginNoBlueprint(BasePlugin):
@@ -32,23 +32,6 @@ class TestBasePluginBlueprint:
         assert plugin.get_url_prefix() is None
 
 
-class TestAnalyticsPluginBlueprint:
-    """Test analytics plugin blueprint."""
-
-    def test_analytics_returns_blueprint(self):
-        """Analytics plugin returns its blueprint."""
-        plugin = AnalyticsPlugin()
-        bp = plugin.get_blueprint()
-        assert bp is not None
-        assert bp.name == "analytics_plugin"
-
-    def test_analytics_returns_url_prefix(self):
-        """Analytics plugin returns URL prefix."""
-        plugin = AnalyticsPlugin()
-        prefix = plugin.get_url_prefix()
-        assert prefix == "/api/v1/plugins/analytics"
-
-
 class TestManagerGetPluginBlueprints:
     """Test PluginManager.get_plugin_blueprints()."""
 
@@ -58,16 +41,16 @@ class TestManagerGetPluginBlueprints:
 
     def test_collects_blueprints_from_enabled_plugins(self, plugin_manager):
         """get_plugin_blueprints returns blueprints from enabled plugins."""
-        plugin = AnalyticsPlugin()
+        plugin = DemoPlugin()
         plugin_manager.register_plugin(plugin)
-        plugin_manager.initialize_plugin("analytics")
-        plugin_manager.enable_plugin("analytics")
+        plugin_manager.initialize_plugin("backend-demo-plugin")
+        plugin_manager.enable_plugin("backend-demo-plugin")
 
         blueprints = plugin_manager.get_plugin_blueprints()
         assert len(blueprints) == 1
         bp, prefix = blueprints[0]
-        assert bp.name == "analytics_plugin"
-        assert prefix == "/api/v1/plugins/analytics"
+        assert bp.name == "demo_plugin"
+        assert prefix == "/api/v1/backend-demo-plugin"
 
     def test_skips_plugins_without_blueprint(self, plugin_manager):
         """get_plugin_blueprints skips plugins that return None."""
@@ -81,9 +64,9 @@ class TestManagerGetPluginBlueprints:
 
     def test_skips_disabled_plugins(self, plugin_manager):
         """get_plugin_blueprints only includes enabled plugins."""
-        plugin = AnalyticsPlugin()
+        plugin = DemoPlugin()
         plugin_manager.register_plugin(plugin)
-        plugin_manager.initialize_plugin("analytics")
+        plugin_manager.initialize_plugin("backend-demo-plugin")
         # Not enabled
 
         blueprints = plugin_manager.get_plugin_blueprints()

@@ -51,6 +51,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Install plugins
+        run: |
+          for plugin in analytics chat cms email ghrm mailchimp paypal stripe taro yookassa; do
+            git clone --depth=1 https://github.com/VBWD-platform/vbwd-plugin-${plugin}.git plugins/${plugin}
+          done
+
       - name: Run unit tests
         env:
           PYTHONPATH: ${{ github.workspace }}
