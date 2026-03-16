@@ -26,7 +26,9 @@ class TaroSessionRepository:
 
     def get_by_id(self, session_id: str) -> Optional[TaroSession]:
         """Get TaroSession by ID."""
-        return self.session.query(TaroSession).filter(TaroSession.id == session_id).first()
+        return (
+            self.session.query(TaroSession).filter(TaroSession.id == session_id).first()
+        )
 
     def get_user_sessions(self, user_id: str) -> List[TaroSession]:
         """Get all sessions for a user, ordered by created_at descending."""
@@ -95,7 +97,11 @@ class TaroSessionRepository:
 
     def count_user_sessions(self, user_id: str) -> int:
         """Count total sessions for user."""
-        return self.session.query(TaroSession).filter(TaroSession.user_id == user_id).count()
+        return (
+            self.session.query(TaroSession)
+            .filter(TaroSession.user_id == user_id)
+            .count()
+        )
 
     def count_active_sessions(self, user_id: str) -> int:
         """Count active sessions for user. Should typically be 0 or 1."""

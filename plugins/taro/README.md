@@ -491,3 +491,14 @@ ls plugins/taro/assets/arcana/
 ## License
 
 This plugin is part of VBWD SDK. See main LICENSE for details.
+
+---
+
+## Related
+
+| | Repository |
+|-|------------|
+| 👤 Frontend (user) | [vbwd-fe-user-plugin-taro](https://github.com/VBWD-platform/vbwd-fe-user-plugin-taro) |
+| 🛠 Frontend (admin) | [vbwd-fe-admin-plugin-taro](https://github.com/VBWD-platform/vbwd-fe-admin-plugin-taro) |
+
+**Core:** [vbwd-backend](https://github.com/VBWD-platform/vbwd-backend)

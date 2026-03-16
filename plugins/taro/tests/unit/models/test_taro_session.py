@@ -21,7 +21,7 @@ class TestTaroSessionCreation:
             expires_at=expires_at,
             tokens_consumed=10,
             follow_up_count=0,
-            max_follow_ups=3
+            max_follow_ups=3,
         )
 
         assert session.user_id == user_id
@@ -36,6 +36,7 @@ class TestTaroSessionCreation:
     def test_taro_session_requires_user_id(self, db):
         """Test that TaroSession requires a user_id at database level."""
         from sqlalchemy.exc import IntegrityError
+
         expires_at = datetime.utcnow() + timedelta(minutes=30)
 
         # SQLAlchemy doesn't raise TypeError on instantiation, but on commit
@@ -43,7 +44,7 @@ class TestTaroSessionCreation:
             status=TaroSessionStatus.ACTIVE.value,
             spread_id="spread-001",
             expires_at=expires_at,
-            tokens_consumed=10
+            tokens_consumed=10,
         )
         # user_id is required so trying to add will fail
         db.session.add(session)
@@ -55,7 +56,7 @@ class TestTaroSessionCreation:
         session = TaroSession(
             user_id=str(uuid4()),
             spread_id="spread-001",
-            expires_at=datetime.utcnow() + timedelta(minutes=30)
+            expires_at=datetime.utcnow() + timedelta(minutes=30),
         )
         db.session.add(session)
         db.session.commit()
@@ -68,7 +69,7 @@ class TestTaroSessionCreation:
         session = TaroSession(
             user_id=str(uuid4()),
             spread_id="spread-001",
-            expires_at=datetime.utcnow() + timedelta(minutes=30)
+            expires_at=datetime.utcnow() + timedelta(minutes=30),
         )
         db.session.add(session)
         db.session.commit()
@@ -90,9 +91,7 @@ class TestTaroSessionCreation:
         expires_at = now + timedelta(minutes=30)
 
         session = TaroSession(
-            user_id=str(uuid4()),
-            spread_id="spread-001",
-            expires_at=expires_at
+            user_id=str(uuid4()), spread_id="spread-001", expires_at=expires_at
         )
 
         # Should be approximately 30 minutes from now
@@ -105,7 +104,7 @@ class TestTaroSessionCreation:
             user_id=str(uuid4()),
             spread_id="spread-001",
             expires_at=datetime.utcnow() + timedelta(minutes=30),
-            tokens_consumed=15
+            tokens_consumed=15,
         )
 
         assert session.tokens_consumed == 15
@@ -121,7 +120,7 @@ class TestTaroSessionCreation:
             spread_id="spread-001",
             expires_at=datetime.utcnow() + timedelta(minutes=30),
             follow_up_count=0,
-            max_follow_ups=3
+            max_follow_ups=3,
         )
 
         assert session.follow_up_count == 0
@@ -138,7 +137,7 @@ class TestTaroSessionCreation:
             user_id=str(uuid4()),
             spread_id="spread-001",
             expires_at=datetime.utcnow() + timedelta(minutes=30),
-            max_follow_ups=0
+            max_follow_ups=0,
         )
         assert session_basic.max_follow_ups == 0
 
@@ -147,7 +146,7 @@ class TestTaroSessionCreation:
             user_id=str(uuid4()),
             spread_id="spread-002",
             expires_at=datetime.utcnow() + timedelta(minutes=30),
-            max_follow_ups=3
+            max_follow_ups=3,
         )
         assert session_star.max_follow_ups == 3
 
@@ -156,7 +155,7 @@ class TestTaroSessionCreation:
             user_id="user-789",
             spread_id="spread-003",
             expires_at=datetime.utcnow() + timedelta(minutes=30),
-            max_follow_ups=12
+            max_follow_ups=12,
         )
         assert session_guru.max_follow_ups == 12
 
@@ -165,7 +164,7 @@ class TestTaroSessionCreation:
         session = TaroSession(
             user_id=str(uuid4()),
             spread_id="spread-001",
-            expires_at=datetime.utcnow() + timedelta(minutes=30)
+            expires_at=datetime.utcnow() + timedelta(minutes=30),
         )
 
         assert session.ended_at is None
@@ -180,7 +179,7 @@ class TestTaroSessionCreation:
         session = TaroSession(
             user_id=str(uuid4()),
             spread_id="spread-001",
-            expires_at=datetime.utcnow() + timedelta(minutes=30)
+            expires_at=datetime.utcnow() + timedelta(minutes=30),
         )
         db.session.add(session)
         db.session.commit()
@@ -193,7 +192,7 @@ class TestTaroSessionCreation:
         session = TaroSession(
             user_id=str(uuid4()),
             spread_id="spread-001",
-            expires_at=datetime.utcnow() + timedelta(minutes=30)
+            expires_at=datetime.utcnow() + timedelta(minutes=30),
         )
         db.session.add(session)
         db.session.commit()
@@ -210,7 +209,7 @@ class TestTaroSessionCreation:
             expires_at=expires_at,
             tokens_consumed=15,
             follow_up_count=1,
-            max_follow_ups=3
+            max_follow_ups=3,
         )
         db.session.add(session)
         db.session.commit()
@@ -227,10 +226,11 @@ class TestTaroSessionCreation:
     def test_taro_session_id_is_uuid(self, db):
         """Test that TaroSession gets a UUID id on creation."""
         from uuid import UUID
+
         session = TaroSession(
             user_id=str(uuid4()),
             spread_id="spread-001",
-            expires_at=datetime.utcnow() + timedelta(minutes=30)
+            expires_at=datetime.utcnow() + timedelta(minutes=30),
         )
         db.session.add(session)
         db.session.commit()

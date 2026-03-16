@@ -25,10 +25,12 @@ def auth_as(user_id):
 def app():
     """Create Flask app for testing."""
     from flask import Flask
+
     app = Flask(__name__)
     app.config["TESTING"] = True
     app.config["JWT_SECRET_KEY"] = "test-secret"
     from plugins.taro.src.routes import taro_bp
+
     app.register_blueprint(taro_bp, url_prefix="/api/v1/taro")
     return app
 
@@ -74,8 +76,13 @@ class TestTaroRoutes:
         # This tests that the route exists and is registered
         user_id = str(uuid4())
         with auth_as(user_id):
-            with patch("plugins.taro.src.routes.get_user_tarif_plan_limits", return_value=(3, 3)):
-                with patch("plugins.taro.src.routes.check_token_balance", return_value=True):
+            with patch(
+                "plugins.taro.src.routes.get_user_tarif_plan_limits",
+                return_value=(3, 3),
+            ):
+                with patch(
+                    "plugins.taro.src.routes.check_token_balance", return_value=True
+                ):
                     # The route should exist and handle the request
                     response = client.post(
                         "/api/v1/taro/session", json={}, headers=_AUTH_HEADER
@@ -93,11 +100,17 @@ class TestLanguageParameterInRoutes:
         session_id = str(uuid4())
 
         with auth_as(user_id):
-            with patch("plugins.taro.src.routes._get_taro_services") as mock_get_services:
+            with patch(
+                "plugins.taro.src.routes._get_taro_services"
+            ) as mock_get_services:
                 # Setup mocks
                 mock_service = Mock()
-                mock_service.get_session.return_value = Mock(user_id=user_id, status="ACTIVE")
-                mock_service.generate_situation_reading.return_value = "Russian interpretation"
+                mock_service.get_session.return_value = Mock(
+                    user_id=user_id, status="ACTIVE"
+                )
+                mock_service.generate_situation_reading.return_value = (
+                    "Russian interpretation"
+                )
                 mock_get_services.return_value = mock_service
 
                 # Call endpoint with language parameter
@@ -110,7 +123,7 @@ class TestLanguageParameterInRoutes:
                 # Verify service was called with language parameter
                 mock_service.generate_situation_reading.assert_called_once()
                 call_kwargs = mock_service.generate_situation_reading.call_args[1]
-                assert call_kwargs['language'] == 'ru'
+                assert call_kwargs["language"] == "ru"
 
     def test_submit_situation_language_defaults_to_english(self, client):
         """Verify language defaults to 'en' if not provided"""
@@ -118,10 +131,16 @@ class TestLanguageParameterInRoutes:
         session_id = str(uuid4())
 
         with auth_as(user_id):
-            with patch("plugins.taro.src.routes._get_taro_services") as mock_get_services:
+            with patch(
+                "plugins.taro.src.routes._get_taro_services"
+            ) as mock_get_services:
                 mock_service = Mock()
-                mock_service.get_session.return_value = Mock(user_id=user_id, status="ACTIVE")
-                mock_service.generate_situation_reading.return_value = "English interpretation"
+                mock_service.get_session.return_value = Mock(
+                    user_id=user_id, status="ACTIVE"
+                )
+                mock_service.generate_situation_reading.return_value = (
+                    "English interpretation"
+                )
                 mock_get_services.return_value = mock_service
 
                 # Call without language parameter
@@ -133,18 +152,24 @@ class TestLanguageParameterInRoutes:
 
                 # Verify language defaults to 'en'
                 call_kwargs = mock_service.generate_situation_reading.call_args[1]
-                assert call_kwargs['language'] == 'en'
+                assert call_kwargs["language"] == "en"
 
-    @pytest.mark.parametrize("lang_code", ["en", "ru", "de", "fr", "es", "ja", "th", "zh"])
+    @pytest.mark.parametrize(
+        "lang_code", ["en", "ru", "de", "fr", "es", "ja", "th", "zh"]
+    )
     def test_submit_situation_all_8_languages(self, client, lang_code):
         """Verify /situation accepts all 8 language codes"""
         user_id = str(uuid4())
         session_id = str(uuid4())
 
         with auth_as(user_id):
-            with patch("plugins.taro.src.routes._get_taro_services") as mock_get_services:
+            with patch(
+                "plugins.taro.src.routes._get_taro_services"
+            ) as mock_get_services:
                 mock_service = Mock()
-                mock_service.get_session.return_value = Mock(user_id=user_id, status="ACTIVE")
+                mock_service.get_session.return_value = Mock(
+                    user_id=user_id, status="ACTIVE"
+                )
                 mock_service.generate_situation_reading.return_value = "Response"
                 mock_get_services.return_value = mock_service
 
@@ -156,7 +181,7 @@ class TestLanguageParameterInRoutes:
 
                 # Verify language was passed correctly
                 call_kwargs = mock_service.generate_situation_reading.call_args[1]
-                assert call_kwargs['language'] == lang_code
+                assert call_kwargs["language"] == lang_code
 
     def test_card_explanation_accepts_language_parameter(self, client):
         """Verify /card-explanation endpoint accepts language parameter"""
@@ -164,9 +189,13 @@ class TestLanguageParameterInRoutes:
         session_id = str(uuid4())
 
         with auth_as(user_id):
-            with patch("plugins.taro.src.routes._get_taro_services") as mock_get_services:
+            with patch(
+                "plugins.taro.src.routes._get_taro_services"
+            ) as mock_get_services:
                 mock_service = Mock()
-                mock_service.get_session.return_value = Mock(user_id=user_id, status="ACTIVE")
+                mock_service.get_session.return_value = Mock(
+                    user_id=user_id, status="ACTIVE"
+                )
                 mock_service.get_session_spread.return_value = [Mock(), Mock(), Mock()]
                 mock_service._build_cards_context.return_value = "Cards: ..."
                 mock_service.prompt_service = Mock()
@@ -185,22 +214,29 @@ class TestLanguageParameterInRoutes:
                 if mock_service.prompt_service.render.called:
                     call_kwargs = mock_service.prompt_service.render.call_args
                     context = call_kwargs[0][1]
-                    assert context.get('language') == 'Deutsch (German)'
+                    assert context.get("language") == "Deutsch (German)"
 
-    @pytest.mark.parametrize("lang_code,expected_lang", [
-        ("en", "English"),
-        ("de", "Deutsch (German)"),
-        ("fr", "Français (French)"),
-    ])
+    @pytest.mark.parametrize(
+        "lang_code,expected_lang",
+        [
+            ("en", "English"),
+            ("de", "Deutsch (German)"),
+            ("fr", "Français (French)"),
+        ],
+    )
     def test_card_explanation_all_languages(self, client, lang_code, expected_lang):
         """Verify /card-explanation handles all language codes"""
         user_id = str(uuid4())
         session_id = str(uuid4())
 
         with auth_as(user_id):
-            with patch("plugins.taro.src.routes._get_taro_services") as mock_get_services:
+            with patch(
+                "plugins.taro.src.routes._get_taro_services"
+            ) as mock_get_services:
                 mock_service = Mock()
-                mock_service.get_session.return_value = Mock(user_id=user_id, status="ACTIVE")
+                mock_service.get_session.return_value = Mock(
+                    user_id=user_id, status="ACTIVE"
+                )
                 mock_service.get_session_spread.return_value = [Mock(), Mock(), Mock()]
                 mock_service._build_cards_context.return_value = "Cards"
                 mock_service.prompt_service = Mock()
@@ -218,7 +254,11 @@ class TestLanguageParameterInRoutes:
                 )
 
                 # Should be successful
-                assert response.status_code in [200, 201, 400]  # May fail for other reasons
+                assert response.status_code in [
+                    200,
+                    201,
+                    400,
+                ]  # May fail for other reasons
 
     def test_follow_up_question_accepts_language_parameter(self, client):
         """Verify /follow-up-question endpoint accepts language parameter"""
@@ -226,9 +266,13 @@ class TestLanguageParameterInRoutes:
         session_id = str(uuid4())
 
         with auth_as(user_id):
-            with patch("plugins.taro.src.routes._get_taro_services") as mock_get_services:
+            with patch(
+                "plugins.taro.src.routes._get_taro_services"
+            ) as mock_get_services:
                 mock_service = Mock()
-                mock_service.get_session.return_value = Mock(user_id=user_id, status="ACTIVE")
+                mock_service.get_session.return_value = Mock(
+                    user_id=user_id, status="ACTIVE"
+                )
                 mock_service.answer_oracle_question.return_value = "Oracle's answer"
                 mock_get_services.return_value = mock_service
 
@@ -241,18 +285,24 @@ class TestLanguageParameterInRoutes:
                 # Verify service was called with language
                 mock_service.answer_oracle_question.assert_called_once()
                 call_kwargs = mock_service.answer_oracle_question.call_args[1]
-                assert call_kwargs['language'] == 'fr'
+                assert call_kwargs["language"] == "fr"
 
-    @pytest.mark.parametrize("lang_code", ["en", "ru", "de", "fr", "es", "ja", "th", "zh"])
+    @pytest.mark.parametrize(
+        "lang_code", ["en", "ru", "de", "fr", "es", "ja", "th", "zh"]
+    )
     def test_follow_up_question_all_8_languages(self, client, lang_code):
         """Verify /follow-up-question accepts all 8 language codes"""
         user_id = str(uuid4())
         session_id = str(uuid4())
 
         with auth_as(user_id):
-            with patch("plugins.taro.src.routes._get_taro_services") as mock_get_services:
+            with patch(
+                "plugins.taro.src.routes._get_taro_services"
+            ) as mock_get_services:
                 mock_service = Mock()
-                mock_service.get_session.return_value = Mock(user_id=user_id, status="ACTIVE")
+                mock_service.get_session.return_value = Mock(
+                    user_id=user_id, status="ACTIVE"
+                )
                 mock_service.answer_oracle_question.return_value = "Response"
                 mock_get_services.return_value = mock_service
 
@@ -264,4 +314,4 @@ class TestLanguageParameterInRoutes:
 
                 # Verify language was passed
                 call_kwargs = mock_service.answer_oracle_question.call_args[1]
-                assert call_kwargs['language'] == lang_code
+                assert call_kwargs["language"] == lang_code

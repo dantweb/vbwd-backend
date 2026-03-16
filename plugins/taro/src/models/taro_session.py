@@ -41,18 +41,28 @@ class TaroSession(BaseModel):
         nullable=False,
         default=utcnow,
     )
-    expires_at = db.Column(db.DateTime, nullable=False, index=True)  # started_at + 30 minutes
-    ended_at = db.Column(db.DateTime, nullable=True)  # When user closed or session expired
+    expires_at = db.Column(
+        db.DateTime, nullable=False, index=True
+    )  # started_at + 30 minutes
+    ended_at = db.Column(
+        db.DateTime, nullable=True
+    )  # When user closed or session expired
 
     # Card spread
-    spread_id = db.Column(db.String(50), nullable=False, index=True)  # Unique ID for this 3-card spread
+    spread_id = db.Column(
+        db.String(50), nullable=False, index=True
+    )  # Unique ID for this 3-card spread
 
     # Token tracking
     tokens_consumed = db.Column(db.Integer, nullable=False, default=0)
 
     # Follow-up tracking
-    follow_up_count = db.Column(db.Integer, nullable=False, default=0)  # How many follow-ups asked
-    max_follow_ups = db.Column(db.Integer, nullable=False, default=3)  # From tarif plan/add-ons
+    follow_up_count = db.Column(
+        db.Integer, nullable=False, default=0
+    )  # How many follow-ups asked
+    max_follow_ups = db.Column(
+        db.Integer, nullable=False, default=3
+    )  # From tarif plan/add-ons
 
     # Relationships
     cards = db.relationship(

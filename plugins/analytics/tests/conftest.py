@@ -23,6 +23,7 @@ def app():
     app = create_app(test_config)
 
     from src.extensions import limiter
+
     limiter.reset()
 
     yield app

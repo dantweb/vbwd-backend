@@ -23,9 +23,15 @@ class Arcana(BaseModel):
 
     # Card identity
     number = db.Column(db.Integer, nullable=True, index=True)  # 0-21 for Major Arcana
-    name = db.Column(db.String(255), nullable=False, index=True)  # "The Fool", "Ace of Cups", etc.
-    suit = db.Column(db.String(50), nullable=True, index=True)  # "CUPS", "WANDS", "SWORDS", "PENTACLES"
-    rank = db.Column(db.String(50), nullable=True, index=True)  # "ACE", "TWO", ..., "KING"
+    name = db.Column(
+        db.String(255), nullable=False, index=True
+    )  # "The Fool", "Ace of Cups", etc.
+    suit = db.Column(
+        db.String(50), nullable=True, index=True
+    )  # "CUPS", "WANDS", "SWORDS", "PENTACLES"
+    rank = db.Column(
+        db.String(50), nullable=True, index=True
+    )  # "ACE", "TWO", ..., "KING"
     arcana_type = db.Column(
         db.String(50),
         nullable=False,
@@ -48,7 +54,9 @@ class Arcana(BaseModel):
             "name": self.name,
             "suit": self.suit,
             "rank": self.rank,
-            "arcana_type": self.arcana_type.value if isinstance(self.arcana_type, ArcanaType) else self.arcana_type,
+            "arcana_type": self.arcana_type.value
+            if isinstance(self.arcana_type, ArcanaType)
+            else self.arcana_type,
             "upright_meaning": self.upright_meaning,
             "reversed_meaning": self.reversed_meaning,
             "image_url": self.image_url,

@@ -29,10 +29,10 @@ class PromptService:
         else:
             raise ValueError("Either prompts_file or prompts_data must be provided")
 
-        self.defaults = self.prompts.get('_defaults', {})
+        self.defaults = self.prompts.get("_defaults", {})
 
     @classmethod
-    def from_dict(cls, prompts_data: Dict[str, Any]) -> 'PromptService':
+    def from_dict(cls, prompts_data: Dict[str, Any]) -> "PromptService":
         """Create PromptService from a prompts dictionary.
 
         Args:
@@ -71,7 +71,7 @@ class PromptService:
         Raises:
             ValueError: If slug is internal (_*) or doesn't exist
         """
-        if slug.startswith('_'):
+        if slug.startswith("_"):
             raise ValueError(f"Cannot access internal prompt: {slug}")
 
         prompt = self.prompts.get(slug)
@@ -97,7 +97,7 @@ class PromptService:
             ValueError: If slug doesn't exist or template rendering fails
         """
         prompt = self.get_prompt(slug)
-        template = prompt.get('template', '')
+        template = prompt.get("template", "")
 
         try:
             t = Template(template)
@@ -141,7 +141,7 @@ class PromptService:
         Raises:
             ValueError: If slug is internal or doesn't exist
         """
-        if slug.startswith('_'):
+        if slug.startswith("_"):
             raise ValueError(f"Cannot modify internal prompt: {slug}")
 
         if slug not in self.prompts:
@@ -164,7 +164,7 @@ class PromptService:
             Updated defaults dict
         """
         self.defaults.update(defaults)
-        self.prompts['_defaults'] = self.defaults
+        self.prompts["_defaults"] = self.defaults
         self._save_prompts()
         return self.defaults
 
@@ -174,7 +174,7 @@ class PromptService:
         Raises:
             FileNotFoundError: If .dist file doesn't exist
         """
-        dist_file = self.prompts_file.replace('.json', '.json.dist')
+        dist_file = self.prompts_file.replace(".json", ".json.dist")
         if not os.path.exists(dist_file):
             raise FileNotFoundError(
                 f"Distribution file not found: {dist_file}\n"
@@ -184,11 +184,11 @@ class PromptService:
         with open(dist_file) as f:
             self.prompts = json.load(f)
 
-        self.defaults = self.prompts.get('_defaults', {})
+        self.defaults = self.prompts.get("_defaults", {})
         self._save_prompts()
 
     def _save_prompts(self) -> None:
         """Save prompts to JSON file (if file-based, otherwise no-op for config-based)."""
         if self.prompts_file:
-            with open(self.prompts_file, 'w') as f:
+            with open(self.prompts_file, "w") as f:
                 json.dump(self.prompts, f, indent=2)

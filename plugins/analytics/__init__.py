@@ -31,6 +31,7 @@ class AnalyticsPlugin(BasePlugin):
 
     def get_blueprint(self) -> Optional["Blueprint"]:
         from plugins.analytics.src.routes import analytics_plugin_bp
+
         return analytics_plugin_bp
 
     def get_url_prefix(self) -> Optional[str]:
@@ -39,6 +40,7 @@ class AnalyticsPlugin(BasePlugin):
     def get_admin_blueprint(self) -> Optional["Blueprint"]:
         """Return the admin analytics blueprint for direct registration."""
         from plugins.analytics.src.routes import analytics_admin_bp
+
         return analytics_admin_bp
 
     def on_enable(self) -> None:

@@ -34,11 +34,23 @@ def upgrade() -> None:
     op.create_table(
         "arcana",
         sa.Column("id", UUID(as_uuid=True), nullable=False),
-        sa.Column("number", sa.Integer(), nullable=True, index=True),  # 0-21 for Major Arcana
+        sa.Column(
+            "number", sa.Integer(), nullable=True, index=True
+        ),  # 0-21 for Major Arcana
         sa.Column("name", sa.String(length=255), nullable=False, index=True),
-        sa.Column("suit", sa.String(length=50), nullable=True, index=True),  # CUPS, WANDS, SWORDS, PENTACLES
-        sa.Column("rank", sa.String(length=50), nullable=True, index=True),  # ACE, TWO, ..., KING
-        sa.Column("arcana_type", arcanatype_enum, nullable=False, index=True, server_default="MAJOR_ARCANA"),
+        sa.Column(
+            "suit", sa.String(length=50), nullable=True, index=True
+        ),  # CUPS, WANDS, SWORDS, PENTACLES
+        sa.Column(
+            "rank", sa.String(length=50), nullable=True, index=True
+        ),  # ACE, TWO, ..., KING
+        sa.Column(
+            "arcana_type",
+            arcanatype_enum,
+            nullable=False,
+            index=True,
+            server_default="MAJOR_ARCANA",
+        ),
         sa.Column("upright_meaning", sa.Text(), nullable=False),
         sa.Column("reversed_meaning", sa.Text(), nullable=False),
         sa.Column("image_url", sa.String(length=512), nullable=False),

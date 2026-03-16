@@ -10,6 +10,7 @@ from plugins.taro.src.enums import ArcanaType
 def populated_db(db):
     """Seed the database with all 78 arcana cards."""
     from plugins.taro.src.bin.populate_arcanas import populate_arcanas
+
     populate_arcanas()
     yield db
 
@@ -24,18 +25,18 @@ class TestArcanaPopulation:
 
     def test_major_arcana_count(self, db):
         """Test that exactly 22 major arcana cards are populated."""
-        major_count = db.session.query(Arcana).filter(
-            Arcana.arcana_type == ArcanaType.MAJOR_ARCANA.value
-        ).count()
+        major_count = (
+            db.session.query(Arcana)
+            .filter(Arcana.arcana_type == ArcanaType.MAJOR_ARCANA.value)
+            .count()
+        )
         assert major_count == 22, f"Expected 22 major arcana, got {major_count}"
 
     def test_minor_arcana_suits(self, db):
         """Test that each minor arcana suit has exactly 14 cards."""
         suits = ["CUPS", "WANDS", "SWORDS", "PENTACLES"]
         for suit in suits:
-            suit_count = db.session.query(Arcana).filter(
-                Arcana.suit == suit
-            ).count()
+            suit_count = db.session.query(Arcana).filter(Arcana.suit == suit).count()
             assert suit_count == 14, f"Expected 14 {suit} cards, got {suit_count}"
 
     def test_major_arcana_numbers(self, db):
@@ -55,9 +56,12 @@ class TestArcanaPopulation:
         all_cards = db.session.query(Arcana).all()
         for card in all_cards:
             assert card.image_url, f"Card '{card.name}' has no image_url"
-            assert isinstance(card.image_url, str), f"Card '{card.name}' image_url is not a string"
-            assert card.image_url.startswith("/api/v1/taro/assets/arcana/"), \
-                f"Card '{card.name}' has invalid image URL: {card.image_url}"
+            assert isinstance(
+                card.image_url, str
+            ), f"Card '{card.name}' image_url is not a string"
+            assert card.image_url.startswith(
+                "/api/v1/taro/assets/arcana/"
+            ), f"Card '{card.name}' has invalid image URL: {card.image_url}"
 
     def test_major_arcana_image_paths(self, db):
         """Test that major arcana image URLs follow correct naming pattern."""
@@ -68,22 +72,20 @@ class TestArcanaPopulation:
         )
         for card in major_arcana:
             expected_pattern = f"/api/v1/taro/assets/arcana/major/{card.number:02d}-"
-            assert card.image_url.startswith(expected_pattern), \
-                f"Card '{card.name}' URL doesn't match pattern: {card.image_url}"
+            assert card.image_url.startswith(
+                expected_pattern
+            ), f"Card '{card.name}' URL doesn't match pattern: {card.image_url}"
 
     def test_minor_arcana_image_paths(self, db):
         """Test that minor arcana image URLs follow correct naming pattern."""
-        minor_arcana = (
-            db.session.query(Arcana)
-            .filter(Arcana.suit.isnot(None))
-            .all()
-        )
+        minor_arcana = db.session.query(Arcana).filter(Arcana.suit.isnot(None)).all()
         for card in minor_arcana:
             suit_lower = card.suit.lower()
             rank_lower = card.rank.lower()
             expected_pattern = f"/api/v1/taro/assets/arcana/minor/{suit_lower}/{rank_lower}-of-{suit_lower}.svg"
-            assert card.image_url == expected_pattern, \
-                f"Card '{card.name}' URL mismatch.\nExpected: {expected_pattern}\nGot: {card.image_url}"
+            assert (
+                card.image_url == expected_pattern
+            ), f"Card '{card.name}' URL mismatch.\nExpected: {expected_pattern}\nGot: {card.image_url}"
 
     def test_image_files_exist(self, db):
         """Test that all image files referenced in database actually exist."""
@@ -97,15 +99,17 @@ class TestArcanaPopulation:
             url_parts = card.image_url.split("/api/v1/taro/assets/arcana/")[1]
             file_path = assets_dir / url_parts
 
-            assert file_path.exists(), \
-                f"Image file not found for card '{card.name}': {file_path}"
+            assert (
+                file_path.exists()
+            ), f"Image file not found for card '{card.name}': {file_path}"
 
     def test_image_files_are_svg(self, db):
         """Test that all image files have .svg extension."""
         all_cards = db.session.query(Arcana).all()
         for card in all_cards:
-            assert card.image_url.endswith(".svg"), \
-                f"Card '{card.name}' image is not SVG: {card.image_url}"
+            assert card.image_url.endswith(
+                ".svg"
+            ), f"Card '{card.name}' image is not SVG: {card.image_url}"
 
     def test_all_meanings_present(self, db):
         """Test that all cards have upright and reversed meanings."""
@@ -130,14 +134,11 @@ class TestArcanaPopulation:
 
     def test_minor_arcana_rank_suit_unique(self, db):
         """Test that minor arcana cards have unique rank+suit combinations."""
-        minor_arcana = (
-            db.session.query(Arcana)
-            .filter(Arcana.suit.isnot(None))
-            .all()
-        )
+        minor_arcana = db.session.query(Arcana).filter(Arcana.suit.isnot(None)).all()
         combinations = [(card.rank, card.suit) for card in minor_arcana]
-        assert len(combinations) == len(set(combinations)), \
-            "Duplicate minor arcana rank+suit combinations found"
+        assert len(combinations) == len(
+            set(combinations)
+        ), "Duplicate minor arcana rank+suit combinations found"
 
     def test_no_null_suit_for_minor_arcana(self, db):
         """Test that all minor arcana cards have a suit."""
@@ -163,8 +164,9 @@ class TestArcanaPopulation:
         """Test that no two cards have the same image URL."""
         all_cards = db.session.query(Arcana).all()
         urls = [card.image_url for card in all_cards]
-        assert len(urls) == len(set(urls)), \
-            f"Found {len(urls) - len(set(urls))} duplicate image URLs"
+        assert len(urls) == len(
+            set(urls)
+        ), f"Found {len(urls) - len(set(urls))} duplicate image URLs"
 
     def test_arcana_to_dict(self, db):
         """Test that arcana.to_dict() includes all required fields."""
@@ -172,9 +174,17 @@ class TestArcanaPopulation:
         card_dict = card.to_dict()
 
         required_fields = [
-            "id", "number", "name", "suit", "rank", "arcana_type",
-            "upright_meaning", "reversed_meaning", "image_url",
-            "created_at", "updated_at"
+            "id",
+            "number",
+            "name",
+            "suit",
+            "rank",
+            "arcana_type",
+            "upright_meaning",
+            "reversed_meaning",
+            "image_url",
+            "created_at",
+            "updated_at",
         ]
 
         for field in required_fields:
@@ -189,12 +199,14 @@ class TestArcanaPopulation:
 
         # Import and run populator again
         from plugins.taro.src.bin.populate_arcanas import populate_arcanas
+
         populate_arcanas()
 
         # Check count remains the same
         final_count = db.session.query(Arcana).count()
-        assert initial_count == final_count, \
-            f"Populator created duplicates: {initial_count} -> {final_count}"
+        assert (
+            initial_count == final_count
+        ), f"Populator created duplicates: {initial_count} -> {final_count}"
 
 
 class TestTaroAssetServing:
@@ -237,19 +249,17 @@ class TestTaroAssetServing:
             # Use the full image_url path as registered on the blueprint
             path = card.image_url
             response = client.get(path)
-            assert response.status_code == 200, \
-                f"Failed to fetch asset for {card.name}: {path}"
+            assert (
+                response.status_code == 200
+            ), f"Failed to fetch asset for {card.name}: {path}"
 
     def test_all_minor_arcana_assets_accessible(self, client, db):
         """Test that all minor arcana assets are accessible via API."""
-        minor_arcana = (
-            db.session.query(Arcana)
-            .filter(Arcana.suit.isnot(None))
-            .all()
-        )
+        minor_arcana = db.session.query(Arcana).filter(Arcana.suit.isnot(None)).all()
         for card in minor_arcana:
             # Use the full image_url path as registered on the blueprint
             path = card.image_url
             response = client.get(path)
-            assert response.status_code == 200, \
-                f"Failed to fetch asset for {card.name}: {path}"
+            assert (
+                response.status_code == 200
+            ), f"Failed to fetch asset for {card.name}: {path}"

@@ -9,8 +9,12 @@ from plugins.taro.src.events import (
 )
 from plugins.taro.src.models.arcana import Arcana
 from plugins.taro.src.services.taro_session_service import TaroSessionService
-from plugins.taro.src.services.arcana_interpretation_service import ArcanaInterpretationService
-from plugins.taro.src.repositories.taro_card_draw_repository import TaroCardDrawRepository
+from plugins.taro.src.services.arcana_interpretation_service import (
+    ArcanaInterpretationService,
+)
+from plugins.taro.src.repositories.taro_card_draw_repository import (
+    TaroCardDrawRepository,
+)
 
 
 class TaroSessionCreatedHandler:
@@ -27,7 +31,9 @@ class TaroSessionCreatedHandler:
         self.token_service = token_service
         self.card_draw_repo = card_draw_repo
 
-    def handle(self, event: TaroSessionCreatedEvent) -> Optional[TaroInterpretationGeneratedEvent]:
+    def handle(
+        self, event: TaroSessionCreatedEvent
+    ) -> Optional[TaroInterpretationGeneratedEvent]:
         """Handle TaroSessionCreatedEvent.
 
         1. Generate LLM interpretations for each card
@@ -51,25 +57,25 @@ class TaroSessionCreatedHandler:
             interpreted_card_ids = []
             for card in cards:
                 # Get Arcana data
-                arcana = db.session.query(Arcana).filter(
-                    Arcana.id == card.arcana_id
-                ).first()
+                arcana = (
+                    db.session.query(Arcana).filter(Arcana.id == card.arcana_id).first()
+                )
 
                 if not arcana:
                     continue
 
                 # Generate interpretation
-                interpretation, tokens = self.interpreter_service.generate_interpretation(
+                (
+                    interpretation,
+                    tokens,
+                ) = self.interpreter_service.generate_interpretation(
                     arcana=arcana,
                     position=card.position,
                     orientation=card.orientation,
                 )
 
                 # Update card with interpretation
-                self.card_draw_repo.update_interpretation(
-                    str(card.id),
-                    interpretation
-                )
+                self.card_draw_repo.update_interpretation(str(card.id), interpretation)
 
                 total_tokens += tokens
                 interpreted_card_ids.append(str(card.id))
@@ -113,7 +119,9 @@ class TaroFollowUpHandler:
         self.session_service = session_service
         self.token_service = token_service
 
-    def handle(self, event: TaroFollowUpRequestedEvent) -> Optional[TaroFollowUpGeneratedEvent]:
+    def handle(
+        self, event: TaroFollowUpRequestedEvent
+    ) -> Optional[TaroFollowUpGeneratedEvent]:
         """Handle TaroFollowUpRequestedEvent.
 
         1. Validate session exists and is active
@@ -143,14 +151,17 @@ class TaroFollowUpHandler:
             # Fetch Arcana objects
             original_arcanas = []
             for card in original_cards:
-                arcana = db.session.query(Arcana).filter(
-                    Arcana.id == card.arcana_id
-                ).first()
+                arcana = (
+                    db.session.query(Arcana).filter(Arcana.id == card.arcana_id).first()
+                )
                 if arcana:
                     original_arcanas.append(arcana)
 
             # Generate follow-up interpretation
-            interpretation, tokens = self.interpreter_service.generate_follow_up_interpretation(
+            (
+                interpretation,
+                tokens,
+            ) = self.interpreter_service.generate_follow_up_interpretation(
                 original_cards=original_arcanas,
                 follow_up_type=event.follow_up_type,
                 question=event.question,
@@ -187,18 +198,24 @@ class TaroFollowUpHandler:
             )
 
             if not token_success:
-                print(f"Warning: Failed to deduct follow-up tokens for user {event.user_id}")
+                print(
+                    f"Warning: Failed to deduct follow-up tokens for user {event.user_id}"
+                )
 
             # Increment follow-up count
             updated_session = self.session_service.add_follow_up(event.session_id)
             if not updated_session:
-                print(f"Failed to increment follow-up count for session {event.session_id}")
+                print(
+                    f"Failed to increment follow-up count for session {event.session_id}"
+                )
 
             # Return follow-up generated event
             return TaroFollowUpGeneratedEvent(
                 session_id=event.session_id,
                 user_id=event.user_id,
-                follow_up_count=updated_session.follow_up_count if updated_session else 1,
+                follow_up_count=updated_session.follow_up_count
+                if updated_session
+                else 1,
                 tokens_consumed=follow_up_tokens,
                 interpretation=interpretation,
                 new_cards=new_card_ids,

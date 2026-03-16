@@ -5,8 +5,15 @@ from uuid import uuid4
 from plugins.taro.src.models.arcana import Arcana
 from plugins.taro.src.models.taro_session import TaroSession
 from plugins.taro.src.models.taro_card_draw import TaroCardDraw
-from plugins.taro.src.repositories.taro_card_draw_repository import TaroCardDrawRepository
-from plugins.taro.src.enums import ArcanaType, CardPosition, CardOrientation, TaroSessionStatus
+from plugins.taro.src.repositories.taro_card_draw_repository import (
+    TaroCardDrawRepository,
+)
+from plugins.taro.src.enums import (
+    ArcanaType,
+    CardPosition,
+    CardOrientation,
+    TaroSessionStatus,
+)
 
 
 @pytest.fixture
@@ -28,7 +35,7 @@ def sample_cards(db):
         arcana_type=ArcanaType.MAJOR_ARCANA.value,
         upright_meaning="New beginnings",
         reversed_meaning="Recklessness",
-        image_url="https://example.com/fool.jpg"
+        image_url="https://example.com/fool.jpg",
     )
     magician = Arcana(
         number=1,
@@ -36,7 +43,7 @@ def sample_cards(db):
         arcana_type=ArcanaType.MAJOR_ARCANA.value,
         upright_meaning="Creativity",
         reversed_meaning="Manipulation",
-        image_url="https://example.com/magician.jpg"
+        image_url="https://example.com/magician.jpg",
     )
     priestess = Arcana(
         number=2,
@@ -44,7 +51,7 @@ def sample_cards(db):
         arcana_type=ArcanaType.MAJOR_ARCANA.value,
         upright_meaning="Intuition",
         reversed_meaning="Secrets",
-        image_url="https://example.com/priestess.jpg"
+        image_url="https://example.com/priestess.jpg",
     )
 
     db.session.add_all([fool, magician, priestess])
@@ -67,21 +74,21 @@ def sample_cards(db):
         arcana_id=str(fool.id),
         position=CardPosition.PAST.value,
         orientation=CardOrientation.UPRIGHT.value,
-        ai_interpretation="In the past, you took a bold leap of faith..."
+        ai_interpretation="In the past, you took a bold leap of faith...",
     )
     present_card = TaroCardDraw(
         session_id=str(session.id),
         arcana_id=str(magician.id),
         position=CardPosition.PRESENT.value,
         orientation=CardOrientation.REVERSED.value,
-        ai_interpretation="Currently, your creative energy is blocked..."
+        ai_interpretation="Currently, your creative energy is blocked...",
     )
     future_card = TaroCardDraw(
         session_id=str(session.id),
         arcana_id=str(priestess.id),
         position=CardPosition.FUTURE.value,
         orientation=CardOrientation.UPRIGHT.value,
-        ai_interpretation="In the future, trust your intuition..."
+        ai_interpretation="In the future, trust your intuition...",
     )
 
     db.session.add_all([past_card, present_card, future_card])
@@ -112,7 +119,7 @@ class TestTaroCardDrawRepository:
             arcana_type=ArcanaType.MAJOR_ARCANA.value,
             upright_meaning="Test",
             reversed_meaning="Test",
-            image_url="https://example.com/test.jpg"
+            image_url="https://example.com/test.jpg",
         )
         db.session.add(arcana)
         db.session.commit()
@@ -132,7 +139,7 @@ class TestTaroCardDrawRepository:
             arcana_id=str(arcana.id),
             position=CardPosition.PAST.value,
             orientation=CardOrientation.UPRIGHT.value,
-            ai_interpretation="Test interpretation"
+            ai_interpretation="Test interpretation",
         )
 
         assert result.id is not None
@@ -186,8 +193,7 @@ class TestTaroCardDrawRepository:
         """Test retrieving card by session and position."""
         session_id = sample_cards["session_id"]
         result = card_draw_repo.get_by_session_and_position(
-            session_id,
-            CardPosition.PAST
+            session_id, CardPosition.PAST
         )
 
         assert result is not None
@@ -198,8 +204,7 @@ class TestTaroCardDrawRepository:
         """Test getting card that doesn't exist."""
         fake_session_id = str(uuid4())
         result = card_draw_repo.get_by_session_and_position(
-            fake_session_id,
-            CardPosition.PAST
+            fake_session_id, CardPosition.PAST
         )
 
         assert result is None
@@ -209,10 +214,7 @@ class TestTaroCardDrawRepository:
         past_card = sample_cards["past_card"]
         new_interpretation = "Updated interpretation text"
 
-        card_draw_repo.update_interpretation(
-            str(past_card.id),
-            new_interpretation
-        )
+        card_draw_repo.update_interpretation(str(past_card.id), new_interpretation)
 
         updated = card_draw_repo.get_by_id(str(past_card.id))
         assert updated.ai_interpretation == new_interpretation
@@ -250,9 +252,9 @@ class TestTaroCardDrawRepository:
         session_id = sample_cards["session_id"]
 
         # Get session and delete it
-        session = db.session.query(TaroSession).filter(
-            TaroSession.id == session_id
-        ).first()
+        session = (
+            db.session.query(TaroSession).filter(TaroSession.id == session_id).first()
+        )
         db.session.delete(session)
         db.session.commit()
 

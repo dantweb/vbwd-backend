@@ -5,9 +5,16 @@ from uuid import uuid4
 from plugins.taro.src.services.taro_session_service import TaroSessionService
 from plugins.taro.src.repositories.arcana_repository import ArcanaRepository
 from plugins.taro.src.repositories.taro_session_repository import TaroSessionRepository
-from plugins.taro.src.repositories.taro_card_draw_repository import TaroCardDrawRepository
+from plugins.taro.src.repositories.taro_card_draw_repository import (
+    TaroCardDrawRepository,
+)
 from plugins.taro.src.models.arcana import Arcana
-from plugins.taro.src.enums import ArcanaType, TaroSessionStatus, CardPosition, CardOrientation
+from plugins.taro.src.enums import (
+    ArcanaType,
+    TaroSessionStatus,
+    CardPosition,
+    CardOrientation,
+)
 from plugins.chat.src.llm_adapter import LLMError
 
 
@@ -32,7 +39,7 @@ def sample_arcanas(db):
             arcana_type=ArcanaType.MAJOR_ARCANA.value,
             upright_meaning="Upright",
             reversed_meaning="Reversed",
-            image_url="https://example.com/card.jpg"
+            image_url="https://example.com/card.jpg",
         )
         cards.append(arcana)
 
@@ -57,7 +64,9 @@ class TestTaroSessionService:
         assert session.tokens_consumed == 10  # SESSION_BASE_TOKENS default
         assert session.follow_up_count == 0
 
-    def test_create_session_with_tarif_plan_daily_limit(self, taro_service, sample_arcanas, db):
+    def test_create_session_with_tarif_plan_daily_limit(
+        self, taro_service, sample_arcanas, db
+    ):
         """Test creating session respects daily limit by tarif plan."""
         user_id = str(uuid4())
 
@@ -144,8 +153,8 @@ class TestTaroSessionService:
         cards = taro_service.get_session_spread(str(session.id))
 
         assert len(cards) == 3
-        assert all(hasattr(card, 'position') for card in cards)
-        assert all(hasattr(card, 'ai_interpretation') for card in cards)
+        assert all(hasattr(card, "position") for card in cards)
+        assert all(hasattr(card, "ai_interpretation") for card in cards)
 
     def test_session_is_expired(self, taro_service, sample_arcanas, db):
         """Test checking if session is expired."""
@@ -192,8 +201,7 @@ class TestTaroSessionService:
 
         # Basic plan allows 1 session
         allowed, remaining = taro_service.check_daily_limit(
-            user_id=user_id,
-            daily_limit=1
+            user_id=user_id, daily_limit=1
         )
 
         assert allowed is True
@@ -204,8 +212,7 @@ class TestTaroSessionService:
 
         # Second session should be blocked
         allowed, remaining = taro_service.check_daily_limit(
-            user_id=user_id,
-            daily_limit=1
+            user_id=user_id, daily_limit=1
         )
 
         assert allowed is False
@@ -218,16 +225,14 @@ class TestTaroSessionService:
         # Star plan allows 3 sessions
         for i in range(3):
             allowed, remaining = taro_service.check_daily_limit(
-                user_id=user_id,
-                daily_limit=3
+                user_id=user_id, daily_limit=3
             )
             assert allowed is True
             taro_service.create_session(user_id=user_id, daily_limit=3)
 
         # Fourth session should be blocked
         allowed, remaining = taro_service.check_daily_limit(
-            user_id=user_id,
-            daily_limit=3
+            user_id=user_id, daily_limit=3
         )
         assert allowed is False
 
@@ -306,6 +311,7 @@ class TestTaroSessionService:
 
         # Create session that already expired
         from plugins.taro.src.models.taro_session import TaroSession
+
         expired_session = TaroSession(
             user_id=user_id,
             status=TaroSessionStatus.ACTIVE.value,
@@ -428,11 +434,12 @@ class TestTaroSessionService:
 
         with pytest.raises(LLMError):
             taro_service.generate_situation_reading(
-                session_id=str(session.id),
-                situation_text=situation_text
+                session_id=str(session.id), situation_text=situation_text
             )
 
-    def test_generate_situation_reading_fallback_when_llm_unavailable(self, taro_service, sample_arcanas, db):
+    def test_generate_situation_reading_fallback_when_llm_unavailable(
+        self, taro_service, sample_arcanas, db
+    ):
         """Test situation reading raises error when LLM unavailable."""
         user_id = str(uuid4())
         session = taro_service.create_session(user_id=user_id)
@@ -445,13 +452,14 @@ class TestTaroSessionService:
         # Should raise LLMError when LLM is unavailable
         with pytest.raises(LLMError) as exc_info:
             taro_service.generate_situation_reading(
-                session_id=str(session.id),
-                situation_text=situation_text
+                session_id=str(session.id), situation_text=situation_text
             )
 
         assert "LLM adapter" in str(exc_info.value)
 
-    def test_generate_situation_reading_word_limit_validation(self, taro_service, sample_arcanas, db):
+    def test_generate_situation_reading_word_limit_validation(
+        self, taro_service, sample_arcanas, db
+    ):
         """Test that situation text exceeding 100 words raises validation error."""
         user_id = str(uuid4())
         session = taro_service.create_session(user_id=user_id)
@@ -461,24 +469,27 @@ class TestTaroSessionService:
 
         with pytest.raises(ValueError) as exc_info:
             taro_service.generate_situation_reading(
-                session_id=str(session.id),
-                situation_text=situation_text
+                session_id=str(session.id), situation_text=situation_text
             )
 
         assert "100 words" in str(exc_info.value)
 
-    def test_generate_situation_reading_empty_text(self, taro_service, sample_arcanas, db):
+    def test_generate_situation_reading_empty_text(
+        self, taro_service, sample_arcanas, db
+    ):
         """Test that empty situation text raises validation error."""
         user_id = str(uuid4())
         session = taro_service.create_session(user_id=user_id)
 
         with pytest.raises(ValueError) as exc_info:
             taro_service.generate_situation_reading(
-                session_id=str(session.id),
-                situation_text=""
+                session_id=str(session.id), situation_text=""
             )
 
-        assert "required" in str(exc_info.value).lower() or "empty" in str(exc_info.value).lower()
+        assert (
+            "required" in str(exc_info.value).lower()
+            or "empty" in str(exc_info.value).lower()
+        )
 
     def test_generate_situation_reading_session_not_found(self, taro_service):
         """Test that non-existent session raises error."""
@@ -487,8 +498,7 @@ class TestTaroSessionService:
 
         with pytest.raises((ValueError, Exception)):
             taro_service.generate_situation_reading(
-                session_id=fake_session_id,
-                situation_text=situation_text
+                session_id=fake_session_id, situation_text=situation_text
             )
 
 
@@ -497,24 +507,27 @@ class TestLanguageParameterFlow:
 
     def test_get_language_name_conversion_russian(self):
         """Should convert 'ru' to 'Русский (Russian)'"""
-        result = TaroSessionService._get_language_name('ru')
-        assert result == 'Русский (Russian)'
+        result = TaroSessionService._get_language_name("ru")
+        assert result == "Русский (Russian)"
 
     def test_get_language_name_conversion_german(self):
         """Should convert 'de' to 'Deutsch (German)'"""
-        result = TaroSessionService._get_language_name('de')
-        assert result == 'Deutsch (German)'
+        result = TaroSessionService._get_language_name("de")
+        assert result == "Deutsch (German)"
 
-    @pytest.mark.parametrize("lang_code,expected_name", [
-        ('en', 'English'),
-        ('ru', 'Русский (Russian)'),
-        ('de', 'Deutsch (German)'),
-        ('fr', 'Français (French)'),
-        ('es', 'Español (Spanish)'),
-        ('ja', '日本語 (Japanese)'),
-        ('th', 'ไทย (Thai)'),
-        ('zh', '中文 (Chinese)'),
-    ])
+    @pytest.mark.parametrize(
+        "lang_code,expected_name",
+        [
+            ("en", "English"),
+            ("ru", "Русский (Russian)"),
+            ("de", "Deutsch (German)"),
+            ("fr", "Français (French)"),
+            ("es", "Español (Spanish)"),
+            ("ja", "日本語 (Japanese)"),
+            ("th", "ไทย (Thai)"),
+            ("zh", "中文 (Chinese)"),
+        ],
+    )
     def test_get_language_name_all_8_languages(self, lang_code, expected_name):
         """Should correctly convert all 8 language codes to full names"""
         result = TaroSessionService._get_language_name(lang_code)
@@ -522,13 +535,13 @@ class TestLanguageParameterFlow:
 
     def test_get_language_name_case_insensitive(self):
         """Should handle uppercase language codes"""
-        result = TaroSessionService._get_language_name('RU')
-        assert result == 'Русский (Russian)'
+        result = TaroSessionService._get_language_name("RU")
+        assert result == "Русский (Russian)"
 
     def test_get_language_name_invalid_defaults_to_english(self):
         """Should default to English for unknown language codes"""
-        result = TaroSessionService._get_language_name('invalid')
-        assert result == 'English'
+        result = TaroSessionService._get_language_name("invalid")
+        assert result == "English"
 
     def test_generate_situation_reading_with_mocked_llm(self, db):
         """Verify language parameter is passed to mocked LLM adapter"""
@@ -553,19 +566,21 @@ class TestLanguageParameterFlow:
                 arcana_type=ArcanaType.MAJOR_ARCANA.value,
                 upright_meaning="Upright",
                 reversed_meaning="Reversed",
-                image_url="https://example.com/card.jpg"
+                image_url="https://example.com/card.jpg",
             )
             arcanas.append(arcana)
         db.session.add_all(arcanas)
         db.session.commit()
 
         # Create prompt service
-        prompt_service = PromptService.from_dict({
-            'situation_reading': {
-                'template': 'You are expert.\n\nRESPOND IN {{language}} LANGUAGE.\n\nSituation: {{situation_text}}\n\nCards: {{cards_context}}\n\nProvide reading:',
-                'variables': ['language', 'situation_text', 'cards_context']
+        prompt_service = PromptService.from_dict(
+            {
+                "situation_reading": {
+                    "template": "You are expert.\n\nRESPOND IN {{language}} LANGUAGE.\n\nSituation: {{situation_text}}\n\nCards: {{cards_context}}\n\nProvide reading:",
+                    "variables": ["language", "situation_text", "cards_context"],
+                }
             }
-        })
+        )
 
         # Setup: Create service with mocked LLM
         service = TaroSessionService(
@@ -582,9 +597,7 @@ class TestLanguageParameterFlow:
 
         # Action: Call with Russian language
         result = service.generate_situation_reading(
-            session_id=str(session.id),
-            situation_text="Career decision",
-            language="ru"
+            session_id=str(session.id), situation_text="Career decision", language="ru"
         )
 
         # Assert: Mocked LLM was called
@@ -593,16 +606,21 @@ class TestLanguageParameterFlow:
 
         # Assert: Language instruction in prompt passed to LLM
         call_args = mock_llm.chat.call_args
-        prompt_passed_to_llm = call_args[1]['messages'][0]['content']
+        prompt_passed_to_llm = call_args[1]["messages"][0]["content"]
         assert "RESPOND IN Русский (Russian) LANGUAGE." in prompt_passed_to_llm
 
-    @pytest.mark.parametrize("lang_code,expected_lang_name", [
-        ("en", "English"),
-        ("ru", "Русский (Russian)"),
-        ("de", "Deutsch (German)"),
-        ("fr", "Français (French)"),
-    ])
-    def test_situation_reading_respects_different_languages(self, db, lang_code, expected_lang_name):
+    @pytest.mark.parametrize(
+        "lang_code,expected_lang_name",
+        [
+            ("en", "English"),
+            ("ru", "Русский (Russian)"),
+            ("de", "Deutsch (German)"),
+            ("fr", "Français (French)"),
+        ],
+    )
+    def test_situation_reading_respects_different_languages(
+        self, db, lang_code, expected_lang_name
+    ):
         """Verify situation_reading passes correct language instruction for each language"""
         from unittest.mock import Mock
         from plugins.taro.src.services.prompt_service import PromptService
@@ -625,19 +643,21 @@ class TestLanguageParameterFlow:
                 arcana_type=ArcanaType.MAJOR_ARCANA.value,
                 upright_meaning="Upright",
                 reversed_meaning="Reversed",
-                image_url="https://example.com/card.jpg"
+                image_url="https://example.com/card.jpg",
             )
             arcanas.append(arcana)
         db.session.add_all(arcanas)
         db.session.commit()
 
         # Prompt service
-        prompt_service = PromptService.from_dict({
-            'situation_reading': {
-                'template': 'RESPOND IN {{language}} LANGUAGE.\n\nSituation: {{situation_text}}\n\nCards: {{cards_context}}',
-                'variables': ['language', 'situation_text', 'cards_context']
+        prompt_service = PromptService.from_dict(
+            {
+                "situation_reading": {
+                    "template": "RESPOND IN {{language}} LANGUAGE.\n\nSituation: {{situation_text}}\n\nCards: {{cards_context}}",
+                    "variables": ["language", "situation_text", "cards_context"],
+                }
             }
-        })
+        )
 
         # Service with mocked LLM
         service = TaroSessionService(
@@ -656,12 +676,12 @@ class TestLanguageParameterFlow:
         result = service.generate_situation_reading(
             session_id=str(session.id),
             situation_text="Test situation",
-            language=lang_code
+            language=lang_code,
         )
 
         # Verify language instruction in prompt
         call_args = mock_llm.chat.call_args
-        prompt = call_args[1]['messages'][0]['content']
+        prompt = call_args[1]["messages"][0]["content"]
         assert f"RESPOND IN {expected_lang_name} LANGUAGE." in prompt
 
     def test_answer_oracle_question_with_mocked_llm(self, db):
@@ -685,18 +705,20 @@ class TestLanguageParameterFlow:
                 arcana_type=ArcanaType.MAJOR_ARCANA.value,
                 upright_meaning="Upright",
                 reversed_meaning="Reversed",
-                image_url="https://example.com/card.jpg"
+                image_url="https://example.com/card.jpg",
             )
             arcanas.append(arcana)
         db.session.add_all(arcanas)
         db.session.commit()
 
-        prompt_service = PromptService.from_dict({
-            'follow_up_question': {
-                'template': 'RESPOND IN {{language}} LANGUAGE.\n\nQuestion: {{question}}\n\nCards: {{cards_context}}',
-                'variables': ['language', 'question', 'cards_context']
+        prompt_service = PromptService.from_dict(
+            {
+                "follow_up_question": {
+                    "template": "RESPOND IN {{language}} LANGUAGE.\n\nQuestion: {{question}}\n\nCards: {{cards_context}}",
+                    "variables": ["language", "question", "cards_context"],
+                }
             }
-        })
+        )
 
         service = TaroSessionService(
             arcana_repo=arcana_repo,
@@ -711,13 +733,11 @@ class TestLanguageParameterFlow:
 
         # Call with French language
         result = service.answer_oracle_question(
-            session_id=str(session.id),
-            question="Will it improve?",
-            language="fr"
+            session_id=str(session.id), question="Will it improve?", language="fr"
         )
 
         # Verify language instruction
         call_args = mock_llm.chat.call_args
-        prompt = call_args[1]['messages'][0]['content']
+        prompt = call_args[1]["messages"][0]["content"]
         assert "RESPOND IN Français (French) LANGUAGE." in prompt
         assert "Will it improve?" in prompt

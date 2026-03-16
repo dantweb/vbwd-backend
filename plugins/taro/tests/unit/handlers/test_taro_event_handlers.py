@@ -14,9 +14,13 @@ from plugins.taro.src.events import (
 from plugins.taro.src.models.arcana import Arcana
 from plugins.taro.src.repositories.arcana_repository import ArcanaRepository
 from plugins.taro.src.repositories.taro_session_repository import TaroSessionRepository
-from plugins.taro.src.repositories.taro_card_draw_repository import TaroCardDrawRepository
+from plugins.taro.src.repositories.taro_card_draw_repository import (
+    TaroCardDrawRepository,
+)
 from plugins.taro.src.services.taro_session_service import TaroSessionService
-from plugins.taro.src.services.arcana_interpretation_service import ArcanaInterpretationService
+from plugins.taro.src.services.arcana_interpretation_service import (
+    ArcanaInterpretationService,
+)
 
 
 @pytest.fixture
@@ -80,7 +84,9 @@ def mock_session():
 
 
 @pytest.fixture
-def follow_up_handler(mock_interpreter_service, mock_token_service, mock_session, mock_card):
+def follow_up_handler(
+    mock_interpreter_service, mock_token_service, mock_session, mock_card
+):
     """Fixture providing TaroFollowUpHandler with properly configured mocks."""
     session_service = Mock(spec=TaroSessionService)
     session_service.get_session.return_value = mock_session
@@ -123,7 +129,9 @@ class TestTaroSessionCreatedHandler:
         mock_token_service.deduct_tokens.return_value = True
 
         with patch("plugins.taro.src.handlers.db") as mock_db:
-            mock_db.session.query.return_value.filter.return_value.first.return_value = mock_arcana
+            mock_db.session.query.return_value.filter.return_value.first.return_value = (
+                mock_arcana
+            )
             result = session_handler.handle(event)
 
         assert result is not None
@@ -150,7 +158,9 @@ class TestTaroSessionCreatedHandler:
         mock_token_service.deduct_tokens.return_value = True
 
         with patch("plugins.taro.src.handlers.db") as mock_db:
-            mock_db.session.query.return_value.filter.return_value.first.return_value = mock_arcana
+            mock_db.session.query.return_value.filter.return_value.first.return_value = (
+                mock_arcana
+            )
             session_handler.handle(event)
 
         mock_token_service.deduct_tokens.assert_called_once()
@@ -164,8 +174,12 @@ class TestTaroSessionCreatedHandler:
         # Set up 3 mock cards
         session_handler.card_draw_repo.get_session_cards.return_value = [
             Mock(id=uuid4(), arcana_id=uuid4(), position="PAST", orientation="UPRIGHT"),
-            Mock(id=uuid4(), arcana_id=uuid4(), position="PRESENT", orientation="UPRIGHT"),
-            Mock(id=uuid4(), arcana_id=uuid4(), position="FUTURE", orientation="REVERSED"),
+            Mock(
+                id=uuid4(), arcana_id=uuid4(), position="PRESENT", orientation="UPRIGHT"
+            ),
+            Mock(
+                id=uuid4(), arcana_id=uuid4(), position="FUTURE", orientation="REVERSED"
+            ),
         ]
 
         event = self._make_event()
@@ -177,7 +191,9 @@ class TestTaroSessionCreatedHandler:
         mock_token_service.deduct_tokens.return_value = True
 
         with patch("plugins.taro.src.handlers.db") as mock_db:
-            mock_db.session.query.return_value.filter.return_value.first.return_value = mock_arcana
+            mock_db.session.query.return_value.filter.return_value.first.return_value = (
+                mock_arcana
+            )
             session_handler.handle(event)
 
         # Should have called interpreter for each card (3 cards)
@@ -196,7 +212,9 @@ class TestTaroSessionCreatedHandler:
         mock_token_service.deduct_tokens.return_value = False
 
         with patch("plugins.taro.src.handlers.db") as mock_db:
-            mock_db.session.query.return_value.filter.return_value.first.return_value = mock_arcana
+            mock_db.session.query.return_value.filter.return_value.first.return_value = (
+                mock_arcana
+            )
             result = session_handler.handle(event)
 
         # Should handle gracefully even when token deduction fails
@@ -206,7 +224,9 @@ class TestTaroSessionCreatedHandler:
 class TestTaroFollowUpHandler:
     """Test TaroFollowUpHandler."""
 
-    def test_handle_follow_up_event(self, follow_up_handler, mock_interpreter_service, mock_token_service):
+    def test_handle_follow_up_event(
+        self, follow_up_handler, mock_interpreter_service, mock_token_service
+    ):
         """Test handling TaroFollowUpRequestedEvent."""
         session_id = str(uuid4())
         user_id = str(uuid4())
@@ -226,12 +246,16 @@ class TestTaroFollowUpHandler:
         mock_token_service.deduct_tokens.return_value = True
 
         with patch("plugins.taro.src.handlers.db") as mock_db:
-            mock_db.session.query.return_value.filter.return_value.first.return_value = None
+            mock_db.session.query.return_value.filter.return_value.first.return_value = (
+                None
+            )
             result = follow_up_handler.handle(event)
 
         assert result is not None
 
-    def test_follow_up_adds_question_count(self, follow_up_handler, mock_interpreter_service, mock_token_service):
+    def test_follow_up_adds_question_count(
+        self, follow_up_handler, mock_interpreter_service, mock_token_service
+    ):
         """Test that follow-up increments question count."""
         session_id = str(uuid4())
         user_id = str(uuid4())
@@ -251,13 +275,17 @@ class TestTaroFollowUpHandler:
         mock_token_service.deduct_tokens.return_value = True
 
         with patch("plugins.taro.src.handlers.db") as mock_db:
-            mock_db.session.query.return_value.filter.return_value.first.return_value = None
+            mock_db.session.query.return_value.filter.return_value.first.return_value = (
+                None
+            )
             follow_up_handler.handle(event)
 
         # Should have attempted to generate follow-up
         assert mock_interpreter_service.generate_follow_up_interpretation.called
 
-    def test_follow_up_deducts_tokens(self, follow_up_handler, mock_interpreter_service, mock_token_service):
+    def test_follow_up_deducts_tokens(
+        self, follow_up_handler, mock_interpreter_service, mock_token_service
+    ):
         """Test that follow-up deducts tokens."""
         session_id = str(uuid4())
         user_id = str(uuid4())
@@ -277,13 +305,17 @@ class TestTaroFollowUpHandler:
         mock_token_service.deduct_tokens.return_value = True
 
         with patch("plugins.taro.src.handlers.db") as mock_db:
-            mock_db.session.query.return_value.filter.return_value.first.return_value = None
+            mock_db.session.query.return_value.filter.return_value.first.return_value = (
+                None
+            )
             follow_up_handler.handle(event)
 
         # Tokens should be deducted
         assert mock_token_service.deduct_tokens.called
 
-    def test_follow_up_validates_session_exists(self, follow_up_handler, mock_interpreter_service, mock_token_service):
+    def test_follow_up_validates_session_exists(
+        self, follow_up_handler, mock_interpreter_service, mock_token_service
+    ):
         """Test that follow-up validates session exists."""
         fake_session_id = str(uuid4())
         user_id = str(uuid4())

@@ -4,7 +4,9 @@ import os
 import sys
 
 # Add src and plugins to path for proper imports
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../src")))
+sys.path.insert(
+    0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../src"))
+)
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
 
 os.environ["FLASK_ENV"] = "testing"
@@ -63,6 +65,7 @@ def app():
     app = create_app(test_config)
 
     from src.extensions import limiter
+
     limiter.reset()
 
     yield app

@@ -51,7 +51,13 @@ def upgrade() -> None:
         "taro_session",
         sa.Column("id", UUID(as_uuid=True), nullable=False),
         sa.Column("user_id", UUID(as_uuid=True), nullable=False, index=True),
-        sa.Column("status", tarosessionstatus_enum, nullable=False, index=True, server_default="ACTIVE"),
+        sa.Column(
+            "status",
+            tarosessionstatus_enum,
+            nullable=False,
+            index=True,
+            server_default="ACTIVE",
+        ),
         sa.Column("started_at", sa.DateTime(), nullable=False),
         sa.Column("expires_at", sa.DateTime(), nullable=False, index=True),
         sa.Column("ended_at", sa.DateTime(), nullable=True),
@@ -77,7 +83,9 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("updated_at", sa.DateTime(), nullable=False),
         sa.Column("version", sa.Integer(), nullable=False),
-        sa.ForeignKeyConstraint(["session_id"], ["taro_session.id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(
+            ["session_id"], ["taro_session.id"], ondelete="CASCADE"
+        ),
         sa.ForeignKeyConstraint(["arcana_id"], ["arcana.id"]),
         sa.PrimaryKeyConstraint("id"),
     )
@@ -93,7 +101,9 @@ def upgrade() -> None:
 def downgrade() -> None:
     """Drop taro_session and taro_card_draw tables and enums."""
     # Drop taro_card_draw
-    op.drop_constraint("uq_taro_card_draw_session_position", "taro_card_draw", type_="unique")
+    op.drop_constraint(
+        "uq_taro_card_draw_session_position", "taro_card_draw", type_="unique"
+    )
     op.drop_table("taro_card_draw")
 
     # Drop taro_session

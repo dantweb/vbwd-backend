@@ -18,7 +18,7 @@ class TestArcanaCreation:
             arcana_type=ArcanaType.MAJOR_ARCANA,
             upright_meaning="New beginnings, taking risks, innocence",
             reversed_meaning="Recklessness, naivety, carelessness",
-            image_url="https://example.com/fool.jpg"
+            image_url="https://example.com/fool.jpg",
         )
 
         assert arcana.number == 0
@@ -33,12 +33,13 @@ class TestArcanaCreation:
     def test_arcana_requires_name(self, db):
         """Test that Arcana requires a name at database level."""
         from sqlalchemy.exc import IntegrityError
+
         arcana = Arcana(
             number=0,
             arcana_type=ArcanaType.MAJOR_ARCANA.value,
             upright_meaning="Test",
             reversed_meaning="Test",
-            image_url="https://example.com/test.jpg"
+            image_url="https://example.com/test.jpg",
         )
         db.session.add(arcana)
         with pytest.raises(IntegrityError):
@@ -51,7 +52,7 @@ class TestArcanaCreation:
             name="The Fool",
             upright_meaning="Test",
             reversed_meaning="Test",
-            image_url="https://example.com/test.jpg"
+            image_url="https://example.com/test.jpg",
         )
         db.session.add(arcana)
         db.session.commit()
@@ -66,7 +67,7 @@ class TestArcanaCreation:
             arcana_type=ArcanaType.MAJOR_ARCANA,
             upright_meaning="Test",
             reversed_meaning="Test",
-            image_url="https://example.com/test.jpg"
+            image_url="https://example.com/test.jpg",
         )
         assert arcana.number == 0
 
@@ -77,7 +78,7 @@ class TestArcanaCreation:
             arcana_type=ArcanaType.MAJOR_ARCANA,
             upright_meaning="Test",
             reversed_meaning="Test",
-            image_url="https://example.com/test.jpg"
+            image_url="https://example.com/test.jpg",
         )
         assert arcana.number == 21
 
@@ -90,7 +91,7 @@ class TestArcanaCreation:
             name="Ace of Cups",
             upright_meaning="New love, new opportunity",
             reversed_meaning="Heartbreak, emotional loss",
-            image_url="https://example.com/ace_cups.jpg"
+            image_url="https://example.com/ace_cups.jpg",
         )
 
         assert arcana.suit == "CUPS"
@@ -107,7 +108,7 @@ class TestArcanaCreation:
             name="Two of Wands",
             upright_meaning="Planning, making decisions",
             reversed_meaning="Lack of direction, procrastination",
-            image_url="https://example.com/two_wands.jpg"
+            image_url="https://example.com/two_wands.jpg",
         )
 
         assert arcana.arcana_type == ArcanaType.WANDS
@@ -121,7 +122,7 @@ class TestArcanaCreation:
             name="Three of Swords",
             upright_meaning="Difficulty, separation, heartbreak",
             reversed_meaning="Healing, forgiveness, recovery",
-            image_url="https://example.com/three_swords.jpg"
+            image_url="https://example.com/three_swords.jpg",
         )
 
         assert arcana.arcana_type == ArcanaType.SWORDS
@@ -135,7 +136,7 @@ class TestArcanaCreation:
             name="Four of Pentacles",
             upright_meaning="Security, control, possessiveness",
             reversed_meaning="Generosity, freedom, abundance",
-            image_url="https://example.com/four_pentacles.jpg"
+            image_url="https://example.com/four_pentacles.jpg",
         )
 
         assert arcana.arcana_type == ArcanaType.PENTACLES
@@ -143,11 +144,12 @@ class TestArcanaCreation:
     def test_arcana_upright_meaning_not_empty(self, db):
         """Test that upright_meaning is required at database level."""
         from sqlalchemy.exc import IntegrityError
+
         arcana = Arcana(
             name="The Fool",
             arcana_type=ArcanaType.MAJOR_ARCANA.value,
             reversed_meaning="Test",
-            image_url="https://example.com/test.jpg"
+            image_url="https://example.com/test.jpg",
         )
         db.session.add(arcana)
         with pytest.raises(IntegrityError):
@@ -156,11 +158,12 @@ class TestArcanaCreation:
     def test_arcana_reversed_meaning_not_empty(self, db):
         """Test that reversed_meaning is required at database level."""
         from sqlalchemy.exc import IntegrityError
+
         arcana = Arcana(
             name="The Fool",
             arcana_type=ArcanaType.MAJOR_ARCANA.value,
             upright_meaning="Test",
-            image_url="https://example.com/test.jpg"
+            image_url="https://example.com/test.jpg",
         )
         db.session.add(arcana)
         with pytest.raises(IntegrityError):
@@ -169,11 +172,12 @@ class TestArcanaCreation:
     def test_arcana_image_url_not_empty(self, db):
         """Test that image_url is required at database level."""
         from sqlalchemy.exc import IntegrityError
+
         arcana = Arcana(
             name="The Fool",
             arcana_type=ArcanaType.MAJOR_ARCANA.value,
             upright_meaning="Test",
-            reversed_meaning="Test"
+            reversed_meaning="Test",
         )
         db.session.add(arcana)
         with pytest.raises(IntegrityError):
@@ -187,7 +191,7 @@ class TestArcanaCreation:
             arcana_type=ArcanaType.MAJOR_ARCANA,
             upright_meaning="New beginnings",
             reversed_meaning="Recklessness",
-            image_url="https://example.com/fool.jpg"
+            image_url="https://example.com/fool.jpg",
         )
 
         result = arcana.to_dict()
@@ -201,12 +205,13 @@ class TestArcanaCreation:
     def test_arcana_id_is_uuid(self, db):
         """Test that Arcana gets a UUID id on creation."""
         from uuid import UUID
+
         arcana = Arcana(
             name="The Fool",
             arcana_type=ArcanaType.MAJOR_ARCANA.value,
             upright_meaning="New beginnings",
             reversed_meaning="Recklessness",
-            image_url="https://example.com/fool.jpg"
+            image_url="https://example.com/fool.jpg",
         )
         db.session.add(arcana)
         db.session.commit()
@@ -221,7 +226,7 @@ class TestArcanaCreation:
             arcana_type=ArcanaType.MAJOR_ARCANA.value,
             upright_meaning="New beginnings",
             reversed_meaning="Recklessness",
-            image_url="https://example.com/fool.jpg"
+            image_url="https://example.com/fool.jpg",
         )
         db.session.add(arcana)
         db.session.commit()

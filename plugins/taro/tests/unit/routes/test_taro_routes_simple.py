@@ -25,10 +25,12 @@ def auth_as(user_id):
 def app():
     """Create Flask app for testing."""
     from flask import Flask
+
     app = Flask(__name__)
     app.config["TESTING"] = True
     app.config["JWT_SECRET_KEY"] = "test-secret"
     from plugins.taro.src.routes import taro_bp
+
     app.register_blueprint(taro_bp, url_prefix="/api/v1/taro")
     return app
 
@@ -74,8 +76,13 @@ class TestTaroRoutes:
         # This tests that the route exists and is registered
         user_id = str(uuid4())
         with auth_as(user_id):
-            with patch("plugins.taro.src.routes.get_user_tarif_plan_limits", return_value=(3, 3)):
-                with patch("plugins.taro.src.routes.check_token_balance", return_value=True):
+            with patch(
+                "plugins.taro.src.routes.get_user_tarif_plan_limits",
+                return_value=(3, 3),
+            ):
+                with patch(
+                    "plugins.taro.src.routes.check_token_balance", return_value=True
+                ):
                     # The route should exist and handle the request
                     response = client.post(
                         "/api/v1/taro/session", json={}, headers=_AUTH_HEADER

@@ -25,7 +25,9 @@ class TaroCardDrawRepository:
 
     def get_by_id(self, card_id: str) -> Optional[TaroCardDraw]:
         """Get TaroCardDraw by ID."""
-        return self.session.query(TaroCardDraw).filter(TaroCardDraw.id == card_id).first()
+        return (
+            self.session.query(TaroCardDraw).filter(TaroCardDraw.id == card_id).first()
+        )
 
     def get_session_cards(self, session_id: str) -> List[TaroCardDraw]:
         """Get all cards in a session, ordered by position (PAST, PRESENT, FUTURE)."""
@@ -42,10 +44,7 @@ class TaroCardDrawRepository:
         )
 
         # Sort by position order
-        return sorted(
-            cards,
-            key=lambda c: position_order.get(c.position, 99)
-        )
+        return sorted(cards, key=lambda c: position_order.get(c.position, 99))
 
     def get_by_session_and_position(
         self,

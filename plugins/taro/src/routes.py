@@ -13,7 +13,9 @@ from plugins.taro.src.events import (
 from plugins.taro.src.services.taro_session_service import TaroSessionService
 from plugins.taro.src.repositories.taro_session_repository import TaroSessionRepository
 from plugins.taro.src.repositories.arcana_repository import ArcanaRepository
-from plugins.taro.src.repositories.taro_card_draw_repository import TaroCardDrawRepository
+from plugins.taro.src.repositories.taro_card_draw_repository import (
+    TaroCardDrawRepository,
+)
 from plugins.taro.src.services.prompt_service import PromptService
 
 
@@ -22,14 +24,14 @@ taro_bp = Blueprint("taro", __name__, url_prefix="/api/v1/taro")
 
 # Language code to full language name mapping for LLM prompts
 LANGUAGE_NAMES = {
-    'en': 'English',
-    'de': 'Deutsch (German)',
-    'es': 'Español (Spanish)',
-    'fr': 'Français (French)',
-    'ja': '日本語 (Japanese)',
-    'ru': 'Русский (Russian)',
-    'th': 'ไทย (Thai)',
-    'zh': '中文 (Chinese)',
+    "en": "English",
+    "de": "Deutsch (German)",
+    "es": "Español (Spanish)",
+    "fr": "Français (French)",
+    "ja": "日本語 (Japanese)",
+    "ru": "Русский (Russian)",
+    "th": "ไทย (Thai)",
+    "zh": "中文 (Chinese)",
 }
 
 
@@ -42,7 +44,7 @@ def get_language_name(language_code: str) -> str:
     Returns:
         Full language name, defaults to English if code not found
     """
-    return LANGUAGE_NAMES.get(language_code.lower(), 'English')
+    return LANGUAGE_NAMES.get(language_code.lower(), "English")
 
 
 def _get_taro_services():
@@ -73,7 +75,9 @@ def _get_prompt_service() -> PromptService:
     import os
 
     # Get plugins directory (plugin-agnostic location)
-    plugin_base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    plugin_base_dir = os.path.dirname(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    )
     prompts_file = os.path.join(plugin_base_dir, "taro-prompts.json")
 
     return PromptService(prompts_file)
@@ -110,7 +114,9 @@ def get_user_tarif_plan_limits(user_id: str) -> tuple:
         # Get user's active subscription (ACTIVE or TRIALING both grant plan features)
         subscription = Subscription.query.filter(
             Subscription.user_id == user_id,
-            Subscription.status.in_([SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIALING]),
+            Subscription.status.in_(
+                [SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIALING]
+            ),
         ).first()
 
         if not subscription or not subscription.tarif_plan:
@@ -143,7 +149,9 @@ def check_token_balance(user_id: str, tokens_required: int = 10) -> bool:
         TokenBalanceRepository,
         TokenTransactionRepository,
     )
-    from src.repositories.token_bundle_purchase_repository import TokenBundlePurchaseRepository
+    from src.repositories.token_bundle_purchase_repository import (
+        TokenBundlePurchaseRepository,
+    )
 
     balance_repo = TokenBalanceRepository(db.session)
     transaction_repo = TokenTransactionRepository(db.session)
@@ -173,21 +181,25 @@ def create_session():
         allowed, remaining = session_service.check_daily_limit(user_id, daily_limit)
         if not allowed:
             return (
-                jsonify({
-                    "success": False,
-                    "message": f"Daily limit reached. You can create {daily_limit} sessions per day.",
-                    "remaining": remaining,
-                }),
+                jsonify(
+                    {
+                        "success": False,
+                        "message": f"Daily limit reached. You can create {daily_limit} sessions per day.",
+                        "remaining": remaining,
+                    }
+                ),
                 402,
             )
 
         # Check token balance (10 tokens base cost)
         if not check_token_balance(user_id, tokens_required=10):
             return (
-                jsonify({
-                    "success": False,
-                    "message": "Insufficient tokens. You need at least 10 tokens to create a reading.",
-                }),
+                jsonify(
+                    {
+                        "success": False,
+                        "message": "Insufficient tokens. You need at least 10 tokens to create a reading.",
+                    }
+                ),
                 402,
             )
 
@@ -209,10 +221,12 @@ def create_session():
 
         if not session:
             return (
-                jsonify({
-                    "success": False,
-                    "message": "Failed to create session",
-                }),
+                jsonify(
+                    {
+                        "success": False,
+                        "message": "Failed to create session",
+                    }
+                ),
                 500,
             )
 
@@ -220,52 +234,62 @@ def create_session():
         cards = session_service.get_session_spread(session.id)
 
         return (
-            jsonify({
-                "success": True,
-                "message": "Taro session created successfully",
-                "session": {
-                    "session_id": str(session.id),
-                    "user_id": str(session.user_id),
-                    "spread_id": str(session.spread_id),
-                    "status": session.status,
-                    "created_at": session.created_at.isoformat() if session.created_at else None,
-                    "expires_at": session.expires_at.isoformat() if session.expires_at else None,
-                    "follow_up_count": session.follow_up_count,
-                    "max_follow_ups": max_follow_ups,
-                    "cards": [
-                        {
-                            "card_id": str(card.id),
-                            "position": card.position,
-                            "orientation": card.orientation,
-                            "arcana_id": str(card.arcana_id),
-                            "interpretation": card.ai_interpretation,
-                            # Include Arcana details for display
-                            "arcana": {
-                                "id": str(card.arcana.id),
-                                "name": card.arcana.name,
-                                "number": card.arcana.number,
-                                "suit": card.arcana.suit,
-                                "rank": card.arcana.rank,
-                                "arcana_type": card.arcana.arcana_type,
-                                "image_url": card.arcana.image_url,
-                                "upright_meaning": card.arcana.upright_meaning,
-                                "reversed_meaning": card.arcana.reversed_meaning,
-                            } if card.arcana else None,
-                        }
-                        for card in cards
-                    ],
-                    "tokens_consumed": session.tokens_consumed,
-                },
-            }),
+            jsonify(
+                {
+                    "success": True,
+                    "message": "Taro session created successfully",
+                    "session": {
+                        "session_id": str(session.id),
+                        "user_id": str(session.user_id),
+                        "spread_id": str(session.spread_id),
+                        "status": session.status,
+                        "created_at": session.created_at.isoformat()
+                        if session.created_at
+                        else None,
+                        "expires_at": session.expires_at.isoformat()
+                        if session.expires_at
+                        else None,
+                        "follow_up_count": session.follow_up_count,
+                        "max_follow_ups": max_follow_ups,
+                        "cards": [
+                            {
+                                "card_id": str(card.id),
+                                "position": card.position,
+                                "orientation": card.orientation,
+                                "arcana_id": str(card.arcana_id),
+                                "interpretation": card.ai_interpretation,
+                                # Include Arcana details for display
+                                "arcana": {
+                                    "id": str(card.arcana.id),
+                                    "name": card.arcana.name,
+                                    "number": card.arcana.number,
+                                    "suit": card.arcana.suit,
+                                    "rank": card.arcana.rank,
+                                    "arcana_type": card.arcana.arcana_type,
+                                    "image_url": card.arcana.image_url,
+                                    "upright_meaning": card.arcana.upright_meaning,
+                                    "reversed_meaning": card.arcana.reversed_meaning,
+                                }
+                                if card.arcana
+                                else None,
+                            }
+                            for card in cards
+                        ],
+                        "tokens_consumed": session.tokens_consumed,
+                    },
+                }
+            ),
             201,
         )
 
     except Exception as e:
         return (
-            jsonify({
-                "success": False,
-                "message": f"Error creating session: {str(e)}",
-            }),
+            jsonify(
+                {
+                    "success": False,
+                    "message": f"Error creating session: {str(e)}",
+                }
+            ),
             500,
         )
 
@@ -292,20 +316,24 @@ def create_follow_up(session_id: str):
         valid_types = {"SAME_CARDS", "ADDITIONAL", "NEW_SPREAD"}
         if follow_up_type not in valid_types:
             return (
-                jsonify({
-                    "success": False,
-                    "message": f"Invalid follow_up_type. Must be one of {valid_types}",
-                }),
+                jsonify(
+                    {
+                        "success": False,
+                        "message": f"Invalid follow_up_type. Must be one of {valid_types}",
+                    }
+                ),
                 400,
             )
 
         # Validate question
         if not question or not question.strip():
             return (
-                jsonify({
-                    "success": False,
-                    "message": "Question is required",
-                }),
+                jsonify(
+                    {
+                        "success": False,
+                        "message": "Question is required",
+                    }
+                ),
                 400,
             )
 
@@ -315,40 +343,48 @@ def create_follow_up(session_id: str):
         session = session_service.get_session(session_id)
         if not session:
             return (
-                jsonify({
-                    "success": False,
-                    "message": "Session not found",
-                }),
+                jsonify(
+                    {
+                        "success": False,
+                        "message": "Session not found",
+                    }
+                ),
                 404,
             )
 
         # Verify user owns session
         if str(session.user_id) != str(user_id):
             return (
-                jsonify({
-                    "success": False,
-                    "message": "Unauthorized",
-                }),
+                jsonify(
+                    {
+                        "success": False,
+                        "message": "Unauthorized",
+                    }
+                ),
                 403,
             )
 
         # Check if session is expired
         if session.status == "EXPIRED":
             return (
-                jsonify({
-                    "success": False,
-                    "message": "Session has expired",
-                }),
+                jsonify(
+                    {
+                        "success": False,
+                        "message": "Session has expired",
+                    }
+                ),
                 410,
             )
 
         # Check if session is closed
         if session.status == "CLOSED":
             return (
-                jsonify({
-                    "success": False,
-                    "message": "Session is closed",
-                }),
+                jsonify(
+                    {
+                        "success": False,
+                        "message": "Session is closed",
+                    }
+                ),
                 410,
             )
 
@@ -358,20 +394,24 @@ def create_follow_up(session_id: str):
         # Check follow-up count limit
         if session.follow_up_count >= max_follow_ups:
             return (
-                jsonify({
-                    "success": False,
-                    "message": f"Maximum follow-ups ({max_follow_ups}) reached for this session",
-                }),
+                jsonify(
+                    {
+                        "success": False,
+                        "message": f"Maximum follow-ups ({max_follow_ups}) reached for this session",
+                    }
+                ),
                 402,
             )
 
         # Check token balance for follow-up (5 base + LLM tokens)
         if not check_token_balance(user_id, tokens_required=15):
             return (
-                jsonify({
-                    "success": False,
-                    "message": "Insufficient tokens. You need at least 15 tokens for a follow-up",
-                }),
+                jsonify(
+                    {
+                        "success": False,
+                        "message": "Insufficient tokens. You need at least 15 tokens for a follow-up",
+                    }
+                ),
                 402,
             )
 
@@ -387,26 +427,30 @@ def create_follow_up(session_id: str):
 
         # Return success response
         return (
-            jsonify({
-                "success": True,
-                "message": "Follow-up question submitted successfully",
-                "follow_up": {
-                    "session_id": session_id,
-                    "question": question,
-                    "follow_up_type": follow_up_type,
-                    "follow_up_count": session.follow_up_count + 1,
-                    "requested_at": utcnow().isoformat(),
-                },
-            }),
+            jsonify(
+                {
+                    "success": True,
+                    "message": "Follow-up question submitted successfully",
+                    "follow_up": {
+                        "session_id": session_id,
+                        "question": question,
+                        "follow_up_type": follow_up_type,
+                        "follow_up_count": session.follow_up_count + 1,
+                        "requested_at": utcnow().isoformat(),
+                    },
+                }
+            ),
             201,
         )
 
     except Exception as e:
         return (
-            jsonify({
-                "success": False,
-                "message": f"Error creating follow-up: {str(e)}",
-            }),
+            jsonify(
+                {
+                    "success": False,
+                    "message": f"Error creating follow-up: {str(e)}",
+                }
+            ),
             500,
         )
 
@@ -438,10 +482,12 @@ def ask_follow_up_question(session_id: str):
         # Validate question
         if not question:
             return (
-                jsonify({
-                    "success": False,
-                    "error": "Question is required",
-                }),
+                jsonify(
+                    {
+                        "success": False,
+                        "error": "Question is required",
+                    }
+                ),
                 400,
             )
 
@@ -451,30 +497,36 @@ def ask_follow_up_question(session_id: str):
         session = session_service.get_session(session_id)
         if not session:
             return (
-                jsonify({
-                    "success": False,
-                    "error": "Session not found",
-                }),
+                jsonify(
+                    {
+                        "success": False,
+                        "error": "Session not found",
+                    }
+                ),
                 404,
             )
 
         # Verify user owns session
         if str(session.user_id) != str(user_id):
             return (
-                jsonify({
-                    "success": False,
-                    "error": "Unauthorized",
-                }),
+                jsonify(
+                    {
+                        "success": False,
+                        "error": "Unauthorized",
+                    }
+                ),
                 403,
             )
 
         # Check if session is expired or closed
         if session.status in ["EXPIRED", "CLOSED"]:
             return (
-                jsonify({
-                    "success": False,
-                    "error": f"Session is {session.status.lower()}",
-                }),
+                jsonify(
+                    {
+                        "success": False,
+                        "error": f"Session is {session.status.lower()}",
+                    }
+                ),
                 410,
             )
 
@@ -486,27 +538,33 @@ def ask_follow_up_question(session_id: str):
         )
 
         return (
-            jsonify({
-                "success": True,
-                "answer": answer,
-            }),
+            jsonify(
+                {
+                    "success": True,
+                    "answer": answer,
+                }
+            ),
             200,
         )
 
     except ValueError as e:
         return (
-            jsonify({
-                "success": False,
-                "error": str(e),
-            }),
+            jsonify(
+                {
+                    "success": False,
+                    "error": str(e),
+                }
+            ),
             400,
         )
     except Exception as e:
         return (
-            jsonify({
-                "success": False,
-                "error": f"Error processing question: {str(e)}",
-            }),
+            jsonify(
+                {
+                    "success": False,
+                    "error": f"Error processing question: {str(e)}",
+                }
+            ),
             500,
         )
 
@@ -537,39 +595,47 @@ def get_card_explanation(session_id: str):
         session = session_service.get_session(session_id)
         if not session:
             return (
-                jsonify({
-                    "success": False,
-                    "error": "Session not found",
-                }),
+                jsonify(
+                    {
+                        "success": False,
+                        "error": "Session not found",
+                    }
+                ),
                 404,
             )
 
         # Verify user owns session
         if str(session.user_id) != str(user_id):
             return (
-                jsonify({
-                    "success": False,
-                    "error": "Unauthorized",
-                }),
+                jsonify(
+                    {
+                        "success": False,
+                        "error": "Unauthorized",
+                    }
+                ),
                 403,
             )
 
         # Check if session is expired or closed
         if session.status == "EXPIRED":
             return (
-                jsonify({
-                    "success": False,
-                    "error": "Session has expired",
-                }),
+                jsonify(
+                    {
+                        "success": False,
+                        "error": "Session has expired",
+                    }
+                ),
                 410,
             )
 
         if session.status == "CLOSED":
             return (
-                jsonify({
-                    "success": False,
-                    "error": "Session is closed",
-                }),
+                jsonify(
+                    {
+                        "success": False,
+                        "error": "Session is closed",
+                    }
+                ),
                 410,
             )
 
@@ -577,10 +643,12 @@ def get_card_explanation(session_id: str):
         cards = session_service.get_session_spread(session_id)
         if len(cards) != 3:
             return (
-                jsonify({
-                    "success": False,
-                    "error": f"Session must have exactly 3 cards, found {len(cards)}",
-                }),
+                jsonify(
+                    {
+                        "success": False,
+                        "error": f"Session must have exactly 3 cards, found {len(cards)}",
+                    }
+                ),
                 400,
             )
 
@@ -590,18 +658,23 @@ def get_card_explanation(session_id: str):
         # Get explanation from LLM (required)
         if not session_service.llm_adapter or not session_service.prompt_service:
             return (
-                jsonify({
-                    "success": False,
-                    "error": "LLM service unavailable. Please try again later.",
-                }),
+                jsonify(
+                    {
+                        "success": False,
+                        "error": "LLM service unavailable. Please try again later.",
+                    }
+                ),
                 503,
             )
 
         try:
-            prompt = session_service.prompt_service.render('card_explanation', {
-                'cards_context': cards_context,
-                'language': get_language_name(language)
-            })
+            prompt = session_service.prompt_service.render(
+                "card_explanation",
+                {
+                    "cards_context": cards_context,
+                    "language": get_language_name(language),
+                },
+            )
 
             response = session_service.llm_adapter.chat(
                 messages=[{"role": "user", "content": prompt}]
@@ -609,41 +682,51 @@ def get_card_explanation(session_id: str):
 
             if not response:
                 return (
-                    jsonify({
-                        "success": False,
-                        "error": "Failed to generate explanation. Please try again.",
-                    }),
+                    jsonify(
+                        {
+                            "success": False,
+                            "error": "Failed to generate explanation. Please try again.",
+                        }
+                    ),
                     500,
                 )
 
             interpretation = response.strip()
             # Deduct tokens for LLM operation
-            session_service.deduct_tokens(session_id, session_service.CARD_EXPLANATION_TOKENS)
+            session_service.deduct_tokens(
+                session_id, session_service.CARD_EXPLANATION_TOKENS
+            )
 
             return (
-                jsonify({
-                    "success": True,
-                    "interpretation": interpretation,
-                }),
+                jsonify(
+                    {
+                        "success": True,
+                        "interpretation": interpretation,
+                    }
+                ),
                 200,
             )
 
         except Exception as e:
             logger.error(f"Error generating explanation: {e}")
             return (
-                jsonify({
-                    "success": False,
-                    "error": "Failed to generate explanation. Please try again.",
-                }),
+                jsonify(
+                    {
+                        "success": False,
+                        "error": "Failed to generate explanation. Please try again.",
+                    }
+                ),
                 500,
             )
 
     except Exception as e:
         return (
-            jsonify({
-                "success": False,
-                "error": f"Error getting explanation: {str(e)}",
-            }),
+            jsonify(
+                {
+                    "success": False,
+                    "error": f"Error getting explanation: {str(e)}",
+                }
+            ),
             500,
         )
 
@@ -675,10 +758,12 @@ def submit_situation(session_id: str):
         # Validate situation_text
         if not situation_text:
             return (
-                jsonify({
-                    "success": False,
-                    "error": "Situation text is required",
-                }),
+                jsonify(
+                    {
+                        "success": False,
+                        "error": "Situation text is required",
+                    }
+                ),
                 400,
             )
 
@@ -686,10 +771,12 @@ def submit_situation(session_id: str):
         word_count = len(situation_text.split())
         if word_count > 100:
             return (
-                jsonify({
-                    "success": False,
-                    "error": f"Situation text must be ≤ 100 words (got {word_count})",
-                }),
+                jsonify(
+                    {
+                        "success": False,
+                        "error": f"Situation text must be ≤ 100 words (got {word_count})",
+                    }
+                ),
                 400,
             )
 
@@ -699,30 +786,36 @@ def submit_situation(session_id: str):
         session = session_service.get_session(session_id)
         if not session:
             return (
-                jsonify({
-                    "success": False,
-                    "error": "Session not found",
-                }),
+                jsonify(
+                    {
+                        "success": False,
+                        "error": "Session not found",
+                    }
+                ),
                 404,
             )
 
         # Verify user owns session
         if str(session.user_id) != str(user_id):
             return (
-                jsonify({
-                    "success": False,
-                    "error": "Unauthorized",
-                }),
+                jsonify(
+                    {
+                        "success": False,
+                        "error": "Unauthorized",
+                    }
+                ),
                 403,
             )
 
         # Check if session is expired or closed
         if session.status in ["EXPIRED", "CLOSED"]:
             return (
-                jsonify({
-                    "success": False,
-                    "error": f"Session is {session.status.lower()}",
-                }),
+                jsonify(
+                    {
+                        "success": False,
+                        "error": f"Session is {session.status.lower()}",
+                    }
+                ),
                 410,
             )
 
@@ -734,27 +827,33 @@ def submit_situation(session_id: str):
         )
 
         return (
-            jsonify({
-                "success": True,
-                "interpretation": interpretation,
-            }),
+            jsonify(
+                {
+                    "success": True,
+                    "interpretation": interpretation,
+                }
+            ),
             200,
         )
 
     except ValueError as e:
         return (
-            jsonify({
-                "success": False,
-                "error": str(e),
-            }),
+            jsonify(
+                {
+                    "success": False,
+                    "error": str(e),
+                }
+            ),
             400,
         )
     except Exception as e:
         return (
-            jsonify({
-                "success": False,
-                "error": f"Error processing situation: {str(e)}",
-            }),
+            jsonify(
+                {
+                    "success": False,
+                    "error": f"Error processing situation: {str(e)}",
+                }
+            ),
             500,
         )
 
@@ -802,46 +901,56 @@ def get_session_history():
         for session in sessions:
             cards = session_service.get_session_spread(session.id)
 
-            sessions_data.append({
-                "session_id": str(session.id),
-                "user_id": str(session.user_id),
-                "status": session.status,
-                "created_at": session.created_at.isoformat() if session.created_at else None,
-                "expires_at": session.expires_at.isoformat() if session.expires_at else None,
-                "tokens_consumed": session.tokens_consumed,
-                "follow_up_count": session.follow_up_count,
-                "cards": [
-                    {
-                        "card_id": str(card.id),
-                        "position": card.position,
-                        "orientation": card.orientation,
-                        "arcana_id": str(card.arcana_id),
-                        "interpretation": card.ai_interpretation,
-                    }
-                    for card in cards
-                ],
-            })
+            sessions_data.append(
+                {
+                    "session_id": str(session.id),
+                    "user_id": str(session.user_id),
+                    "status": session.status,
+                    "created_at": session.created_at.isoformat()
+                    if session.created_at
+                    else None,
+                    "expires_at": session.expires_at.isoformat()
+                    if session.expires_at
+                    else None,
+                    "tokens_consumed": session.tokens_consumed,
+                    "follow_up_count": session.follow_up_count,
+                    "cards": [
+                        {
+                            "card_id": str(card.id),
+                            "position": card.position,
+                            "orientation": card.orientation,
+                            "arcana_id": str(card.arcana_id),
+                            "interpretation": card.ai_interpretation,
+                        }
+                        for card in cards
+                    ],
+                }
+            )
 
         return (
-            jsonify({
-                "success": True,
-                "message": "Session history retrieved successfully",
-                "sessions": sessions_data,
-                "pagination": {
-                    "limit": limit,
-                    "offset": offset,
-                    "total": session_service.count_user_sessions(user_id),
-                },
-            }),
+            jsonify(
+                {
+                    "success": True,
+                    "message": "Session history retrieved successfully",
+                    "sessions": sessions_data,
+                    "pagination": {
+                        "limit": limit,
+                        "offset": offset,
+                        "total": session_service.count_user_sessions(user_id),
+                    },
+                }
+            ),
             200,
         )
 
     except Exception as e:
         return (
-            jsonify({
-                "success": False,
-                "message": f"Error retrieving history: {str(e)}",
-            }),
+            jsonify(
+                {
+                    "success": False,
+                    "message": f"Error retrieving history: {str(e)}",
+                }
+            ),
             500,
         )
 
@@ -867,7 +976,9 @@ def get_daily_limits():
         plan_name = "Unknown"
         subscription = Subscription.query.filter(
             Subscription.user_id == user_id,
-            Subscription.status.in_([SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIALING]),
+            Subscription.status.in_(
+                [SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIALING]
+            ),
         ).first()
         if subscription and subscription.tarif_plan:
             plan_name = subscription.tarif_plan.name
@@ -888,7 +999,9 @@ def get_daily_limits():
                 session_expiry_warning = {
                     "has_warning": True,
                     "session_id": str(active_session.id),
-                    "expires_at": active_session.expires_at.isoformat() if active_session.expires_at else None,
+                    "expires_at": active_session.expires_at.isoformat()
+                    if active_session.expires_at
+                    else None,
                     "seconds_remaining": int(time_remaining),
                 }
 
@@ -911,10 +1024,12 @@ def get_daily_limits():
 
     except Exception as e:
         return (
-            jsonify({
-                "success": False,
-                "message": f"Error retrieving limits: {str(e)}",
-            }),
+            jsonify(
+                {
+                    "success": False,
+                    "message": f"Error retrieving limits: {str(e)}",
+                }
+            ),
             500,
         )
 
@@ -924,7 +1039,7 @@ def serve_arcana_assets(filename):
     """Serve tarot card SVG assets from the plugin directory."""
     try:
         # Security: only allow safe file paths (alphanumeric, hyphens, slashes, dots)
-        if not all(c.isalnum() or c in '-_/.svg' for c in filename):
+        if not all(c.isalnum() or c in "-_/.svg" for c in filename):
             return jsonify({"error": "Invalid file path"}), 400
 
         # Get plugin directory path
@@ -977,6 +1092,7 @@ def admin_get_user_sessions(user_id):
 
         # Verify user exists
         from src.models.user import User
+
         user = User.query.get(user_uuid)
         if not user:
             return jsonify({"error": "User not found"}), 404
@@ -986,27 +1102,33 @@ def admin_get_user_sessions(user_id):
 
         # Get session info from user's tarif plan
         daily_limit, _ = get_user_tarif_plan_limits(str(user_id))
-        allowed, remaining = session_service.check_daily_limit(str(user_id), daily_limit)
+        allowed, remaining = session_service.check_daily_limit(
+            str(user_id), daily_limit
+        )
 
         return (
-            jsonify({
-                "success": True,
-                "user_id": str(user.id),
-                "email": user.email,
-                "daily_limit": daily_limit,
-                "daily_remaining": remaining,
-                "daily_used": daily_limit - remaining,
-                "can_create": allowed,
-            }),
+            jsonify(
+                {
+                    "success": True,
+                    "user_id": str(user.id),
+                    "email": user.email,
+                    "daily_limit": daily_limit,
+                    "daily_remaining": remaining,
+                    "daily_used": daily_limit - remaining,
+                    "can_create": allowed,
+                }
+            ),
             200,
         )
 
     except Exception as e:
         return (
-            jsonify({
-                "success": False,
-                "message": f"Error fetching session info: {str(e)}",
-            }),
+            jsonify(
+                {
+                    "success": False,
+                    "message": f"Error fetching session info: {str(e)}",
+                }
+            ),
             500,
         )
 
@@ -1037,6 +1159,7 @@ def admin_reset_user_sessions(user_id):
 
         # Verify user exists
         from src.models.user import User
+
         user = User.query.get(user_uuid)
         if not user:
             return jsonify({"error": "User not found"}), 404
@@ -1049,29 +1172,35 @@ def admin_reset_user_sessions(user_id):
 
         # Get remaining sessions info after reset (from user's tarif plan)
         daily_limit, _ = get_user_tarif_plan_limits(str(user_id))
-        allowed, remaining = session_service.check_daily_limit(str(user_id), daily_limit)
+        allowed, remaining = session_service.check_daily_limit(
+            str(user_id), daily_limit
+        )
 
         return (
-            jsonify({
-                "success": True,
-                "message": f"Reset {reset_count} Taro sessions for {user.email}",
-                "user_id": str(user.id),
-                "email": user.email,
-                "reset_count": reset_count,
-                "daily_limit": daily_limit,
-                "daily_remaining": remaining,
-                "daily_used": daily_limit - remaining,
-                "can_create": allowed,
-            }),
+            jsonify(
+                {
+                    "success": True,
+                    "message": f"Reset {reset_count} Taro sessions for {user.email}",
+                    "user_id": str(user.id),
+                    "email": user.email,
+                    "reset_count": reset_count,
+                    "daily_limit": daily_limit,
+                    "daily_remaining": remaining,
+                    "daily_used": daily_limit - remaining,
+                    "can_create": allowed,
+                }
+            ),
             200,
         )
 
     except Exception as e:
         return (
-            jsonify({
-                "success": False,
-                "message": f"Error resetting sessions: {str(e)}",
-            }),
+            jsonify(
+                {
+                    "success": False,
+                    "message": f"Error resetting sessions: {str(e)}",
+                }
+            ),
             500,
         )
 
@@ -1097,25 +1226,21 @@ def get_all_prompts():
 
         # Get all non-internal prompts with resolved metadata
         for slug in prompt_service.prompts:
-            if not slug.startswith('_'):
+            if not slug.startswith("_"):
                 prompts[slug] = prompt_service.get_prompt(slug)
 
         return (
-            jsonify({
-                "success": True,
-                "prompts": prompts,
-                "defaults": prompt_service.defaults
-            }),
-            200
+            jsonify(
+                {
+                    "success": True,
+                    "prompts": prompts,
+                    "defaults": prompt_service.defaults,
+                }
+            ),
+            200,
         )
     except Exception as e:
-        return (
-            jsonify({
-                "success": False,
-                "error": str(e)
-            }),
-            500
-        )
+        return (jsonify({"success": False, "error": str(e)}), 500)
 
 
 @taro_bp.route("/admin/prompts/defaults", methods=["GET"])
@@ -1130,21 +1255,9 @@ def get_prompt_defaults():
     """
     try:
         prompt_service = _get_prompt_service()
-        return (
-            jsonify({
-                "success": True,
-                "defaults": prompt_service.defaults
-            }),
-            200
-        )
+        return (jsonify({"success": True, "defaults": prompt_service.defaults}), 200)
     except Exception as e:
-        return (
-            jsonify({
-                "success": False,
-                "error": str(e)
-            }),
-            500
-        )
+        return (jsonify({"success": False, "error": str(e)}), 500)
 
 
 @taro_bp.route("/admin/prompts/defaults", methods=["PUT"])
@@ -1163,25 +1276,13 @@ def update_prompt_defaults():
         prompt_service = _get_prompt_service()
 
         # Validate metadata fields - only allow specific fields
-        allowed_keys = {'temperature', 'max_tokens', 'timeout'}
+        allowed_keys = {"temperature", "max_tokens", "timeout"}
         data = {k: v for k, v in data.items() if k in allowed_keys}
 
         defaults = prompt_service.update_defaults(data)
-        return (
-            jsonify({
-                "success": True,
-                "defaults": defaults
-            }),
-            200
-        )
+        return (jsonify({"success": True, "defaults": defaults}), 200)
     except Exception as e:
-        return (
-            jsonify({
-                "success": False,
-                "error": str(e)
-            }),
-            400
-        )
+        return (jsonify({"success": False, "error": str(e)}), 400)
 
 
 @taro_bp.route("/admin/prompts/<slug>", methods=["GET"])
@@ -1201,29 +1302,11 @@ def get_prompt(slug):
     try:
         prompt_service = _get_prompt_service()
         prompt = prompt_service.get_prompt(slug)
-        return (
-            jsonify({
-                "success": True,
-                "prompt": prompt
-            }),
-            200
-        )
+        return (jsonify({"success": True, "prompt": prompt}), 200)
     except ValueError as e:
-        return (
-            jsonify({
-                "success": False,
-                "error": str(e)
-            }),
-            404
-        )
+        return (jsonify({"success": False, "error": str(e)}), 404)
     except Exception as e:
-        return (
-            jsonify({
-                "success": False,
-                "error": str(e)
-            }),
-            500
-        )
+        return (jsonify({"success": False, "error": str(e)}), 500)
 
 
 @taro_bp.route("/admin/prompts/<slug>", methods=["PUT"])
@@ -1254,38 +1337,20 @@ def update_prompt(slug):
         prompt_service = _get_prompt_service()
 
         # Validate template if provided
-        if 'template' in data:
-            variables = data.get('variables', [])
-            prompt_service.validate_template(data['template'], variables)
+        if "template" in data:
+            variables = data.get("variables", [])
+            prompt_service.validate_template(data["template"], variables)
 
         # Only allow specific fields
-        allowed_keys = {'template', 'variables', 'temperature', 'max_tokens', 'timeout'}
+        allowed_keys = {"template", "variables", "temperature", "max_tokens", "timeout"}
         data = {k: v for k, v in data.items() if k in allowed_keys}
 
         updated = prompt_service.update_prompt(slug, data)
-        return (
-            jsonify({
-                "success": True,
-                "prompt": updated
-            }),
-            200
-        )
+        return (jsonify({"success": True, "prompt": updated}), 200)
     except ValueError as e:
-        return (
-            jsonify({
-                "success": False,
-                "error": str(e)
-            }),
-            400
-        )
+        return (jsonify({"success": False, "error": str(e)}), 400)
     except Exception as e:
-        return (
-            jsonify({
-                "success": False,
-                "error": str(e)
-            }),
-            500
-        )
+        return (jsonify({"success": False, "error": str(e)}), 500)
 
 
 @taro_bp.route("/admin/prompts/reset", methods=["POST"])
@@ -1302,21 +1367,9 @@ def reset_prompts():
     try:
         prompt_service = _get_prompt_service()
         prompt_service.reset_to_defaults()
-        return (
-            jsonify({
-                "success": True,
-                "message": "Prompts reset to defaults"
-            }),
-            200
-        )
+        return (jsonify({"success": True, "message": "Prompts reset to defaults"}), 200)
     except Exception as e:
-        return (
-            jsonify({
-                "success": False,
-                "error": str(e)
-            }),
-            400
-        )
+        return (jsonify({"success": False, "error": str(e)}), 400)
 
 
 @taro_bp.route("/admin/prompts/validate", methods=["POST"])
@@ -1338,32 +1391,14 @@ def validate_prompt():
     """
     try:
         data = request.get_json() or {}
-        template = data.get('template', '')
-        variables = data.get('variables', [])
+        template = data.get("template", "")
+        variables = data.get("variables", [])
 
         prompt_service = _get_prompt_service()
         prompt_service.validate_template(template, variables)
 
-        return (
-            jsonify({
-                "success": True,
-                "message": "Template is valid"
-            }),
-            200
-        )
+        return (jsonify({"success": True, "message": "Template is valid"}), 200)
     except ValueError as e:
-        return (
-            jsonify({
-                "success": False,
-                "error": str(e)
-            }),
-            400
-        )
+        return (jsonify({"success": False, "error": str(e)}), 400)
     except Exception as e:
-        return (
-            jsonify({
-                "success": False,
-                "error": str(e)
-            }),
-            400
-        )
+        return (jsonify({"success": False, "error": str(e)}), 400)

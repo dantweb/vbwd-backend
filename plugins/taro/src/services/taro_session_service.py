@@ -12,7 +12,9 @@ from plugins.taro.src.models.taro_session import TaroSession
 from plugins.taro.src.models.taro_card_draw import TaroCardDraw
 from plugins.taro.src.repositories.arcana_repository import ArcanaRepository
 from plugins.taro.src.repositories.taro_session_repository import TaroSessionRepository
-from plugins.taro.src.repositories.taro_card_draw_repository import TaroCardDrawRepository
+from plugins.taro.src.repositories.taro_card_draw_repository import (
+    TaroCardDrawRepository,
+)
 from plugins.taro.src.enums import TaroSessionStatus, CardPosition, CardOrientation
 from plugins.chat.src.llm_adapter import LLMAdapter, LLMError
 from plugins.taro.src.services.prompt_service import PromptService
@@ -57,21 +59,25 @@ class TaroSessionService:
         """Initialize LLM adapter from plugin configuration."""
         try:
             # Read plugin configuration from config.json (runtime config at plugins/config.json)
-            plugins_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+            plugins_dir = os.path.dirname(
+                os.path.dirname(
+                    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                )
+            )
             config_path = os.path.join(plugins_dir, "config.json")
 
             if not os.path.exists(config_path):
                 logger.warning(f"Plugin config file not found at {config_path}")
                 return None
 
-            with open(config_path, 'r') as f:
+            with open(config_path, "r") as f:
                 config_data = json.load(f)
 
-            taro_config = config_data.get('taro', {})
-            api_endpoint = taro_config.get('llm_api_endpoint')
-            api_key = taro_config.get('llm_api_key')
-            model = taro_config.get('llm_model', 'gpt-4')
-            max_tokens = taro_config.get('llm_max_tokens', 800)
+            taro_config = config_data.get("taro", {})
+            api_endpoint = taro_config.get("llm_api_endpoint")
+            api_key = taro_config.get("llm_api_key")
+            model = taro_config.get("llm_model", "gpt-4")
+            max_tokens = taro_config.get("llm_max_tokens", 800)
 
             if not api_endpoint or not api_key:
                 logger.warning(
@@ -109,45 +115,55 @@ class TaroSessionService:
         """
         try:
             # Read plugin configuration from config.json (runtime config at plugins/config.json)
-            plugins_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+            plugins_dir = os.path.dirname(
+                os.path.dirname(
+                    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                )
+            )
             config_path = os.path.join(plugins_dir, "config.json")
 
             if not os.path.exists(config_path):
                 logger.warning(f"Plugin config file not found at {config_path}")
                 return None
 
-            with open(config_path, 'r') as f:
+            with open(config_path, "r") as f:
                 config_data = json.load(f)
 
-            taro_config = config_data.get('taro', {})
+            taro_config = config_data.get("taro", {})
 
             # Reconstruct prompts from flat config structure
             # Note: Temperature and max_tokens use global LLM settings (llm_temperature, llm_max_tokens)
             prompts_data = {
-                'system_prompt': {
-                    'template': taro_config.get('system_prompt', ''),
-                    'variables': []
+                "system_prompt": {
+                    "template": taro_config.get("system_prompt", ""),
+                    "variables": [],
                 },
-                'card_interpretation': {
-                    'template': taro_config.get('card_interpretation_template', ''),
-                    'variables': ['card_name', 'orientation', 'position', 'base_meaning', 'position_context']
+                "card_interpretation": {
+                    "template": taro_config.get("card_interpretation_template", ""),
+                    "variables": [
+                        "card_name",
+                        "orientation",
+                        "position",
+                        "base_meaning",
+                        "position_context",
+                    ],
                 },
-                'situation_reading': {
-                    'template': taro_config.get('situation_reading_template', ''),
-                    'variables': ['situation_text', 'cards_context']
+                "situation_reading": {
+                    "template": taro_config.get("situation_reading_template", ""),
+                    "variables": ["situation_text", "cards_context"],
                 },
-                'card_explanation': {
-                    'template': taro_config.get('card_explanation_template', ''),
-                    'variables': ['cards_context']
+                "card_explanation": {
+                    "template": taro_config.get("card_explanation_template", ""),
+                    "variables": ["cards_context"],
                 },
-                'follow_up_question': {
-                    'template': taro_config.get('follow_up_question_template', ''),
-                    'variables': ['cards_context', 'question']
+                "follow_up_question": {
+                    "template": taro_config.get("follow_up_question_template", ""),
+                    "variables": ["cards_context", "question"],
                 },
-                'initial_greeting': {
-                    'template': taro_config.get('initial_greeting', ''),
-                    'variables': []
-                }
+                "initial_greeting": {
+                    "template": taro_config.get("initial_greeting", ""),
+                    "variables": [],
+                },
             }
 
             if not prompts_data:
@@ -218,16 +234,16 @@ class TaroSessionService:
             # Randomize orientation: 70% upright, 30% reversed
             is_upright = randint(1, 100) <= 70
             orientation = (
-                CardOrientation.UPRIGHT
-                if is_upright
-                else CardOrientation.REVERSED
+                CardOrientation.UPRIGHT if is_upright else CardOrientation.REVERSED
             )
 
             # Generate interpretation for this card
             interpretation = self._generate_card_interpretation(
                 arcana=arcana,
                 position=position,
-                orientation=CardOrientation.UPRIGHT if is_upright else CardOrientation.REVERSED,
+                orientation=CardOrientation.UPRIGHT
+                if is_upright
+                else CardOrientation.REVERSED,
             )
 
             card = self.card_draw_repo.create(
@@ -274,13 +290,16 @@ class TaroSessionService:
                 }.get(position, "")
 
                 # Render prompt from PromptService
-                prompt = self.prompt_service.render('card_interpretation', {
-                    'card_name': arcana.name,
-                    'orientation': orientation.value,
-                    'position': position.value,
-                    'base_meaning': meaning,
-                    'position_context': position_context
-                })
+                prompt = self.prompt_service.render(
+                    "card_interpretation",
+                    {
+                        "card_name": arcana.name,
+                        "orientation": orientation.value,
+                        "position": position.value,
+                        "base_meaning": meaning,
+                        "position_context": position_context,
+                    },
+                )
 
                 response = self.llm_adapter.chat(
                     messages=[{"role": "user", "content": prompt}]
@@ -291,9 +310,13 @@ class TaroSessionService:
                     return response.strip()
 
             except LLMError as e:
-                logger.warning(f"LLM error generating interpretation: {e}. Using base meaning.")
+                logger.warning(
+                    f"LLM error generating interpretation: {e}. Using base meaning."
+                )
             except Exception as e:
-                logger.error(f"Unexpected error generating interpretation: {e}. Using base meaning.")
+                logger.error(
+                    f"Unexpected error generating interpretation: {e}. Using base meaning."
+                )
 
         # Fallback: use base meaning
         meaning = (
@@ -315,7 +338,9 @@ class TaroSessionService:
         """Get 3-card spread for session."""
         return self.card_draw_repo.get_session_cards(session_id)
 
-    def get_user_session_history(self, user_id: str, limit: int = 10) -> List[TaroSession]:
+    def get_user_session_history(
+        self, user_id: str, limit: int = 10
+    ) -> List[TaroSession]:
         """Get user's session history (for revisiting past readings)."""
         sessions = self.session_repo.get_user_sessions(user_id)
         return sessions[:limit]
@@ -330,8 +355,10 @@ class TaroSessionService:
 
         today = utcnow().date()
         today_count = sum(
-            1 for s in sessions
-            if s.started_at.date() == today and s.status == TaroSessionStatus.ACTIVE.value
+            1
+            for s in sessions
+            if s.started_at.date() == today
+            and s.status == TaroSessionStatus.ACTIVE.value
         )
 
         return today_count
@@ -462,7 +489,9 @@ class TaroSessionService:
         """
         return self.session_repo.update_tokens_consumed(session_id, tokens)
 
-    def get_user_sessions(self, user_id: str, limit: int = 10, offset: int = 0) -> List[TaroSession]:
+    def get_user_sessions(
+        self, user_id: str, limit: int = 10, offset: int = 0
+    ) -> List[TaroSession]:
         """Get user's sessions with pagination support.
 
         Args:
@@ -474,7 +503,7 @@ class TaroSessionService:
             List of sessions
         """
         sessions = self.session_repo.get_user_sessions(user_id)
-        return sessions[offset:offset + limit]
+        return sessions[offset : offset + limit]
 
     def count_user_sessions(self, user_id: str) -> int:
         """Count total sessions for user.
@@ -516,8 +545,10 @@ class TaroSessionService:
         closed_count = 0
         for session in sessions:
             # Only close ACTIVE sessions created today
-            if (session.status == TaroSessionStatus.ACTIVE.value and
-                session.started_at.date() == today):
+            if (
+                session.status == TaroSessionStatus.ACTIVE.value
+                and session.started_at.date() == today
+            ):
                 self.session_repo.update_status(
                     session.id,
                     TaroSessionStatus.CLOSED,
@@ -570,18 +601,23 @@ class TaroSessionService:
 
         # LLM is required for situation reading
         if not self.llm_adapter or not self.prompt_service:
-            raise LLMError("LLM adapter or PromptService not initialized. Cannot generate situation reading.")
+            raise LLMError(
+                "LLM adapter or PromptService not initialized. Cannot generate situation reading."
+            )
 
         try:
             # Convert language code to full language name
             language_name = self._get_language_name(language)
 
             # Render prompt from PromptService with language instruction
-            prompt = self.prompt_service.render('situation_reading', {
-                'situation_text': situation_text,
-                'cards_context': cards_context,
-                'language': language_name
-            })
+            prompt = self.prompt_service.render(
+                "situation_reading",
+                {
+                    "situation_text": situation_text,
+                    "cards_context": cards_context,
+                    "language": language_name,
+                },
+            )
 
             response = self.llm_adapter.chat(
                 messages=[{"role": "user", "content": prompt}]
@@ -618,9 +654,18 @@ class TaroSessionService:
         }
 
         context_parts = []
-        for card in sorted(cards, key=lambda c: list(position_names.values()).index(position_names.get(c.position, ""))):
+        for card in sorted(
+            cards,
+            key=lambda c: list(position_names.values()).index(
+                position_names.get(c.position, "")
+            ),
+        ):
             pos_name = position_names.get(card.position, "Unknown")
-            orientation_name = "Upright" if card.orientation == CardOrientation.UPRIGHT.value else "Reversed"
+            orientation_name = (
+                "Upright"
+                if card.orientation == CardOrientation.UPRIGHT.value
+                else "Reversed"
+            )
             context_parts.append(
                 f"{pos_name}: {card.arcana.name} ({orientation_name})\n"
                 f"  Meaning: {card.ai_interpretation}"
@@ -639,16 +684,16 @@ class TaroSessionService:
             Full language name, defaults to English if code not found
         """
         language_names = {
-            'en': 'English',
-            'de': 'Deutsch (German)',
-            'es': 'Español (Spanish)',
-            'fr': 'Français (French)',
-            'ja': '日本語 (Japanese)',
-            'ru': 'Русский (Russian)',
-            'th': 'ไทย (Thai)',
-            'zh': '中文 (Chinese)',
+            "en": "English",
+            "de": "Deutsch (German)",
+            "es": "Español (Spanish)",
+            "fr": "Français (French)",
+            "ja": "日本語 (Japanese)",
+            "ru": "Русский (Russian)",
+            "th": "ไทย (Thai)",
+            "zh": "中文 (Chinese)",
         }
-        return language_names.get(language_code.lower(), 'English')
+        return language_names.get(language_code.lower(), "English")
 
     def answer_oracle_question(
         self,
@@ -687,18 +732,23 @@ class TaroSessionService:
 
         # LLM is required for answering questions
         if not self.llm_adapter or not self.prompt_service:
-            raise LLMError("LLM adapter or PromptService not initialized. Cannot answer question.")
+            raise LLMError(
+                "LLM adapter or PromptService not initialized. Cannot answer question."
+            )
 
         try:
             # Convert language code to full language name
             language_name = self._get_language_name(language)
 
             # Render prompt from PromptService with language instruction
-            prompt = self.prompt_service.render('follow_up_question', {
-                'cards_context': cards_context,
-                'question': question,
-                'language': language_name
-            })
+            prompt = self.prompt_service.render(
+                "follow_up_question",
+                {
+                    "cards_context": cards_context,
+                    "question": question,
+                    "language": language_name,
+                },
+            )
 
             response = self.llm_adapter.chat(
                 messages=[{"role": "user", "content": prompt}]

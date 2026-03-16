@@ -5,28 +5,102 @@ from pathlib import Path
 
 # Card data
 MAJOR_ARCANA = [
-    (0, "The Fool"), (1, "The Magician"), (2, "The High Priestess"),
-    (3, "The Empress"), (4, "The Emperor"), (5, "The Hierophant"),
-    (6, "The Lovers"), (7, "The Chariot"), (8, "Strength"),
-    (9, "The Hermit"), (10, "Wheel of Fortune"), (11, "Justice"),
-    (12, "The Hanged Man"), (13, "Death"), (14, "Temperance"),
-    (15, "The Devil"), (16, "The Tower"), (17, "The Star"),
-    (18, "The Moon"), (19, "The Sun"), (20, "Judgement"),
+    (0, "The Fool"),
+    (1, "The Magician"),
+    (2, "The High Priestess"),
+    (3, "The Empress"),
+    (4, "The Emperor"),
+    (5, "The Hierophant"),
+    (6, "The Lovers"),
+    (7, "The Chariot"),
+    (8, "Strength"),
+    (9, "The Hermit"),
+    (10, "Wheel of Fortune"),
+    (11, "Justice"),
+    (12, "The Hanged Man"),
+    (13, "Death"),
+    (14, "Temperance"),
+    (15, "The Devil"),
+    (16, "The Tower"),
+    (17, "The Star"),
+    (18, "The Moon"),
+    (19, "The Sun"),
+    (20, "Judgement"),
     (21, "The World"),
 ]
 
 MINOR_ARCANA_SUITS = {
-    "cups": ["Ace", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Page", "Knight", "Queen", "King"],
-    "wands": ["Ace", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Page", "Knight", "Queen", "King"],
-    "swords": ["Ace", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Page", "Knight", "Queen", "King"],
-    "pentacles": ["Ace", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Page", "Knight", "Queen", "King"],
+    "cups": [
+        "Ace",
+        "Two",
+        "Three",
+        "Four",
+        "Five",
+        "Six",
+        "Seven",
+        "Eight",
+        "Nine",
+        "Ten",
+        "Page",
+        "Knight",
+        "Queen",
+        "King",
+    ],
+    "wands": [
+        "Ace",
+        "Two",
+        "Three",
+        "Four",
+        "Five",
+        "Six",
+        "Seven",
+        "Eight",
+        "Nine",
+        "Ten",
+        "Page",
+        "Knight",
+        "Queen",
+        "King",
+    ],
+    "swords": [
+        "Ace",
+        "Two",
+        "Three",
+        "Four",
+        "Five",
+        "Six",
+        "Seven",
+        "Eight",
+        "Nine",
+        "Ten",
+        "Page",
+        "Knight",
+        "Queen",
+        "King",
+    ],
+    "pentacles": [
+        "Ace",
+        "Two",
+        "Three",
+        "Four",
+        "Five",
+        "Six",
+        "Seven",
+        "Eight",
+        "Nine",
+        "Ten",
+        "Page",
+        "Knight",
+        "Queen",
+        "King",
+    ],
 }
 
 SUIT_COLORS = {
-    "cups": "#3498db",      # Blue
-    "wands": "#e74c3c",     # Red/Orange
-    "swords": "#95a5a6",    # Gray
-    "pentacles": "#f39c12", # Gold
+    "cups": "#3498db",  # Blue
+    "wands": "#e74c3c",  # Red/Orange
+    "swords": "#95a5a6",  # Gray
+    "pentacles": "#f39c12",  # Gold
 }
 
 SUIT_SYMBOLS = {
@@ -39,7 +113,7 @@ SUIT_SYMBOLS = {
 
 def create_major_arcana_svg(number: int, name: str) -> str:
     """Create SVG for major arcana card."""
-    return f'''<?xml version="1.0" encoding="UTF-8"?>
+    return f"""<?xml version="1.0" encoding="UTF-8"?>
 <svg width="280" height="400" viewBox="0 0 280 400" xmlns="http://www.w3.org/2000/svg">
   <!-- Background -->
   <rect width="280" height="400" fill="#1a1a2e"/>
@@ -71,7 +145,7 @@ def create_major_arcana_svg(number: int, name: str) -> str:
   <!-- Bottom ornament -->
   <line x1="50" y1="350" x2="230" y2="350" stroke="#d4af37" stroke-width="1"/>
   <circle cx="140" cy="350" r="3" fill="#d4af37"/>
-</svg>'''
+</svg>"""
 
 
 def create_minor_arcana_svg(suit: str, rank: str) -> str:
@@ -79,7 +153,7 @@ def create_minor_arcana_svg(suit: str, rank: str) -> str:
     color = SUIT_COLORS[suit.lower()]
     suit_symbol = SUIT_SYMBOLS[suit.lower()]
 
-    return f'''<?xml version="1.0" encoding="UTF-8"?>
+    return f"""<?xml version="1.0" encoding="UTF-8"?>
 <svg width="280" height="400" viewBox="0 0 280 400" xmlns="http://www.w3.org/2000/svg">
   <!-- Background -->
   <rect width="280" height="400" fill="#1a1a2e"/>
@@ -111,7 +185,7 @@ def create_minor_arcana_svg(suit: str, rank: str) -> str:
   <!-- Bottom ornament -->
   <line x1="50" y1="350" x2="230" y2="350" stroke="{color}" stroke-width="1"/>
   <circle cx="140" cy="350" r="3" fill="{color}"/>
-</svg>'''
+</svg>"""
 
 
 def generate_all_cards():

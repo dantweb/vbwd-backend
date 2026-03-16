@@ -45,6 +45,7 @@ class TaroPlugin(BasePlugin):
 
     def get_blueprint(self) -> Optional["Blueprint"]:
         from plugins.taro.src.routes import taro_bp
+
         return taro_bp
 
     def get_url_prefix(self) -> Optional[str]:

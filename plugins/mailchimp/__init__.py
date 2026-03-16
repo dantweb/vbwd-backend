@@ -51,12 +51,16 @@ class MailchimpPlugin(BasePlugin):
             api_key = cfg.get("mandrill_api_key", "")
             if not api_key:
                 import logging
+
                 logging.getLogger(__name__).warning(
                     "[mailchimp] mandrill_api_key not set — sender not registered"
                 )
                 return
 
-            from plugins.mailchimp.src.services.mandrill_sender import MandrillEmailSender
+            from plugins.mailchimp.src.services.mandrill_sender import (
+                MandrillEmailSender,
+            )
+
             # Instantiate to validate config; actual use requires the email
             # plugin's registry to be configured with 'mandrill' as active_sender.
             MandrillEmailSender(
@@ -65,11 +69,13 @@ class MailchimpPlugin(BasePlugin):
                 from_name=cfg.get("from_name", "VBWD"),
             )
             import logging
+
             logging.getLogger(__name__).info(
                 "[mailchimp] MandrillEmailSender available (sender_id='mandrill')"
             )
         except Exception:
             import logging
+
             logging.getLogger(__name__).warning(
                 "[mailchimp] MandrillEmailSender not registered"
             )

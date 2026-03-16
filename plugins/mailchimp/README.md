@@ -99,3 +99,9 @@ plugins/mailchimp/
 `MandrillEmailSender` is a drop-in replacement for `SmtpEmailSender` — both implement
 `IEmailSender.send(message: EmailMessage) -> None` and can be selected at runtime via the
 `active_sender` config key without code changes.
+
+---
+
+## Related
+
+**Core:** [vbwd-backend](https://github.com/VBWD-platform/vbwd-backend)

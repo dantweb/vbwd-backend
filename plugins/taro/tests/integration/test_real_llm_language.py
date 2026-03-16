@@ -18,7 +18,9 @@ from plugins.taro.src.services.taro_session_service import TaroSessionService
 from plugins.taro.src.services.prompt_service import PromptService
 from plugins.taro.src.repositories.arcana_repository import ArcanaRepository
 from plugins.taro.src.repositories.taro_session_repository import TaroSessionRepository
-from plugins.taro.src.repositories.taro_card_draw_repository import TaroCardDrawRepository
+from plugins.taro.src.repositories.taro_card_draw_repository import (
+    TaroCardDrawRepository,
+)
 from plugins.taro.src.models.arcana import Arcana
 from plugins.taro.src.enums import ArcanaType
 from plugins.chat.src.llm_adapter import LLMAdapter, LLMError
@@ -27,19 +29,19 @@ from plugins.chat.src.llm_adapter import LLMAdapter, LLMError
 def load_taro_config():
     """Load Taro configuration from plugins/config.json"""
     config_path = os.path.join(
-        os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(
-            os.path.abspath(__file__)
-        )))),
-        "config.json"
+        os.path.dirname(
+            os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        ),
+        "config.json",
     )
 
     if not os.path.exists(config_path):
         raise FileNotFoundError(f"Config file not found: {config_path}")
 
-    with open(config_path, 'r') as f:
+    with open(config_path, "r") as f:
         config = json.load(f)
 
-    return config.get('taro', {})
+    return config.get("taro", {})
 
 
 @pytest.fixture
@@ -54,9 +56,9 @@ def taro_config():
 @pytest.fixture
 def llm_adapter(taro_config):
     """Fixture providing real LLM adapter with actual credentials"""
-    api_endpoint = taro_config.get('llm_api_endpoint')
-    api_key = taro_config.get('llm_api_key')
-    model = taro_config.get('llm_model', 'deepseek-reasoner')
+    api_endpoint = taro_config.get("llm_api_endpoint")
+    api_key = taro_config.get("llm_api_key")
+    model = taro_config.get("llm_model", "deepseek-reasoner")
 
     if not api_endpoint or not api_key:
         pytest.skip("LLM credentials not configured")
@@ -74,26 +76,26 @@ def llm_adapter(taro_config):
 def prompt_service(taro_config):
     """Fixture providing PromptService with config templates"""
     prompts_data = {
-        'situation_reading': {
-            'template': 'You are an expert Tarot card reader.\n\nRESPOND IN {{language}} LANGUAGE.\n\nSituation: {{situation_text}}\n\nCards:\n{{cards_context}}\n\nProvide a brief reading:',
-            'variables': ['language', 'situation_text', 'cards_context']
+        "situation_reading": {
+            "template": "You are an expert Tarot card reader.\n\nRESPOND IN {{language}} LANGUAGE.\n\nSituation: {{situation_text}}\n\nCards:\n{{cards_context}}\n\nProvide a brief reading:",
+            "variables": ["language", "situation_text", "cards_context"],
         },
-        'card_explanation': {
-            'template': 'You are an expert.\n\nRESPOND IN {{language}} LANGUAGE.\n\nCards: {{cards_context}}\n\nExplain the cards:',
-            'variables': ['language', 'cards_context']
+        "card_explanation": {
+            "template": "You are an expert.\n\nRESPOND IN {{language}} LANGUAGE.\n\nCards: {{cards_context}}\n\nExplain the cards:",
+            "variables": ["language", "cards_context"],
         },
-        'follow_up_question': {
-            'template': 'You are oracle.\n\nRESPOND IN {{language}} LANGUAGE.\n\nQuestion: {{question}}\n\nAnswer:',
-            'variables': ['language', 'question']
-        }
+        "follow_up_question": {
+            "template": "You are oracle.\n\nRESPOND IN {{language}} LANGUAGE.\n\nQuestion: {{question}}\n\nAnswer:",
+            "variables": ["language", "question"],
+        },
     }
 
     return PromptService.from_dict(prompts_data)
 
 
 @pytest.mark.skipif(
-    os.getenv('SKIP_LLM_TESTS') == '1',
-    reason="Skipping real LLM tests (set SKIP_LLM_TESTS=1 to skip)"
+    os.getenv("SKIP_LLM_TESTS") == "1",
+    reason="Skipping real LLM tests (set SKIP_LLM_TESTS=1 to skip)",
 )
 class TestRealLLMLanguageCommunication:
     """Integration tests with real LLM API communication"""
@@ -108,14 +110,16 @@ class TestRealLLMLanguageCommunication:
                 arcana_type=ArcanaType.MAJOR_ARCANA.value,
                 upright_meaning="Upright meaning",
                 reversed_meaning="Reversed meaning",
-                image_url="https://example.com/card.jpg"
+                image_url="https://example.com/card.jpg",
             )
             arcanas.append(arcana)
         db.session.add_all(arcanas)
         db.session.commit()
         return arcanas
 
-    def test_real_llm_situation_reading_with_russian_language(self, db, llm_adapter, prompt_service):
+    def test_real_llm_situation_reading_with_russian_language(
+        self, db, llm_adapter, prompt_service
+    ):
         """Test real LLM communication with Russian language instruction"""
         # Setup: Real repositories
         arcana_repo = ArcanaRepository(db.session)
@@ -142,7 +146,7 @@ class TestRealLLMLanguageCommunication:
             result = service.generate_situation_reading(
                 session_id=str(session.id),
                 situation_text="I am facing a major life decision",
-                language="ru"
+                language="ru",
             )
 
             # Validate: Got a response
@@ -181,7 +185,7 @@ class TestRealLLMLanguageCommunication:
             result = service.generate_situation_reading(
                 session_id=str(session.id),
                 situation_text="Ich habe eine wichtige Entscheidung zu treffen",
-                language="de"
+                language="de",
             )
 
             assert result is not None
@@ -215,7 +219,7 @@ class TestRealLLMLanguageCommunication:
             result = service.generate_situation_reading(
                 session_id=str(session.id),
                 situation_text="Je dois prendre une décision importante",
-                language="fr"
+                language="fr",
             )
 
             assert result is not None
@@ -226,7 +230,9 @@ class TestRealLLMLanguageCommunication:
         except LLMError as e:
             pytest.fail(f"LLM API call failed: {e}")
 
-    def test_real_llm_follow_up_question_with_language(self, db, llm_adapter, prompt_service):
+    def test_real_llm_follow_up_question_with_language(
+        self, db, llm_adapter, prompt_service
+    ):
         """Test real LLM communication for follow-up questions with language"""
         arcana_repo = ArcanaRepository(db.session)
         session_repo = TaroSessionRepository(db.session)
@@ -250,7 +256,7 @@ class TestRealLLMLanguageCommunication:
             result = service.answer_oracle_question(
                 session_id=str(session.id),
                 question="¿Cuál es el siguiente paso?",
-                language="es"
+                language="es",
             )
 
             assert result is not None
@@ -261,7 +267,9 @@ class TestRealLLMLanguageCommunication:
         except LLMError as e:
             pytest.fail(f"LLM API call failed: {e}")
 
-    def test_real_llm_language_instruction_in_response(self, db, llm_adapter, prompt_service):
+    def test_real_llm_language_instruction_in_response(
+        self, db, llm_adapter, prompt_service
+    ):
         """Test that LLM actually receives and respects language instruction"""
         arcana_repo = ArcanaRepository(db.session)
         session_repo = TaroSessionRepository(db.session)
@@ -285,14 +293,14 @@ class TestRealLLMLanguageCommunication:
             russian_result = service.generate_situation_reading(
                 session_id=str(session.id),
                 situation_text="A career question",
-                language="ru"
+                language="ru",
             )
 
             # Get English response (for comparison)
             english_result = service.generate_situation_reading(
                 session_id=str(session.id),
                 situation_text="A career question",
-                language="en"
+                language="en",
             )
 
             # Validate both got responses
@@ -342,9 +350,7 @@ class TestRealLLMLanguageCommunication:
         # Should raise LLMError with invalid credentials
         with pytest.raises(LLMError):
             service.generate_situation_reading(
-                session_id=str(session.id),
-                situation_text="Test",
-                language="ru"
+                session_id=str(session.id), situation_text="Test", language="ru"
             )
 
 
@@ -359,10 +365,10 @@ class TestLLMConfigurationLoading:
             pytest.skip("plugins/config.json not found — skipping config loading test")
 
         # Validate required fields exist
-        assert 'llm_api_endpoint' in config
-        assert 'llm_api_key' in config
-        assert 'llm_model' in config
-        assert 'system_prompt' in config
+        assert "llm_api_endpoint" in config
+        assert "llm_api_key" in config
+        assert "llm_model" in config
+        assert "system_prompt" in config
 
     def test_taro_config_has_language_templates(self):
         """Test that config has templates with language support"""
@@ -373,15 +379,15 @@ class TestLLMConfigurationLoading:
 
         # Note: The current config may not have {{language}} yet
         # This test documents what we expect after the fix
-        assert 'situation_reading_template' in config
-        assert 'card_explanation_template' in config
-        assert 'follow_up_question_template' in config
+        assert "situation_reading_template" in config
+        assert "card_explanation_template" in config
+        assert "follow_up_question_template" in config
 
     def test_create_llm_adapter_from_config(self, taro_config):
         """Test creating LLMAdapter from actual config"""
-        api_endpoint = taro_config.get('llm_api_endpoint')
-        api_key = taro_config.get('llm_api_key')
-        model = taro_config.get('llm_model')
+        api_endpoint = taro_config.get("llm_api_endpoint")
+        api_key = taro_config.get("llm_api_key")
+        model = taro_config.get("llm_model")
 
         if not api_endpoint or not api_key:
             pytest.skip("LLM credentials not configured")
@@ -401,9 +407,9 @@ class TestLLMConfigurationLoading:
     def test_prompt_service_loads_from_config_templates(self, taro_config):
         """Test that PromptService can be created from config templates"""
         prompts_data = {
-            'situation_reading': {
-                'template': taro_config.get('situation_reading_template', ''),
-                'variables': ['language', 'situation_text', 'cards_context']
+            "situation_reading": {
+                "template": taro_config.get("situation_reading_template", ""),
+                "variables": ["language", "situation_text", "cards_context"],
             }
         }
 
@@ -411,4 +417,4 @@ class TestLLMConfigurationLoading:
         service = PromptService.from_dict(prompts_data)
 
         assert service is not None
-        assert 'situation_reading' in service.prompts
+        assert "situation_reading" in service.prompts

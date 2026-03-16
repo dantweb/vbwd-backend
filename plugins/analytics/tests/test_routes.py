@@ -73,9 +73,7 @@ class TestActiveSessions:
 
     @patch("src.middleware.auth.AuthService")
     @patch("src.middleware.auth.UserRepository")
-    def test_requires_admin_role(
-        self, mock_repo_class, mock_auth_class, app, client
-    ):
+    def test_requires_admin_role(self, mock_repo_class, mock_auth_class, app, client):
         """Non-admin users should get 403."""
         user_id = uuid4()
         mock_user = MagicMock()

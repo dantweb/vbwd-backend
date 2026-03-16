@@ -115,3 +115,13 @@ Use this plugin as a template:
 5. Check `config_store.get_by_name("<name>")` in route handlers for enabled status
 6. Add tests in `tests/` with a `conftest.py` providing `app`/`client` fixtures
 7. The plugin is auto-discovered on next app restart — no manual registration needed
+
+---
+
+## Related
+
+| | Repository |
+|-|------------|
+| 🛠 Frontend (admin) | [vbwd-fe-admin-plugin-analytics-widget](https://github.com/VBWD-platform/vbwd-fe-admin-plugin-analytics-widget) |
+
+**Core:** [vbwd-backend](https://github.com/VBWD-platform/vbwd-backend)

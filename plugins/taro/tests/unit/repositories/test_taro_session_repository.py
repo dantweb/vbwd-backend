@@ -28,7 +28,7 @@ def sample_sessions(db):
         spread_id="spread-001",
         tokens_consumed=10,
         follow_up_count=0,
-        max_follow_ups=3
+        max_follow_ups=3,
     )
 
     # Expired session
@@ -40,7 +40,7 @@ def sample_sessions(db):
         spread_id="spread-002",
         tokens_consumed=15,
         follow_up_count=2,
-        max_follow_ups=3
+        max_follow_ups=3,
     )
 
     # Closed session
@@ -53,7 +53,7 @@ def sample_sessions(db):
         spread_id="spread-003",
         tokens_consumed=20,
         follow_up_count=3,
-        max_follow_ups=3
+        max_follow_ups=3,
     )
 
     # Another user's active session
@@ -65,10 +65,12 @@ def sample_sessions(db):
         spread_id="spread-004",
         tokens_consumed=10,
         follow_up_count=0,
-        max_follow_ups=0
+        max_follow_ups=0,
     )
 
-    db.session.add_all([active_session, expired_session, closed_session, other_user_session])
+    db.session.add_all(
+        [active_session, expired_session, closed_session, other_user_session]
+    )
     db.session.commit()
 
     return {
@@ -95,7 +97,7 @@ class TestTaroSessionRepository:
             started_at=datetime.utcnow(),
             expires_at=expires_at,
             spread_id="spread-new",
-            tokens_consumed=10
+            tokens_consumed=10,
         )
 
         assert result.id is not None
@@ -150,7 +152,9 @@ class TestTaroSessionRepository:
 
         assert result is None
 
-    def test_get_active_session_only_returns_active(self, session_repo, sample_sessions):
+    def test_get_active_session_only_returns_active(
+        self, session_repo, sample_sessions
+    ):
         """Test that get_active_session only returns ACTIVE status."""
         # user has active, expired, and closed sessions
         # get_active_session should only return the ACTIVE one
@@ -184,12 +188,13 @@ class TestTaroSessionRepository:
         for session in results:
             assert session.expires_at < now
 
-    def test_get_expired_sessions_with_status_filter(self, session_repo, sample_sessions):
+    def test_get_expired_sessions_with_status_filter(
+        self, session_repo, sample_sessions
+    ):
         """Test getting only EXPIRED status sessions (not CLOSED)."""
         now = datetime.utcnow()
         results = session_repo.get_expired_sessions(
-            before=now,
-            status_only=TaroSessionStatus.EXPIRED
+            before=now, status_only=TaroSessionStatus.EXPIRED
         )
 
         # Should only include EXPIRED, not CLOSED

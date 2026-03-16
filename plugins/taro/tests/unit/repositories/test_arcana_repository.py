@@ -21,7 +21,7 @@ def sample_arcanas(db):
         arcana_type=ArcanaType.MAJOR_ARCANA.value,
         upright_meaning="New beginnings, taking risks",
         reversed_meaning="Recklessness, carelessness",
-        image_url="https://example.com/fool.jpg"
+        image_url="https://example.com/fool.jpg",
     )
     magician = Arcana(
         number=1,
@@ -29,7 +29,7 @@ def sample_arcanas(db):
         arcana_type=ArcanaType.MAJOR_ARCANA.value,
         upright_meaning="Creativity, resourcefulness",
         reversed_meaning="Manipulation, misdirection",
-        image_url="https://example.com/magician.jpg"
+        image_url="https://example.com/magician.jpg",
     )
 
     # Minor Arcana - Cups
@@ -40,7 +40,7 @@ def sample_arcanas(db):
         arcana_type=ArcanaType.CUPS.value,
         upright_meaning="New love, opportunity",
         reversed_meaning="Heartbreak, emotional loss",
-        image_url="https://example.com/ace_cups.jpg"
+        image_url="https://example.com/ace_cups.jpg",
     )
     two_cups = Arcana(
         suit="CUPS",
@@ -49,7 +49,7 @@ def sample_arcanas(db):
         arcana_type=ArcanaType.CUPS.value,
         upright_meaning="Partnership, connection",
         reversed_meaning="Disharmony, separation",
-        image_url="https://example.com/two_cups.jpg"
+        image_url="https://example.com/two_cups.jpg",
     )
 
     # Minor Arcana - Wands
@@ -60,7 +60,7 @@ def sample_arcanas(db):
         arcana_type=ArcanaType.WANDS.value,
         upright_meaning="Exploration, expansion",
         reversed_meaning="Delays, lack of progress",
-        image_url="https://example.com/three_wands.jpg"
+        image_url="https://example.com/three_wands.jpg",
     )
 
     db.session.add_all([fool, magician, ace_cups, two_cups, three_wands])

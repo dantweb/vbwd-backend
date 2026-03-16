@@ -1,6 +1,8 @@
 """ArcanaInterpretationService - LLM integration for card interpretations."""
 from typing import Optional, Tuple, List
-from plugins.taro.src.repositories.taro_card_draw_repository import TaroCardDrawRepository
+from plugins.taro.src.repositories.taro_card_draw_repository import (
+    TaroCardDrawRepository,
+)
 from plugins.taro.src.models.arcana import Arcana
 from plugins.taro.src.models.taro_card_draw import TaroCardDraw
 from plugins.taro.src.enums import CardPosition, CardOrientation
@@ -141,7 +143,10 @@ Keep it concise and mystical."""
         arcana_list = []
         for card in cards:
             from src.extensions import db
-            arcana = db.session.query(Arcana).filter(Arcana.id == card.arcana_id).first()
+
+            arcana = (
+                db.session.query(Arcana).filter(Arcana.id == card.arcana_id).first()
+            )
             if arcana:
                 arcana_list.append((card, arcana))
 
@@ -164,7 +169,9 @@ Keep it concise and mystical."""
             fallback = "Your reading reveals a journey of growth and transformation."
             return fallback, 10
 
-    def _build_spread_prompt(self, arcana_list: List[Tuple[TaroCardDraw, Arcana]]) -> str:
+    def _build_spread_prompt(
+        self, arcana_list: List[Tuple[TaroCardDraw, Arcana]]
+    ) -> str:
         """Build LLM prompt for 3-card spread interpretation."""
         cards_text = ""
         for i, (card, arcana) in enumerate(arcana_list):
@@ -173,7 +180,9 @@ Keep it concise and mystical."""
                 if card.orientation == CardOrientation.UPRIGHT.value
                 else arcana.reversed_meaning
             )
-            cards_text += f"\n{card.position}: {arcana.name} ({card.orientation}) - {meaning}"
+            cards_text += (
+                f"\n{card.position}: {arcana.name} ({card.orientation}) - {meaning}"
+            )
 
         prompt = f"""Generate a mystical interpretation of this Tarot spread:
 {cards_text}
