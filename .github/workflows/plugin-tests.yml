@@ -1,0 +1,118 @@
+name: Plugin Tests
+
+on:
+  push:
+    branches: ['*']
+  pull_request:
+    branches: [main]
+
+jobs:
+  unit:
+    name: Unit Tests — ${{ matrix.plugin }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        plugin:
+          - analytics
+          - chat
+          - cms
+          - email
+          - ghrm
+          - mailchimp
+          - paypal
+          - stripe
+          - taro
+          - yookassa
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: requirements.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run unit tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+          REDIS_URL: redis://localhost:6379/0
+          DATABASE_URL: postgresql://vbwd:vbwd@localhost:5432/vbwd_test
+        run: |
+          if [ -d "plugins/${{ matrix.plugin }}/tests/unit" ]; then
+            pytest plugins/${{ matrix.plugin }}/tests/unit/ -v --tb=short
+          elif [ -d "plugins/${{ matrix.plugin }}/tests" ]; then
+            pytest plugins/${{ matrix.plugin }}/tests/ -v --tb=short \
+              --ignore=plugins/${{ matrix.plugin }}/tests/integration/
+          else
+            echo "No tests for ${{ matrix.plugin }} — skipping."
+          fi
+
+  integration:
+    name: Integration Tests — ${{ matrix.plugin }}
+    needs: unit
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        plugin:
+          - cms
+          - email
+          - ghrm
+          - taro
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: vbwd
+          POSTGRES_PASSWORD: vbwd
+          POSTGRES_DB: vbwd_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: requirements.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run integration tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+          REDIS_URL: redis://localhost:6379/0
+          DATABASE_URL: postgresql://vbwd:vbwd@localhost:5432/vbwd_test
+        run: |
+          pytest plugins/${{ matrix.plugin }}/tests/integration/ -v --tb=short
