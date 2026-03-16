@@ -4,7 +4,7 @@ Each entry describes:
 - description : human-readable label shown in the admin editor
 - variables   : dict of var_name → {"type", "description", "example"}
 
-These are the 8 core transactional email events.
+These are the 12 core transactional email events.
 
 At import time, all entries are auto-registered in ``EventContextRegistry``
 so other plugins can query the full set via the registry API without needing
@@ -266,6 +266,131 @@ EVENT_CONTEXTS: Dict[str, Dict[str, Any]] = {
                 "type": "string",
                 "description": "Token expiry duration",
                 "example": "1 hour",
+            },
+        },
+    },
+    "subscription.expired": {
+        "description": "Sent when a subscription expires without renewal",
+        "variables": {
+            "user_name": {
+                "type": "string",
+                "description": "User display name",
+                "example": "Alice",
+            },
+            "user_email": {
+                "type": "string",
+                "description": "User email address",
+                "example": "alice@example.com",
+            },
+            "plan_name": {
+                "type": "string",
+                "description": "Plan display name",
+                "example": "Pro Monthly",
+            },
+            "resubscribe_url": {
+                "type": "string",
+                "description": "Link to resubscribe / pricing page",
+                "example": "https://app.example.com/pricing",
+            },
+        },
+    },
+    "invoice.created": {
+        "description": "Sent when a new invoice is generated",
+        "variables": {
+            "user_name": {
+                "type": "string",
+                "description": "User display name",
+                "example": "Alice",
+            },
+            "user_email": {
+                "type": "string",
+                "description": "User email address",
+                "example": "alice@example.com",
+            },
+            "invoice_id": {
+                "type": "string",
+                "description": "Invoice number or ID",
+                "example": "INV-2026-0001",
+            },
+            "amount": {
+                "type": "string",
+                "description": "Invoice total amount",
+                "example": "$29.00",
+            },
+            "due_date": {
+                "type": "string",
+                "description": "Payment due ISO date",
+                "example": "2026-04-01",
+            },
+            "invoice_url": {
+                "type": "string",
+                "description": "Link to invoice detail page",
+                "example": "https://app.example.com/invoices/abc",
+            },
+        },
+    },
+    "invoice.paid": {
+        "description": "Sent when an invoice is successfully paid",
+        "variables": {
+            "user_name": {
+                "type": "string",
+                "description": "User display name",
+                "example": "Alice",
+            },
+            "user_email": {
+                "type": "string",
+                "description": "User email address",
+                "example": "alice@example.com",
+            },
+            "invoice_id": {
+                "type": "string",
+                "description": "Invoice number or ID",
+                "example": "INV-2026-0001",
+            },
+            "amount": {
+                "type": "string",
+                "description": "Amount paid",
+                "example": "$29.00",
+            },
+            "paid_date": {
+                "type": "string",
+                "description": "Payment ISO date",
+                "example": "2026-03-16",
+            },
+            "invoice_url": {
+                "type": "string",
+                "description": "Link to invoice detail page",
+                "example": "https://app.example.com/invoices/abc",
+            },
+        },
+    },
+    "contact_form.received": {
+        "description": "Sent to the site owner when a contact form is submitted",
+        "variables": {
+            "widget_slug": {
+                "type": "string",
+                "description": "Slug of the contact form widget",
+                "example": "contact-us",
+            },
+            "recipient_email": {
+                "type": "string",
+                "description": "Destination email address (site owner)",
+                "example": "admin@example.com",
+            },
+            "remote_ip": {
+                "type": "string",
+                "description": "Sender IP address",
+                "example": "203.0.113.1",
+            },
+            "fields": {
+                "type": "list",
+                "description": "List of form fields [{id, label, value}]",
+                "example": "[{\"label\": \"Name\", \"value\": \"Bob\"}]",
+            },
+            "fields_text": {
+                "type": "string",
+                "description": "Plain-text summary of all form fields",
+                "example": "  Name: Bob\n  Email: bob@example.com",
             },
         },
     },

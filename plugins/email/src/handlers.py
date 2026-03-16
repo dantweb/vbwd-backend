@@ -130,11 +130,77 @@ def register_handlers(bus: "EventBus", cfg: dict) -> None:
             },
         )
 
+    def on_subscription_expired(_name: str, payload: dict) -> None:
+        _safe_send(
+            "subscription.expired",
+            payload.get("user_email", ""),
+            {
+                "user_name": payload.get("user_name", ""),
+                "user_email": payload.get("user_email", ""),
+                "plan_name": payload.get("plan_name", ""),
+                "resubscribe_url": payload.get("resubscribe_url", "/pricing"),
+            },
+        )
+
+    def on_invoice_created(_name: str, payload: dict) -> None:
+        _safe_send(
+            "invoice.created",
+            payload.get("user_email", ""),
+            {
+                "user_name": payload.get("user_name", ""),
+                "user_email": payload.get("user_email", ""),
+                "invoice_id": payload.get("invoice_id", ""),
+                "amount": payload.get("amount", ""),
+                "due_date": payload.get("due_date", ""),
+                "invoice_url": payload.get("invoice_url", "/invoices"),
+            },
+        )
+
+    def on_invoice_paid(_name: str, payload: dict) -> None:
+        _safe_send(
+            "invoice.paid",
+            payload.get("user_email", ""),
+            {
+                "user_name": payload.get("user_name", ""),
+                "user_email": payload.get("user_email", ""),
+                "invoice_id": payload.get("invoice_id", ""),
+                "amount": payload.get("amount", ""),
+                "paid_date": payload.get("paid_date", ""),
+                "invoice_url": payload.get("invoice_url", "/invoices"),
+            },
+        )
+
+    def on_contact_form_received(_name: str, payload: dict) -> None:
+        recipient = payload.get("recipient_email", "")
+        if not recipient:
+            logger.warning("[email] contact_form.received: no recipient_email in payload")
+            return
+        fields: list = payload.get("fields", [])
+        rows = "\n".join(
+            f"  {f.get('label', f.get('id', '?'))}: {f.get('value', '')}"
+            for f in fields
+        )
+        _safe_send(
+            "contact_form.received",
+            recipient,
+            {
+                "widget_slug": payload.get("widget_slug", ""),
+                "recipient_email": recipient,
+                "remote_ip": payload.get("remote_ip", ""),
+                "fields": fields,
+                "fields_text": rows,
+            },
+        )
+
     bus.subscribe("subscription.activated", on_subscription_activated)
     bus.subscribe("subscription.cancelled", on_subscription_cancelled)
+    bus.subscribe("subscription.expired", on_subscription_expired)
     bus.subscribe("subscription.payment_failed", on_subscription_payment_failed)
     bus.subscribe("subscription.renewed", on_subscription_renewed)
+    bus.subscribe("invoice.created", on_invoice_created)
+    bus.subscribe("invoice.paid", on_invoice_paid)
     bus.subscribe("user.registered", on_user_registered)
     bus.subscribe("user.password_reset", on_user_password_reset)
+    bus.subscribe("contact_form.received", on_contact_form_received)
 
     logger.info("[email] Event handlers registered")

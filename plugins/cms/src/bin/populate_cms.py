@@ -6,10 +6,13 @@ Creates:
   - 5 light themes + 5 dark themes (CmsStyle)
   - Navigation widgets: header-nav (menu with Pricing submenu), footer-nav (menu)
   - Content widgets: hero-home1, hero-home2, cta-primary, features-3col, features-slideshow,
-                     pricing-embed-demo, pricing-native-plans (vue-component) (html)
-  - 5 layouts: home-v1, home-v2, landing, content-page, native-pricing-page
-  - 11 pages: home1, home2, landing2, landing3, about, privacy, terms, contact,
-               features, pricing-embedded, pricing-native
+                     pricing-embed-demo, pricing-native-plans, contact-form (vue-component) (html)
+  - 8 layouts: contact-form, ghrm-software-catalogue, ghrm-software-detail,
+               home-v1, home-v2, landing, content-page, native-pricing-page
+  - 19 pages: home1, home2, landing2, landing3, about, privacy, terms, contact,
+               features, pricing-embedded, pricing-native, we-are-launching-soon,
+               ghrm-software-catalogue, ghrm-software-detail, software, category,
+               category/backend, category/fe-user, category/fe-admin
 
 Header nav: Home | Features | Pricing (submenu: Embedded / Native / All Plans) | About | Software
 
@@ -698,14 +701,81 @@ code { font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace; fon
 # Stored in CmsWidget.config; the frontend "vue-component" widget type reads this
 # to determine which Vue component to render and with which props.
 
+NATIVE_PRICING_CSS = """\
+/* ============================================================
+   NativePricingPlans widget CSS
+   Three ready-to-use styles. Uncomment ONE block at a time.
+   The active block overrides the theme-switcher preset colors.
+   ============================================================ */
+
+/* ── STYLE 1 (default): Theme-aware ──────────────────────────
+   No overrides. Plan cards automatically follow the active
+   theme-switcher preset (light / dark / forest / ocean …).
+   Nothing to uncomment — this is the default behaviour.
+   ----------------------------------------------------------- */
+
+/* ── STYLE 2: Dark overlay ───────────────────────────────────
+   Forces a dark appearance regardless of the selected theme.
+   Un-comment the block below to activate.
+   -----------------------------------------------------------
+.landing1 {
+  background: #16213e;
+}
+.landing1 .plan-card {
+  background: #1a1a2e;
+  border-color: #374151;
+  box-shadow: 0 2px 8px rgba(0,0,0,.4);
+}
+.landing1 .plan-card:hover {
+  border-color: #60a5fa;
+  box-shadow: 0 8px 24px rgba(0,0,0,.6);
+}
+.landing1 .plan-name   { color: #f3f4f6; }
+.landing1 .plan-price  { color: #60a5fa; }
+.landing1 .billing-period   { color: #9ca3af; }
+.landing1 .plan-description { color: #9ca3af; }
+.landing1 .choose-plan-btn  { background: #60a5fa; }
+.landing1 .choose-plan-btn:hover { background: #3b82f6; }
+.landing1-header h1  { color: #f3f4f6; }
+.landing1 .subtitle  { color: #9ca3af; }
+   ----------------------------------------------------------- */
+
+/* ── STYLE 3: Light-clean (ocean palette) ────────────────────
+   Crisp white cards on a light blue tint. Good for pricing
+   pages that sit outside the authenticated dashboard.
+   Un-comment the block below to activate.
+   -----------------------------------------------------------
+.landing1 {
+  background: #f0f9ff;
+}
+.landing1 .plan-card {
+  background: #ffffff;
+  border-radius: 16px;
+  border-color: transparent;
+  box-shadow: 0 4px 20px rgba(0,0,0,.06);
+}
+.landing1 .plan-card:hover {
+  border-color: #0284c7;
+  box-shadow: 0 8px 28px rgba(2,132,199,.15);
+}
+.landing1 .plan-name   { color: #0c4a6e; }
+.landing1 .plan-price  { color: #0284c7; }
+.landing1 .billing-period   { color: #64748b; }
+.landing1 .plan-description { color: #64748b; }
+.landing1 .choose-plan-btn  { background: #0284c7; }
+.landing1 .choose-plan-btn:hover { background: #0369a1; }
+.landing1-header h1  { color: #0c4a6e; }
+.landing1 .subtitle  { color: #64748b; }
+   ----------------------------------------------------------- */
+"""
+
 NATIVE_PRICING_CONFIG = {
     "component": "NativePricingPlans",
-    "props": {
-        "category": "root",
-        "plan_count": 3,
-        "show_billing_toggle": True,
-        "default_billing_period": "monthly",
-    },
+    "component_name": "NativePricingPlans",
+    "mode": "category",
+    "category": "root",
+    "plan_slugs": [],
+    "css": NATIVE_PRICING_CSS,
 }
 
 BREADCRUMBS_CSS = (
@@ -733,6 +803,29 @@ BREADCRUMBS_CONFIG = {
     "max_label_length": 60,
     "category_label": "Software",
     "css": BREADCRUMBS_CSS,
+}
+
+CONTACT_FORM_CONFIG = {
+    "component_name": "ContactForm",
+    "recipient_email": "root@localhost.local",
+    "success_message": "Thank you! Your message has been sent.",
+    "fields": [
+        {"id": "name",    "type": "text",     "label": "Name",    "required": True},
+        {"id": "email",   "type": "email",    "label": "Email",   "required": True},
+        {"id": "field_1", "type": "textarea", "label": "Message", "required": False},
+    ],
+    "rate_limit_enabled": True,
+    "rate_limit_max": 5,
+    "rate_limit_window_minutes": 60,
+    "captcha_html": "",
+    "analytics_html": "",
+    "css": (
+        ".contact-form-widget {\n"
+        "    background: #ebe8eb;\n"
+        "    border-radius: 10px;\n"
+        "    margin-bottom: 5rem;\n"
+        "}"
+    ),
 }
 
 TESTIMONIALS_HTML = """
@@ -823,6 +916,59 @@ STANDARD_CONTENT_JSON = {
 # ─── Layouts ───────────────────────────────────────────────────────────────────
 
 LAYOUTS = [
+    {
+        "slug": "contact-form",
+        "name": "Contact Form",
+        "description": "Page layout with header, content area, contact form widget, and footer.",
+        "sort_order": 0,
+        "areas": [
+            {"name": "header",       "type": "header",  "label": ""},
+            {"name": "content",      "type": "content", "label": ""},
+            {"name": "contact form", "type": "vue",     "label": ""},
+            {"name": "footer",       "type": "footer",  "label": ""},
+        ],
+        "widget_assignments": [
+            ("header",       "header-nav"),
+            ("contact form", "contact-form"),
+            ("footer",       "footer-nav"),
+        ],
+    },
+    {
+        "slug": "ghrm-software-catalogue",
+        "name": "GHRM Software Catalogue",
+        "description": "GHRM plugin: software catalogue listing with breadcrumbs and category browser.",
+        "sort_order": 10,
+        "areas": [
+            {"name": "header",          "type": "header", "label": "Header"},
+            {"name": "breadcrumbs",     "type": "vue",    "label": ""},
+            {"name": "ghrm-categories", "type": "vue",    "label": "Categories"},
+            {"name": "footer",          "type": "footer", "label": "Footer"},
+        ],
+        "widget_assignments": [
+            ("header",          "header-nav"),
+            ("breadcrumbs",     "breadcrumbs"),
+            ("ghrm-categories", "ghrm-categories"),
+            ("footer",          "footer-nav"),
+        ],
+    },
+    {
+        "slug": "ghrm-software-detail",
+        "name": "GHRM Software Detail",
+        "description": "GHRM plugin: individual software package detail page.",
+        "sort_order": 11,
+        "areas": [
+            {"name": "header",               "type": "header", "label": "Header"},
+            {"name": "breadcrumbs",          "type": "vue",    "label": ""},
+            {"name": "ghrm-software-detail", "type": "vue",    "label": "Software Detail"},
+            {"name": "footer",               "type": "footer", "label": "Footer"},
+        ],
+        "widget_assignments": [
+            ("header",               "header-nav"),
+            ("breadcrumbs",          "breadcrumbs"),
+            ("ghrm-software-detail", "ghrm-software-detail"),
+            ("footer",               "footer-nav"),
+        ],
+    },
     {
         "slug": "home-v1",
         "name": "Home v1 (Hero + Features + CTA)",
@@ -958,6 +1104,8 @@ def _get_or_create_widget(slug: str, name: str, widget_type: str,
         existing.name = name
         if widget_type == "html":
             existing.content_json = content_json
+        elif content_json is not None:
+            existing.content_json = content_json
         if source_css is not None:
             existing.source_css = source_css
         if config is not None:
@@ -1073,7 +1221,8 @@ def _get_or_create_page(slug: str, name: str, layout: "CmsLayout",
                           meta_description: str = None,
                           sort_order: int = 0,
                           category_id: str = None,
-                          robots: str = "index,follow") -> None:
+                          robots: str = "index,follow",
+                          is_published: bool = True) -> None:
     existing = db.session.query(CmsPage).filter_by(slug=slug).first()
     if existing:
         existing.name = name
@@ -1098,7 +1247,7 @@ def _get_or_create_page(slug: str, name: str, layout: "CmsLayout",
         language="en",
         content_json=content_json or {"type": "doc", "content": []},
         content_html=content_html,
-        is_published=True,
+        is_published=is_published,
         sort_order=sort_order,
         layout_id=layout.id if layout else None,
         style_id=style.id if style else None,
@@ -1214,12 +1363,26 @@ def populate_cms() -> None:
     )
     widget_map["pricing-native-plans"] = _get_or_create_widget(
         "pricing-native-plans", "Pricing — Native CMS Plans", "vue-component",
+        content_json={"component": "NativePricingPlans"},
         config=NATIVE_PRICING_CONFIG,
     )
     widget_map["breadcrumbs"] = _get_or_create_widget(
         "breadcrumbs", "Breadcrumbs", "vue-component",
         content_json={"component": "CmsBreadcrumb"},
         config=BREADCRUMBS_CONFIG,
+    )
+    widget_map["contact-form"] = _get_or_create_widget(
+        "contact-form", "Contact Form", "vue-component",
+        content_json={"component": "ContactForm"},
+        config=CONTACT_FORM_CONFIG,
+    )
+    widget_map["ghrm-categories"] = _get_or_create_widget(
+        "ghrm-categories", "GHRM Categories", "vue-component",
+        content_json={"component": "GhrmCatalogueContent", "items_per_page": 12},
+    )
+    widget_map["ghrm-software-detail"] = _get_or_create_widget(
+        "ghrm-software-detail", "GHRM Software Detail", "vue-component",
+        content_json={"component": "GhrmPackageDetail", "items_per_page": 12},
     )
 
     db.session.commit()
@@ -1236,6 +1399,7 @@ def populate_cms() -> None:
     cat_about, _ = _get_or_create_category("about", "About", sort_order=0)
     cat_blog, _ = _get_or_create_category("blog", "Blog", sort_order=0)
     cat_static, _ = _get_or_create_category("static-pages", "Static Pages", sort_order=0)
+    cat_ghrm, _ = _get_or_create_category("ghrm", "Software Catalogue", sort_order=0)
     db.session.commit()
 
     print("\n── Pages ───────────────────────────────────────────────────────")
@@ -1245,6 +1409,9 @@ def populate_cms() -> None:
     home_v2 = layout_map.get("home-v2")
     landing = layout_map.get("landing")
     content_page = layout_map.get("content-page")
+    contact_form_layout = layout_map.get("contact-form")
+    ghrm_catalogue_layout = layout_map.get("ghrm-software-catalogue")
+    ghrm_detail_layout = layout_map.get("ghrm-software-detail")
 
     _get_or_create_page(
         "home1", "Home — Version 1", home_v1, default_light,
@@ -1289,8 +1456,11 @@ def populate_cms() -> None:
         category_id=cat_about.id,
     )
     _get_or_create_page(
-        "contact", "Contact", content_page, default_light,
-        content_html="<h1>Contact Us</h1><p>Get in touch with our team.</p>",
+        "contact", "Contact", contact_form_layout, default_light,
+        content_json={"type": "doc", "content": [
+            {"type": "heading", "attrs": {"level": 1}, "content": [{"type": "text", "text": "Contact Us"}]},
+            {"type": "paragraph", "content": [{"type": "text", "text": "Get in touch with our team. We will answer you shortly"}]},
+        ]},
         meta_description="Contact our team.",
         sort_order=32,
         category_id=cat_about.id,
@@ -1324,6 +1494,54 @@ def populate_cms() -> None:
         category_id=cat_static.id,
     )
 
+    # ── GHRM pages (Software Catalogue plugin) ──────────────────────────────
+    # Template pages (not published) — used as bases by the GHRM plugin
+    _get_or_create_page(
+        "ghrm-software-catalogue", "GHRM Catalogue Template", ghrm_catalogue_layout, None,
+        meta_description="Browse our software catalogue.",
+        sort_order=0,
+        category_id=cat_ghrm.id,
+        robots="noindex,nofollow",
+        is_published=False,
+    )
+    _get_or_create_page(
+        "ghrm-software-detail", "GHRM Detail Template", ghrm_detail_layout, None,
+        meta_description="Software package details.",
+        sort_order=1,
+        category_id=cat_ghrm.id,
+    )
+    # Published catalogue pages
+    _get_or_create_page(
+        "software", "Software", ghrm_catalogue_layout, default_dark,
+        meta_description="Browse all software packages.",
+        sort_order=0,
+        category_id=cat_ghrm.id,
+    )
+    _get_or_create_page(
+        "category", "Software Catalogue", ghrm_catalogue_layout, default_light,
+        meta_description="Browse software packages by category.",
+        sort_order=0,
+        category_id=cat_ghrm.id,
+    )
+    _get_or_create_page(
+        "category/backend", "Backend Packages", ghrm_catalogue_layout, default_light,
+        meta_description="Backend software packages.",
+        sort_order=1,
+        category_id=cat_ghrm.id,
+    )
+    _get_or_create_page(
+        "category/fe-user", "Fe User Packages", ghrm_catalogue_layout, default_light,
+        meta_description="Frontend user packages.",
+        sort_order=2,
+        category_id=cat_ghrm.id,
+    )
+    _get_or_create_page(
+        "category/fe-admin", "Fe Admin Packages", ghrm_catalogue_layout, default_light,
+        meta_description="Frontend admin packages.",
+        sort_order=3,
+        category_id=cat_ghrm.id,
+    )
+
     db.session.commit()
 
     print("\n── Routing Rules ───────────────────────────────────────────────")
@@ -1348,12 +1566,14 @@ def populate_cms() -> None:
     print("\n" + "=" * 55)
     print("✓ CMS demo data population complete")
     print(f"  Styles      : {len(STYLES)} (5 light + 5 dark)")
-    print(f"  Widgets     : {len(widget_map)} (incl. breadcrumbs vue-component)")
-    print(f"  Layouts     : {len(LAYOUTS)} (content-page now has breadcrumbs area)")
-    print("  Categories  : about, blog, static-pages")
-    print("  Pages       : 12 (home1, home2, landing2, landing3, about, privacy, terms,")
+    print(f"  Widgets     : {len(widget_map)} (incl. breadcrumbs, contact-form, ghrm-* vue-components)")
+    print(f"  Layouts     : {len(LAYOUTS)}")
+    print("  Categories  : about, blog, static-pages, ghrm")
+    print("  Pages       : 19 (home1, home2, landing2, landing3, about, privacy, terms,")
     print("                    contact, features, pricing-embedded, pricing-native,")
-    print("                    we-are-launching-soon)")
+    print("                    we-are-launching-soon, ghrm-software-catalogue,")
+    print("                    ghrm-software-detail, software, category, category/backend,")
+    print("                    category/fe-user, category/fe-admin)")
     print("  Routing     : default → home1")
     print("  Header nav  : Home | Features | Pricing (submenu) | About | Software")
     print("=" * 55)

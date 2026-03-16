@@ -243,7 +243,9 @@ class PaymentCapturedHandler(IEventHandler):
                 {
                     "user_name": user_name,
                     "user_email": user_email,
-                    "invoice_id": str(getattr(invoice, "invoice_number", None) or invoice.id),
+                    "invoice_id": str(
+                        getattr(invoice, "invoice_number", None) or invoice.id
+                    ),
                     "amount": str(invoice.amount),
                     "paid_date": paid_date,
                     "invoice_url": f"/invoices/{invoice.id}",
@@ -261,9 +263,14 @@ class PaymentCapturedHandler(IEventHandler):
                             "user_email": user_email,
                             "plan_name": plan.name,
                             "plan_price": str(getattr(plan, "price", "") or ""),
-                            "billing_period": getattr(plan, "billing_period", "monthly") or "monthly",
-                            "start_date": sub.started_at.date().isoformat() if sub.started_at else paid_date,
-                            "next_billing_date": sub.expires_at.date().isoformat() if sub.expires_at else "",
+                            "billing_period": getattr(plan, "billing_period", "monthly")
+                            or "monthly",
+                            "start_date": sub.started_at.date().isoformat()
+                            if sub.started_at
+                            else paid_date,
+                            "next_billing_date": sub.expires_at.date().isoformat()
+                            if sub.expires_at
+                            else "",
                             "dashboard_url": "/dashboard",
                         },
                     )

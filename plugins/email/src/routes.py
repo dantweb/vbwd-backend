@@ -26,22 +26,33 @@ email_bp = Blueprint("email", __name__)
 # ---------------------------------------------------------------------------
 
 
+def _email_cfg() -> dict:
+    """Return the email plugin config dict from the config store, or {}."""
+    from flask import current_app
+    config_store = getattr(current_app, "config_store", None)
+    if config_store:
+        cfg = config_store.get_config("email")
+        if cfg:
+            return cfg
+    return {}
+
+
 def _template_svc():
     from src.extensions import db
     from plugins.email.src.services.email_service import EmailService
     from plugins.email.src.services.sender_registry import EmailSenderRegistry
     from plugins.email.src.services.smtp_sender import SmtpEmailSender
-    import os
 
+    cfg = _email_cfg()
     registry = EmailSenderRegistry()
     smtp = SmtpEmailSender(
-        host=os.getenv("SMTP_HOST", "localhost"),
-        port=int(os.getenv("SMTP_PORT", "587")),
-        username=os.getenv("SMTP_USER") or None,
-        password=os.getenv("SMTP_PASSWORD") or None,
-        use_tls=os.getenv("SMTP_USE_TLS", "true").lower() != "false",
-        from_address=os.getenv("SMTP_FROM_EMAIL", "noreply@example.com"),
-        from_name=os.getenv("SMTP_FROM_NAME", "VBWD"),
+        host=cfg.get("smtp_host", "localhost"),
+        port=int(cfg.get("smtp_port", 587)),
+        username=cfg.get("smtp_user") or None,
+        password=cfg.get("smtp_password") or None,
+        use_tls=cfg.get("smtp_use_tls", True),
+        from_address=cfg.get("smtp_from_email", "noreply@example.com"),
+        from_name=cfg.get("smtp_from_name", "VBWD"),
     )
     registry.register(smtp)
     registry.set_active("smtp")

@@ -158,18 +158,51 @@ To switch: set `active_sender: "mailchimp"` in the email plugin config and confi
 
 The following event types have seeded default templates:
 
-| Event | Trigger |
-|-------|---------|
-| `user.registered` | New user sign-up |
-| `user.password_reset` | Password reset requested |
-| `subscription.activated` | Subscription activated or renewed |
-| `subscription.cancelled` | Subscription cancelled by user or admin |
-| `subscription.expired` | Subscription reached end date without renewal |
-| `invoice.created` | New invoice generated |
-| `invoice.paid` | Invoice marked as paid |
-| `payment.failed` | Dunning — payment attempt failed |
+| Event | Trigger | Template variables |
+|-------|---------|-------------------|
+| `user.registered` | New user sign-up | `user_name`, `user_email`, `login_url` |
+| `user.password_reset` | Password reset requested | `user_name`, `user_email`, `reset_url`, `expires_in` |
+| `subscription.activated` | Subscription activated or renewed | `user_name`, `user_email`, `plan_name`, `start_date`, `end_date`, `amount` |
+| `subscription.cancelled` | Subscription cancelled | `user_name`, `user_email`, `plan_name`, `end_date` |
+| `subscription.expired` | Subscription reached end date | `user_name`, `user_email`, `plan_name` |
+| `invoice.created` | New invoice generated | `user_name`, `user_email`, `invoice_id`, `amount`, `due_date` |
+| `invoice.paid` | Invoice marked as paid | `user_name`, `user_email`, `invoice_id`, `amount`, `paid_date` |
+| `payment.failed` | Dunning — payment attempt failed | `user_name`, `user_email`, `plan_name`, `amount`, `next_attempt` |
+| `contact_form.received` | CMS ContactForm widget submission | `widget_slug`, `recipient_email`, `remote_ip`, `fields`, `fields_text` |
 
 Templates are editable at **Admin → Settings → Email Templates**.
+
+### Contact Form Email (`contact_form.received`)
+
+This event is emitted by the CMS plugin when a visitor submits a `ContactForm` widget. The email plugin subscribes to it and delivers a notification to the address configured in the widget's `recipient_email` field.
+
+If `recipient_email` is empty in the widget config, the event is received but no email is sent (a warning is logged).
+
+**Template variables:**
+
+| Variable | Type | Description |
+|----------|------|-------------|
+| `widget_slug` | string | Slug of the ContactForm widget that was submitted |
+| `recipient_email` | string | Destination address (from widget config) |
+| `remote_ip` | string | Submitter's IP address |
+| `fields` | list | List of `{label, value}` objects for each submitted field |
+| `fields_text` | string | Plain-text rendering of all fields (`label: value` lines) |
+
+**Default HTML template** renders a table of submitted fields. **Default text template:**
+```
+New contact form submission
+Form: {{ widget_slug }}
+
+{{ fields_text }}
+
+IP: {{ remote_ip }}
+```
+
+**Enabling contact form emails:**
+
+1. Create a `ContactForm` widget in the CMS admin, set `recipient_email` to your inbox address.
+2. Ensure the email plugin is enabled and SMTP is configured.
+3. The seeded `contact_form.received` template is active by default — no further setup needed.
 
 ---
 

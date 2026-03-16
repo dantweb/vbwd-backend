@@ -3,6 +3,7 @@
 Public endpoints:
     GET  /api/v1/cms/pages/<slug>
     GET  /api/v1/cms/pages            ?category=<slug>&page=1&per_page=20
+    POST /api/v1/contact              contact form submission
 
 Admin endpoints (require_admin):
     Pages:
@@ -61,6 +62,10 @@ from plugins.cms.src.services.cms_style_service import (
     CmsStyleService, CmsStyleNotFoundError, CmsStyleSlugConflictError,
 )
 from plugins.cms.src.services.file_storage import LocalFileStorage
+from plugins.cms.src.services.contact_form_service import (
+    ContactFormService, HoneypotError, RateLimitError, ValidationError,
+)
+from plugins.cms.src.services.cms_import_export_service import CmsImportExportService
 
 logger = logging.getLogger(__name__)
 
@@ -111,6 +116,26 @@ def _style_service() -> CmsStyleService:
     return CmsStyleService(CmsStyleRepository(db.session))
 
 
+def _import_export_service() -> CmsImportExportService:
+    from plugins.cms.src.repositories.routing_rule_repository import CmsRoutingRuleRepository
+    config = _cms_config()
+    storage = LocalFileStorage(
+        base_path=config.get("uploads_base_path", "/app/uploads"),
+        base_url=config.get("uploads_base_url", "/uploads"),
+    )
+    return CmsImportExportService(
+        CmsCategoryRepository(db.session),
+        CmsStyleRepository(db.session),
+        CmsWidgetRepository(db.session),
+        CmsLayoutRepository(db.session),
+        CmsPageRepository(db.session),
+        CmsRoutingRuleRepository(db.session),
+        CmsImageRepository(db.session),
+        CmsLayoutWidgetRepository(db.session),
+        storage,
+    )
+
+
 def _cms_config() -> dict:
     config_store = getattr(current_app, "config_store", None)
     if config_store:
@@ -121,6 +146,67 @@ def _cms_config() -> dict:
         "uploads_base_path": "/app/uploads",
         "uploads_base_url": "/uploads",
     }
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# CONTACT FORM — public POST endpoint
+# ════════════════════════════════════════════════════════════════════════════
+
+@cms_bp.route("/api/v1/contact", methods=["POST"])
+def submit_contact_form():
+    """Process a ContactForm widget submission.
+
+    Body (JSON):
+        widget_slug  – slug of the CMS widget (identifies config)
+        fields       – dict of {field_id: value}
+        _hp          – honeypot field (must be empty)
+
+    Returns 200 on success, 404/422/429 on failure.
+    """
+    from src.events.bus import event_bus
+    from src.utils.redis_client import redis_client
+
+    body = request.get_json(silent=True) or {}
+    widget_slug: str = str(body.get("widget_slug", "")).strip()
+
+    if not widget_slug:
+        return jsonify({"error": "widget_slug required"}), 422
+
+    # Load widget config
+    widget_repo = CmsWidgetRepository(db.session)
+    widget = widget_repo.find_by_slug(widget_slug)
+    if not widget:
+        return jsonify({"error": "Form not found"}), 404
+
+    if widget.widget_type != "vue-component":
+        return jsonify({"error": "Form not found"}), 404
+
+    config: dict = widget.config or {}
+    if config.get("component_name") != "ContactForm":
+        return jsonify({"error": "Form not found"}), 404
+
+    recipient_email: str = (config.get("recipient_email") or "").strip()
+    if not recipient_email:
+        return jsonify({"error": "Contact form is not configured"}), 422
+
+    svc = ContactFormService(redis_client)
+    try:
+        payload = svc.process_submission(
+            config=config,
+            form_data=body,
+            remote_ip=request.remote_addr or "unknown",
+        )
+    except HoneypotError:
+        # Silent reject — return OK so bots can't detect the honeypot
+        return jsonify({"ok": True}), 200
+    except RateLimitError:
+        return jsonify({"error": "Too many requests. Please try again later."}), 429
+    except ValidationError as exc:
+        return jsonify({"error": str(exc)}), 422
+
+    event_bus.publish("contact_form.received", payload)
+    logger.info("[contact_form] Submitted widget=%s to=%s", widget_slug, recipient_email)
+    return jsonify({"ok": True}), 200
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -1093,3 +1179,60 @@ def admin_delete_routing_rule(rule_id: str):
         return "", 204
     except CmsRoutingRuleNotFoundError:
         return jsonify({"error": "Routing rule not found"}), 404
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# CMS IMPORT / EXPORT
+# ════════════════════════════════════════════════════════════════════════════
+
+@cms_bp.route("/api/v1/admin/cms/export", methods=["POST"])
+@require_auth
+@require_admin
+def admin_cms_export():
+    """POST /api/v1/admin/cms/export — export CMS content as a ZIP.
+
+    Body (JSON):
+        sections  – list of section names, or ["everything"]
+                    e.g. ["pages", "widgets", "categories"]
+    Returns:
+        ZIP binary (application/zip)
+    """
+    data = request.get_json(silent=True) or {}
+    sections = data.get("sections", ["everything"])
+    try:
+        zip_bytes = _import_export_service().export(sections)
+    except Exception as e:
+        logger.exception("CMS export failed")
+        return jsonify({"error": str(e)}), 500
+    return Response(
+        zip_bytes,
+        status=200,
+        mimetype="application/zip",
+        headers={"Content-Disposition": "attachment; filename=cms-export.zip"},
+    )
+
+
+@cms_bp.route("/api/v1/admin/cms/import", methods=["POST"])
+@require_auth
+@require_admin
+def admin_cms_import():
+    """POST /api/v1/admin/cms/import — import CMS content from a ZIP.
+
+    Multipart form fields:
+        file      – the ZIP file
+        strategy  – "add" | "index" | "drop_all"
+    Returns:
+        JSON { imported: {...}, errors: [...] }
+    """
+    file = request.files.get("file")
+    if not file:
+        return jsonify({"error": "No file uploaded"}), 400
+    strategy = request.form.get("strategy", "add")
+    if strategy not in ("add", "index", "drop_all"):
+        return jsonify({"error": "Invalid strategy"}), 400
+    try:
+        result = _import_export_service().import_zip(file.read(), strategy)
+    except Exception as e:
+        logger.exception("CMS import failed")
+        return jsonify({"error": str(e)}), 500
+    return jsonify(result), 200

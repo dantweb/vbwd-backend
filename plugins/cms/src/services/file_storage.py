@@ -23,6 +23,10 @@ class IFileStorage(ABC):
     def exists(self, relative_path: str) -> bool:
         """Return True if the file exists in storage."""
 
+    @abstractmethod
+    def read(self, relative_path: str) -> bytes:
+        """Return raw bytes of a stored file."""
+
 
 class LocalFileStorage(IFileStorage):
     """File storage backed by a bind-mounted local directory.
@@ -64,6 +68,10 @@ class LocalFileStorage(IFileStorage):
     def exists(self, relative_path: str) -> bool:
         return os.path.exists(self._full_path(relative_path))
 
+    def read(self, relative_path: str) -> bytes:
+        with open(self._full_path(relative_path), "rb") as f:
+            return f.read()
+
 
 class InMemoryFileStorage(IFileStorage):
     """In-memory storage for unit tests — no disk I/O."""
@@ -85,3 +93,8 @@ class InMemoryFileStorage(IFileStorage):
 
     def exists(self, relative_path: str) -> bool:
         return relative_path in self._store
+
+    def read(self, relative_path: str) -> bytes:
+        if relative_path not in self._store:
+            raise FileNotFoundError(relative_path)
+        return self._store[relative_path]

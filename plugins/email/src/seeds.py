@@ -79,6 +79,54 @@ DEFAULT_TEMPLATES = [
         "is_active": True,
     },
     {
+        "event_type": "subscription.expired",
+        "subject": "Your {{ plan_name }} subscription has expired",
+        "html_body": """\
+<!DOCTYPE html>
+<html>
+<body style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 24px;">
+  <h1 style="color: #e74c3c;">Subscription expired</h1>
+  <p>Hi {{ user_name }},</p>
+  <p>Your <strong>{{ plan_name }}</strong> subscription has expired. You no longer have access to paid features.</p>
+  <p><a href="{{ resubscribe_url }}" style="background:#27ae60;color:#fff;padding:10px 20px;border-radius:4px;text-decoration:none;">Resubscribe</a></p>
+</body>
+</html>""",
+        "text_body": "Hi {{ user_name }},\n\nYour {{ plan_name }} subscription has expired.\n\nResubscribe: {{ resubscribe_url }}",
+        "is_active": True,
+    },
+    {
+        "event_type": "invoice.created",
+        "subject": "Invoice #{{ invoice_id }} — {{ amount }} due {{ due_date }}",
+        "html_body": """\
+<!DOCTYPE html>
+<html>
+<body style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 24px;">
+  <h1 style="color: #2c3e50;">New invoice</h1>
+  <p>Hi {{ user_name }},</p>
+  <p>Invoice <strong>#{{ invoice_id }}</strong> for <strong>{{ amount }}</strong> is due on {{ due_date }}.</p>
+  <p><a href="{{ invoice_url }}" style="background:#3498db;color:#fff;padding:10px 20px;border-radius:4px;text-decoration:none;">View Invoice</a></p>
+</body>
+</html>""",
+        "text_body": "Hi {{ user_name }},\n\nInvoice #{{ invoice_id }} — {{ amount }} due {{ due_date }}.\n\nView: {{ invoice_url }}",
+        "is_active": True,
+    },
+    {
+        "event_type": "invoice.paid",
+        "subject": "Payment received — Invoice #{{ invoice_id }}",
+        "html_body": """\
+<!DOCTYPE html>
+<html>
+<body style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 24px;">
+  <h1 style="color: #27ae60;">Payment received</h1>
+  <p>Hi {{ user_name }},</p>
+  <p>We received your payment of <strong>{{ amount }}</strong> for invoice <strong>#{{ invoice_id }}</strong> on {{ paid_date }}.</p>
+  <p><a href="{{ invoice_url }}" style="background:#3498db;color:#fff;padding:10px 20px;border-radius:4px;text-decoration:none;">View Invoice</a></p>
+</body>
+</html>""",
+        "text_body": "Hi {{ user_name }},\n\nPayment of {{ amount }} received for invoice #{{ invoice_id }} on {{ paid_date }}.\n\nView: {{ invoice_url }}",
+        "is_active": True,
+    },
+    {
         "event_type": "trial.started",
         "subject": "Your {{ plan_name }} trial has started",
         "html_body": """\
@@ -125,6 +173,29 @@ DEFAULT_TEMPLATES = [
 </body>
 </html>""",
         "text_body": "Hi {{ user_name }},\n\nWelcome to VBWD! Log in: {{ login_url }}",
+        "is_active": True,
+    },
+    {
+        "event_type": "contact_form.received",
+        "subject": "New contact form submission ({{ widget_slug }})",
+        "html_body": """\
+<!DOCTYPE html>
+<html>
+<body style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 24px;">
+  <h1 style="color: #2c3e50;">New Contact Form Submission</h1>
+  <p><strong>Form:</strong> {{ widget_slug }}</p>
+  <table style="width:100%;border-collapse:collapse;margin:16px 0;">
+    {% for field in fields %}
+    <tr style="border-bottom:1px solid #e2e8f0;">
+      <td style="padding:8px;font-weight:600;color:#374151;width:35%;">{{ field.label }}</td>
+      <td style="padding:8px;color:#1e293b;">{{ field.value }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  <p style="color:#9ca3af;font-size:12px;">Submitted from IP: {{ remote_ip }}</p>
+</body>
+</html>""",
+        "text_body": "New contact form submission\nForm: {{ widget_slug }}\n\n{{ fields_text }}\n\nIP: {{ remote_ip }}",
         "is_active": True,
     },
     {
