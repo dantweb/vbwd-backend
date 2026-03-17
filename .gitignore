@@ -124,7 +124,7 @@ plugins/plugins.json
 # Install via: recipes/install-plugins.sh or CI
 plugins/analytics/
 plugins/chat/
-plugins/cms/
+plugins/cms/*
 plugins/email/
 plugins/ghrm/
 plugins/mailchimp/
