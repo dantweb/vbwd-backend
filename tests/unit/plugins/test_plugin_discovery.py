@@ -51,7 +51,9 @@ class TestPluginDiscovery:
 
         # demoplugin should not be double-registered
         all_plugins = plugin_manager.get_all_plugins()
-        demo_count = sum(1 for p in all_plugins if p.metadata.name == "backend-demo-plugin")
+        demo_count = sum(
+            1 for p in all_plugins if p.metadata.name == "backend-demo-plugin"
+        )
         assert demo_count == 1
 
     def test_handles_import_errors_gracefully(self, plugin_manager):
