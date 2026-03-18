@@ -1,6 +1,6 @@
 """Demo plugin API routes."""
 from flask import Blueprint, jsonify, current_app
-from src.middleware.auth import require_auth
+from vbwd.middleware.auth import require_auth
 
 demo_plugin_bp = Blueprint("demo_plugin", __name__)
 

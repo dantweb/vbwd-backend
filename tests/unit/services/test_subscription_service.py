@@ -4,8 +4,8 @@ from unittest.mock import Mock, MagicMock
 from datetime import datetime, timedelta
 from uuid import uuid4
 
-from src.models.enums import SubscriptionStatus, InvoiceStatus
-from src.services.subscription_service import SubscriptionService
+from vbwd.models.enums import SubscriptionStatus, InvoiceStatus
+from vbwd.services.subscription_service import SubscriptionService
 
 
 class TestSubscriptionServiceCreate:
@@ -24,7 +24,7 @@ class TestSubscriptionServiceCreate:
     @pytest.fixture
     def subscription_service(self, mock_sub_repo, mock_plan_repo):
         """Create SubscriptionService with mocked dependencies."""
-        from src.services.subscription_service import SubscriptionService
+        from vbwd.services.subscription_service import SubscriptionService
 
         return SubscriptionService(
             subscription_repo=mock_sub_repo,
@@ -35,9 +35,9 @@ class TestSubscriptionServiceCreate:
         self, subscription_service, mock_sub_repo, mock_plan_repo
     ):
         """create_subscription should create pending subscription."""
-        from src.models.subscription import Subscription
-        from src.models.tarif_plan import TarifPlan
-        from src.models.enums import SubscriptionStatus, BillingPeriod
+        from vbwd.models.subscription import Subscription
+        from vbwd.models.tarif_plan import TarifPlan
+        from vbwd.models.enums import SubscriptionStatus, BillingPeriod
 
         plan_id = uuid4()
         user_id = uuid4()
@@ -85,7 +85,7 @@ class TestSubscriptionServiceCreate:
         self, subscription_service, mock_plan_repo
     ):
         """create_subscription should raise error if plan is inactive."""
-        from src.models.tarif_plan import TarifPlan
+        from vbwd.models.tarif_plan import TarifPlan
 
         plan_id = uuid4()
         user_id = uuid4()
@@ -113,7 +113,7 @@ class TestSubscriptionServiceActivate:
     @pytest.fixture
     def subscription_service(self, mock_sub_repo):
         """Create SubscriptionService with mocked dependencies."""
-        from src.services.subscription_service import SubscriptionService
+        from vbwd.services.subscription_service import SubscriptionService
 
         return SubscriptionService(subscription_repo=mock_sub_repo)
 
@@ -121,9 +121,9 @@ class TestSubscriptionServiceActivate:
         self, subscription_service, mock_sub_repo
     ):
         """activate_subscription should set status and dates."""
-        from src.models.subscription import Subscription
-        from src.models.tarif_plan import TarifPlan
-        from src.models.enums import SubscriptionStatus, BillingPeriod
+        from vbwd.models.subscription import Subscription
+        from vbwd.models.tarif_plan import TarifPlan
+        from vbwd.models.enums import SubscriptionStatus, BillingPeriod
 
         sub_id = uuid4()
         plan_id = uuid4()
@@ -175,7 +175,7 @@ class TestSubscriptionServiceGetActive:
     @pytest.fixture
     def subscription_service(self, mock_sub_repo):
         """Create SubscriptionService with mocked dependencies."""
-        from src.services.subscription_service import SubscriptionService
+        from vbwd.services.subscription_service import SubscriptionService
 
         return SubscriptionService(subscription_repo=mock_sub_repo)
 
@@ -183,8 +183,8 @@ class TestSubscriptionServiceGetActive:
         self, subscription_service, mock_sub_repo
     ):
         """get_active_subscription should return valid subscription."""
-        from src.models.subscription import Subscription
-        from src.models.enums import SubscriptionStatus
+        from vbwd.models.subscription import Subscription
+        from vbwd.models.enums import SubscriptionStatus
 
         user_id = uuid4()
 
@@ -226,14 +226,14 @@ class TestSubscriptionServiceCancel:
     @pytest.fixture
     def subscription_service(self, mock_sub_repo):
         """Create SubscriptionService with mocked dependencies."""
-        from src.services.subscription_service import SubscriptionService
+        from vbwd.services.subscription_service import SubscriptionService
 
         return SubscriptionService(subscription_repo=mock_sub_repo)
 
     def test_cancel_subscription_sets_status(self, subscription_service, mock_sub_repo):
         """cancel_subscription should set cancelled status."""
-        from src.models.subscription import Subscription
-        from src.models.enums import SubscriptionStatus
+        from vbwd.models.subscription import Subscription
+        from vbwd.models.enums import SubscriptionStatus
 
         sub_id = uuid4()
 
@@ -282,9 +282,9 @@ class TestSubscriptionServiceActivateWithTokens:
         return Mock()
 
     def _make_subscription_and_plan(self, features):
-        from src.models.subscription import Subscription
-        from src.models.tarif_plan import TarifPlan
-        from src.models.enums import SubscriptionStatus, BillingPeriod
+        from vbwd.models.subscription import Subscription
+        from vbwd.models.tarif_plan import TarifPlan
+        from vbwd.models.enums import SubscriptionStatus, BillingPeriod
 
         sub_id = uuid4()
         user_id = uuid4()
@@ -309,8 +309,8 @@ class TestSubscriptionServiceActivateWithTokens:
         self, mock_sub_repo, mock_token_service
     ):
         """activate_subscription should credit tokens when default_tokens > 0."""
-        from src.services.subscription_service import SubscriptionService
-        from src.models.enums import TokenTransactionType
+        from vbwd.services.subscription_service import SubscriptionService
+        from vbwd.models.enums import TokenTransactionType
 
         subscription = self._make_subscription_and_plan({"default_tokens": 100})
         mock_sub_repo.find_by_id.return_value = subscription
@@ -332,7 +332,7 @@ class TestSubscriptionServiceActivateWithTokens:
 
     def test_activate_skips_tokens_when_zero(self, mock_sub_repo, mock_token_service):
         """activate_subscription should NOT credit tokens when default_tokens is 0."""
-        from src.services.subscription_service import SubscriptionService
+        from vbwd.services.subscription_service import SubscriptionService
 
         subscription = self._make_subscription_and_plan({"default_tokens": 0})
         mock_sub_repo.find_by_id.return_value = subscription
@@ -348,7 +348,7 @@ class TestSubscriptionServiceActivateWithTokens:
 
     def test_activate_skips_tokens_when_no_key(self, mock_sub_repo, mock_token_service):
         """activate_subscription should NOT credit tokens when key is missing."""
-        from src.services.subscription_service import SubscriptionService
+        from vbwd.services.subscription_service import SubscriptionService
 
         subscription = self._make_subscription_and_plan({"api_calls": 1000})
         mock_sub_repo.find_by_id.return_value = subscription
@@ -366,7 +366,7 @@ class TestSubscriptionServiceActivateWithTokens:
         self, mock_sub_repo, mock_token_service
     ):
         """activate_subscription should NOT credit tokens when features is a list."""
-        from src.services.subscription_service import SubscriptionService
+        from vbwd.services.subscription_service import SubscriptionService
 
         subscription = self._make_subscription_and_plan(["feature_a", "feature_b"])
         mock_sub_repo.find_by_id.return_value = subscription
@@ -382,7 +382,7 @@ class TestSubscriptionServiceActivateWithTokens:
 
     def test_activate_skips_tokens_when_no_token_service(self, mock_sub_repo):
         """activate_subscription should work fine without token_service."""
-        from src.services.subscription_service import SubscriptionService
+        from vbwd.services.subscription_service import SubscriptionService
 
         subscription = self._make_subscription_and_plan({"default_tokens": 100})
         mock_sub_repo.find_by_id.return_value = subscription
@@ -405,7 +405,7 @@ class TestSubscriptionServiceGetUserSubscriptions:
     @pytest.fixture
     def subscription_service(self, mock_sub_repo):
         """Create SubscriptionService with mocked dependencies."""
-        from src.services.subscription_service import SubscriptionService
+        from vbwd.services.subscription_service import SubscriptionService
 
         return SubscriptionService(subscription_repo=mock_sub_repo)
 
@@ -413,8 +413,8 @@ class TestSubscriptionServiceGetUserSubscriptions:
         self, subscription_service, mock_sub_repo
     ):
         """get_user_subscriptions should return all user subscriptions."""
-        from src.models.subscription import Subscription
-        from src.models.enums import SubscriptionStatus
+        from vbwd.models.subscription import Subscription
+        from vbwd.models.enums import SubscriptionStatus
 
         user_id = uuid4()
 
@@ -571,7 +571,7 @@ class TestActivateRejectsTrialing:
     """Test that activate_subscription blocks TRIALING subscriptions."""
 
     def test_activate_rejects_trialing_subscription(self):
-        from src.models.subscription import Subscription
+        from vbwd.models.subscription import Subscription
 
         sub = Subscription()
         sub.id = uuid4()
@@ -640,20 +640,20 @@ class TestBillingPeriodDays:
     """Test PERIOD_DAYS covers all BillingPeriod values including DAILY and WEEKLY."""
 
     def test_daily_period_is_one_day(self):
-        from src.models.enums import BillingPeriod
-        from src.services.subscription_service import SubscriptionService
+        from vbwd.models.enums import BillingPeriod
+        from vbwd.services.subscription_service import SubscriptionService
 
         assert SubscriptionService.PERIOD_DAYS[BillingPeriod.DAILY] == 1
 
     def test_weekly_period_is_seven_days(self):
-        from src.models.enums import BillingPeriod
-        from src.services.subscription_service import SubscriptionService
+        from vbwd.models.enums import BillingPeriod
+        from vbwd.services.subscription_service import SubscriptionService
 
         assert SubscriptionService.PERIOD_DAYS[BillingPeriod.WEEKLY] == 7
 
     def test_all_billing_periods_covered(self):
-        from src.models.enums import BillingPeriod
-        from src.services.subscription_service import SubscriptionService
+        from vbwd.models.enums import BillingPeriod
+        from vbwd.services.subscription_service import SubscriptionService
 
         for period in BillingPeriod:
             assert (
@@ -707,14 +707,14 @@ class TestSendDunningEmails:
         assert len(result) >= 0
 
     def test_uses_dunning_days_config(self):
-        from src.services.subscription_service import SubscriptionService
+        from vbwd.services.subscription_service import SubscriptionService
 
         assert hasattr(SubscriptionService, "DUNNING_DAYS")
         assert 3 in SubscriptionService.DUNNING_DAYS
         assert 7 in SubscriptionService.DUNNING_DAYS
 
     def test_emitted_events_are_subscription_dunning_events(self):
-        from src.events.subscription_events import SubscriptionDunningEvent
+        from vbwd.events.subscription_events import SubscriptionDunningEvent
 
         sub = self._make_subscription()
         sub_repo = MagicMock()

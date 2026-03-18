@@ -1,7 +1,7 @@
 """Tests for admin add-on tarif_plan_ids handling in routes (Sprint 13)."""
 from unittest.mock import patch, MagicMock
 from uuid import uuid4
-from src.models.enums import UserRole
+from vbwd.models.enums import UserRole
 
 
 def _mock_admin_auth(mock_auth_user_repo_class, mock_auth_class):
@@ -27,10 +27,10 @@ def _mock_admin_auth(mock_auth_user_repo_class, mock_auth_class):
 class TestAdminCreateAddonWithPlans:
     """Tests for POST /admin/addons/ with tarif_plan_ids."""
 
-    @patch("src.routes.admin.addons.db")
-    @patch("src.routes.admin.addons.AddOnRepository")
-    @patch("src.middleware.auth.AuthService")
-    @patch("src.middleware.auth.UserRepository")
+    @patch("vbwd.routes.admin.addons.db")
+    @patch("vbwd.routes.admin.addons.AddOnRepository")
+    @patch("vbwd.middleware.auth.AuthService")
+    @patch("vbwd.middleware.auth.UserRepository")
     def test_create_addon_with_tarif_plan_ids(
         self,
         mock_auth_user_repo_class,
@@ -85,10 +85,10 @@ class TestAdminCreateAddonWithPlans:
         assert "addon" in data
         assert data["addon"]["tarif_plan_ids"] == [plan_id_1, plan_id_2]
 
-    @patch("src.routes.admin.addons.db")
-    @patch("src.routes.admin.addons.AddOnRepository")
-    @patch("src.middleware.auth.AuthService")
-    @patch("src.middleware.auth.UserRepository")
+    @patch("vbwd.routes.admin.addons.db")
+    @patch("vbwd.routes.admin.addons.AddOnRepository")
+    @patch("vbwd.middleware.auth.AuthService")
+    @patch("vbwd.middleware.auth.UserRepository")
     def test_create_addon_without_plan_ids(
         self,
         mock_auth_user_repo_class,
@@ -122,10 +122,10 @@ class TestAdminCreateAddonWithPlans:
         # db.session.query should not be called for TarifPlan when no IDs given
         mock_db.session.query.assert_not_called()
 
-    @patch("src.routes.admin.addons.db")
-    @patch("src.routes.admin.addons.AddOnRepository")
-    @patch("src.middleware.auth.AuthService")
-    @patch("src.middleware.auth.UserRepository")
+    @patch("vbwd.routes.admin.addons.db")
+    @patch("vbwd.routes.admin.addons.AddOnRepository")
+    @patch("vbwd.middleware.auth.AuthService")
+    @patch("vbwd.middleware.auth.UserRepository")
     def test_create_addon_with_invalid_plan_id(
         self,
         mock_auth_user_repo_class,
@@ -166,10 +166,10 @@ class TestAdminCreateAddonWithPlans:
 class TestAdminUpdateAddonWithPlans:
     """Tests for PUT /admin/addons/<id> with tarif_plan_ids."""
 
-    @patch("src.routes.admin.addons.db")
-    @patch("src.routes.admin.addons.AddOnRepository")
-    @patch("src.middleware.auth.AuthService")
-    @patch("src.middleware.auth.UserRepository")
+    @patch("vbwd.routes.admin.addons.db")
+    @patch("vbwd.routes.admin.addons.AddOnRepository")
+    @patch("vbwd.middleware.auth.AuthService")
+    @patch("vbwd.middleware.auth.UserRepository")
     def test_update_addon_set_plan_ids(
         self,
         mock_auth_user_repo_class,
@@ -217,10 +217,10 @@ class TestAdminUpdateAddonWithPlans:
         # Verify addon.tarif_plans was set
         assert mock_addon.tarif_plans == [mock_plan]
 
-    @patch("src.routes.admin.addons.db")
-    @patch("src.routes.admin.addons.AddOnRepository")
-    @patch("src.middleware.auth.AuthService")
-    @patch("src.middleware.auth.UserRepository")
+    @patch("vbwd.routes.admin.addons.db")
+    @patch("vbwd.routes.admin.addons.AddOnRepository")
+    @patch("vbwd.middleware.auth.AuthService")
+    @patch("vbwd.middleware.auth.UserRepository")
     def test_update_addon_clear_plan_ids(
         self,
         mock_auth_user_repo_class,
@@ -255,10 +255,10 @@ class TestAdminUpdateAddonWithPlans:
         assert response.status_code == 200
         assert mock_addon.tarif_plans == []
 
-    @patch("src.routes.admin.addons.db")
-    @patch("src.routes.admin.addons.AddOnRepository")
-    @patch("src.middleware.auth.AuthService")
-    @patch("src.middleware.auth.UserRepository")
+    @patch("vbwd.routes.admin.addons.db")
+    @patch("vbwd.routes.admin.addons.AddOnRepository")
+    @patch("vbwd.middleware.auth.AuthService")
+    @patch("vbwd.middleware.auth.UserRepository")
     def test_update_addon_with_invalid_plan_id(
         self,
         mock_auth_user_repo_class,
@@ -297,9 +297,9 @@ class TestAdminUpdateAddonWithPlans:
 class TestAdminGetAddonIncludesPlanData:
     """Tests for GET /admin/addons/<id> returning plan info."""
 
-    @patch("src.routes.admin.addons.AddOnRepository")
-    @patch("src.middleware.auth.AuthService")
-    @patch("src.middleware.auth.UserRepository")
+    @patch("vbwd.routes.admin.addons.AddOnRepository")
+    @patch("vbwd.middleware.auth.AuthService")
+    @patch("vbwd.middleware.auth.UserRepository")
     def test_get_addon_response_includes_tarif_plans(
         self,
         mock_auth_user_repo_class,

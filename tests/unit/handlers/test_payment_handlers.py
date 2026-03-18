@@ -9,7 +9,7 @@ class TestCheckoutInitiatedEvent:
 
     def test_event_has_user_id(self):
         """CheckoutInitiatedEvent has user_id field."""
-        from src.events.payment_events import CheckoutInitiatedEvent
+        from vbwd.events.payment_events import CheckoutInitiatedEvent
 
         user_id = uuid4()
         event = CheckoutInitiatedEvent(
@@ -20,7 +20,7 @@ class TestCheckoutInitiatedEvent:
 
     def test_event_has_tarif_plan_id(self):
         """CheckoutInitiatedEvent has tarif_plan_id field."""
-        from src.events.payment_events import CheckoutInitiatedEvent
+        from vbwd.events.payment_events import CheckoutInitiatedEvent
 
         plan_id = uuid4()
         event = CheckoutInitiatedEvent(
@@ -31,7 +31,7 @@ class TestCheckoutInitiatedEvent:
 
     def test_event_has_provider(self):
         """CheckoutInitiatedEvent has provider field."""
-        from src.events.payment_events import CheckoutInitiatedEvent
+        from vbwd.events.payment_events import CheckoutInitiatedEvent
 
         event = CheckoutInitiatedEvent(
             user_id=uuid4(), tarif_plan_id=uuid4(), provider="paypal"
@@ -41,7 +41,7 @@ class TestCheckoutInitiatedEvent:
 
     def test_event_has_name(self):
         """CheckoutInitiatedEvent has correct name."""
-        from src.events.payment_events import CheckoutInitiatedEvent
+        from vbwd.events.payment_events import CheckoutInitiatedEvent
 
         event = CheckoutInitiatedEvent(
             user_id=uuid4(), tarif_plan_id=uuid4(), provider="stripe"
@@ -51,7 +51,7 @@ class TestCheckoutInitiatedEvent:
 
     def test_event_has_optional_urls(self):
         """CheckoutInitiatedEvent has optional return/cancel URLs."""
-        from src.events.payment_events import CheckoutInitiatedEvent
+        from vbwd.events.payment_events import CheckoutInitiatedEvent
 
         event = CheckoutInitiatedEvent(
             user_id=uuid4(),
@@ -70,7 +70,7 @@ class TestPaymentCapturedEvent:
 
     def test_event_has_subscription_id(self):
         """PaymentCapturedEvent has subscription_id."""
-        from src.events.payment_events import PaymentCapturedEvent
+        from vbwd.events.payment_events import PaymentCapturedEvent
 
         sub_id = uuid4()
         event = PaymentCapturedEvent(
@@ -86,7 +86,7 @@ class TestPaymentCapturedEvent:
 
     def test_event_has_transaction_data(self):
         """PaymentCapturedEvent has transaction data."""
-        from src.events.payment_events import PaymentCapturedEvent
+        from vbwd.events.payment_events import PaymentCapturedEvent
 
         event = PaymentCapturedEvent(
             subscription_id=uuid4(),
@@ -103,7 +103,7 @@ class TestPaymentCapturedEvent:
 
     def test_event_has_name(self):
         """PaymentCapturedEvent has correct name."""
-        from src.events.payment_events import PaymentCapturedEvent
+        from vbwd.events.payment_events import PaymentCapturedEvent
 
         event = PaymentCapturedEvent(
             subscription_id=uuid4(),
@@ -122,7 +122,7 @@ class TestPaymentFailedEvent:
 
     def test_event_has_error_info(self):
         """PaymentFailedEvent has error info."""
-        from src.events.payment_events import PaymentFailedEvent
+        from vbwd.events.payment_events import PaymentFailedEvent
 
         event = PaymentFailedEvent(
             subscription_id=uuid4(),
@@ -137,7 +137,7 @@ class TestPaymentFailedEvent:
 
     def test_event_has_name(self):
         """PaymentFailedEvent has correct name."""
-        from src.events.payment_events import PaymentFailedEvent
+        from vbwd.events.payment_events import PaymentFailedEvent
 
         event = PaymentFailedEvent(
             subscription_id=uuid4(),
@@ -155,7 +155,7 @@ class TestRefundRequestedEvent:
 
     def test_event_has_transaction_id(self):
         """RefundRequestedEvent has transaction_id."""
-        from src.events.payment_events import RefundRequestedEvent
+        from vbwd.events.payment_events import RefundRequestedEvent
 
         event = RefundRequestedEvent(
             transaction_id="pi_123",
@@ -168,7 +168,7 @@ class TestRefundRequestedEvent:
 
     def test_event_has_optional_amount(self):
         """RefundRequestedEvent has optional amount for partial refund."""
-        from src.events.payment_events import RefundRequestedEvent
+        from vbwd.events.payment_events import RefundRequestedEvent
 
         event = RefundRequestedEvent(
             transaction_id="pi_123", subscription_id=uuid4(), reason="Partial refund"
@@ -178,7 +178,7 @@ class TestRefundRequestedEvent:
 
     def test_event_has_name(self):
         """RefundRequestedEvent has correct name."""
-        from src.events.payment_events import RefundRequestedEvent
+        from vbwd.events.payment_events import RefundRequestedEvent
 
         event = RefundRequestedEvent(
             transaction_id="pi_123", subscription_id=uuid4(), reason="Refund"
@@ -192,7 +192,7 @@ class TestCheckoutInitiatedHandler:
 
     def test_handler_has_handled_event_class(self):
         """Handler declares handled event class."""
-        from src.handlers.payment_handlers import CheckoutInitiatedHandler
+        from vbwd.handlers.payment_handlers import CheckoutInitiatedHandler
 
         assert (
             CheckoutInitiatedHandler.get_handled_event_class() == "checkout.initiated"
@@ -200,8 +200,8 @@ class TestCheckoutInitiatedHandler:
 
     def test_handler_can_handle_checkout_event(self):
         """Handler can handle CheckoutInitiatedEvent."""
-        from src.handlers.payment_handlers import CheckoutInitiatedHandler
-        from src.events.payment_events import CheckoutInitiatedEvent
+        from vbwd.handlers.payment_handlers import CheckoutInitiatedHandler
+        from vbwd.events.payment_events import CheckoutInitiatedEvent
 
         handler = CheckoutInitiatedHandler(sdk_registry=Mock())
         event = CheckoutInitiatedEvent(
@@ -212,9 +212,9 @@ class TestCheckoutInitiatedHandler:
 
     def test_handler_calls_sdk_adapter(self):
         """Handler uses SDK adapter to create payment intent."""
-        from src.handlers.payment_handlers import CheckoutInitiatedHandler
-        from src.events.payment_events import CheckoutInitiatedEvent
-        from src.sdk.interface import SDKResponse
+        from vbwd.handlers.payment_handlers import CheckoutInitiatedHandler
+        from vbwd.events.payment_events import CheckoutInitiatedEvent
+        from vbwd.sdk.interface import SDKResponse
 
         mock_adapter = Mock()
         mock_adapter.create_payment_intent.return_value = SDKResponse(
@@ -242,9 +242,9 @@ class TestCheckoutInitiatedHandler:
 
     def test_handler_returns_checkout_url(self):
         """Handler returns checkout URL in result."""
-        from src.handlers.payment_handlers import CheckoutInitiatedHandler
-        from src.events.payment_events import CheckoutInitiatedEvent
-        from src.sdk.interface import SDKResponse
+        from vbwd.handlers.payment_handlers import CheckoutInitiatedHandler
+        from vbwd.events.payment_events import CheckoutInitiatedEvent
+        from vbwd.sdk.interface import SDKResponse
 
         mock_adapter = Mock()
         mock_adapter.create_payment_intent.return_value = SDKResponse(
@@ -270,9 +270,9 @@ class TestCheckoutInitiatedHandler:
 
     def test_handler_returns_error_on_sdk_failure(self):
         """Handler returns error when SDK fails."""
-        from src.handlers.payment_handlers import CheckoutInitiatedHandler
-        from src.events.payment_events import CheckoutInitiatedEvent
-        from src.sdk.interface import SDKResponse
+        from vbwd.handlers.payment_handlers import CheckoutInitiatedHandler
+        from vbwd.events.payment_events import CheckoutInitiatedEvent
+        from vbwd.sdk.interface import SDKResponse
 
         mock_adapter = Mock()
         mock_adapter.create_payment_intent.return_value = SDKResponse(
@@ -298,8 +298,8 @@ class TestCheckoutInitiatedHandler:
 
     def test_handler_returns_error_for_unknown_provider(self):
         """Handler returns error for unknown provider."""
-        from src.handlers.payment_handlers import CheckoutInitiatedHandler
-        from src.events.payment_events import CheckoutInitiatedEvent
+        from vbwd.handlers.payment_handlers import CheckoutInitiatedHandler
+        from vbwd.events.payment_events import CheckoutInitiatedEvent
 
         mock_registry = Mock()
         mock_registry.get.side_effect = ValueError("Unknown provider")
@@ -323,14 +323,14 @@ class TestPaymentCapturedHandler:
 
     def test_handler_has_handled_event_class(self):
         """Handler declares handled event class."""
-        from src.handlers.payment_handlers import PaymentCapturedHandler
+        from vbwd.handlers.payment_handlers import PaymentCapturedHandler
 
         assert PaymentCapturedHandler.get_handled_event_class() == "payment.captured"
 
     def test_handler_can_handle_payment_captured_event(self):
         """Handler can handle PaymentCapturedEvent."""
-        from src.handlers.payment_handlers import PaymentCapturedHandler
-        from src.events.payment_events import PaymentCapturedEvent
+        from vbwd.handlers.payment_handlers import PaymentCapturedHandler
+        from vbwd.events.payment_events import PaymentCapturedEvent
 
         handler = PaymentCapturedHandler()
         event = PaymentCapturedEvent(
@@ -346,8 +346,8 @@ class TestPaymentCapturedHandler:
 
     def test_handler_returns_success(self):
         """Handler returns success for valid event."""
-        from src.handlers.payment_handlers import PaymentCapturedHandler
-        from src.events.payment_events import PaymentCapturedEvent
+        from vbwd.handlers.payment_handlers import PaymentCapturedHandler
+        from vbwd.events.payment_events import PaymentCapturedEvent
 
         handler = PaymentCapturedHandler()
         event = PaymentCapturedEvent(
@@ -365,8 +365,8 @@ class TestPaymentCapturedHandler:
 
     def test_handler_tracks_processed_events(self):
         """Handler tracks all processed events."""
-        from src.handlers.payment_handlers import PaymentCapturedHandler
-        from src.events.payment_events import PaymentCapturedEvent
+        from vbwd.handlers.payment_handlers import PaymentCapturedHandler
+        from vbwd.events.payment_events import PaymentCapturedEvent
 
         handler = PaymentCapturedHandler()
         event1 = PaymentCapturedEvent(
@@ -397,14 +397,14 @@ class TestPaymentFailedHandler:
 
     def test_handler_has_handled_event_class(self):
         """Handler declares handled event class."""
-        from src.handlers.payment_handlers import PaymentFailedHandler
+        from vbwd.handlers.payment_handlers import PaymentFailedHandler
 
         assert PaymentFailedHandler.get_handled_event_class() == "payment.failed"
 
     def test_handler_can_handle_payment_failed_event(self):
         """Handler can handle PaymentFailedEvent."""
-        from src.handlers.payment_handlers import PaymentFailedHandler
-        from src.events.payment_events import PaymentFailedEvent
+        from vbwd.handlers.payment_handlers import PaymentFailedHandler
+        from vbwd.events.payment_events import PaymentFailedEvent
 
         handler = PaymentFailedHandler()
         event = PaymentFailedEvent(
@@ -419,8 +419,8 @@ class TestPaymentFailedHandler:
 
     def test_handler_returns_success(self):
         """Handler returns success (event processed, even if payment failed)."""
-        from src.handlers.payment_handlers import PaymentFailedHandler
-        from src.events.payment_events import PaymentFailedEvent
+        from vbwd.handlers.payment_handlers import PaymentFailedHandler
+        from vbwd.events.payment_events import PaymentFailedEvent
 
         handler = PaymentFailedHandler()
         event = PaymentFailedEvent(
@@ -441,15 +441,15 @@ class TestRefundRequestedHandler:
 
     def test_handler_has_handled_event_class(self):
         """Handler declares handled event class."""
-        from src.handlers.payment_handlers import RefundRequestedHandler
+        from vbwd.handlers.payment_handlers import RefundRequestedHandler
 
         assert RefundRequestedHandler.get_handled_event_class() == "refund.requested"
 
     def test_handler_calls_sdk_refund(self):
         """Handler calls SDK adapter refund_payment."""
-        from src.handlers.payment_handlers import RefundRequestedHandler
-        from src.events.payment_events import RefundRequestedEvent
-        from src.sdk.interface import SDKResponse
+        from vbwd.handlers.payment_handlers import RefundRequestedHandler
+        from vbwd.events.payment_events import RefundRequestedEvent
+        from vbwd.sdk.interface import SDKResponse
 
         mock_adapter = Mock()
         mock_adapter.refund_payment.return_value = SDKResponse(
@@ -475,9 +475,9 @@ class TestRefundRequestedHandler:
 
     def test_handler_returns_error_on_refund_failure(self):
         """Handler returns error when refund fails."""
-        from src.handlers.payment_handlers import RefundRequestedHandler
-        from src.events.payment_events import RefundRequestedEvent
-        from src.sdk.interface import SDKResponse
+        from vbwd.handlers.payment_handlers import RefundRequestedHandler
+        from vbwd.events.payment_events import RefundRequestedEvent
+        from vbwd.sdk.interface import SDKResponse
 
         mock_adapter = Mock()
         mock_adapter.refund_payment.return_value = SDKResponse(

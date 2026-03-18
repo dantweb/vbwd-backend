@@ -8,8 +8,8 @@ class TestPaymentRefundedHandler:
 
     def test_handler_calls_refund_service(self):
         """Handler delegates to RefundService.process_refund()."""
-        from src.handlers.refund_handler import PaymentRefundedHandler
-        from src.events.payment_events import PaymentRefundedEvent
+        from vbwd.handlers.refund_handler import PaymentRefundedHandler
+        from vbwd.events.payment_events import PaymentRefundedEvent
 
         invoice_id = uuid4()
         mock_invoice = MagicMock()
@@ -51,8 +51,8 @@ class TestPaymentRefundedHandler:
 
     def test_handler_returns_error_on_service_failure(self):
         """Handler returns error when RefundService reports failure."""
-        from src.handlers.refund_handler import PaymentRefundedHandler
-        from src.events.payment_events import PaymentRefundedEvent
+        from vbwd.handlers.refund_handler import PaymentRefundedHandler
+        from vbwd.events.payment_events import PaymentRefundedEvent
 
         mock_result = MagicMock()
         mock_result.success = False
@@ -77,8 +77,8 @@ class TestPaymentRefundedHandler:
 
     def test_handler_returns_success_with_data(self):
         """Handler returns success result with invoice and items_reversed."""
-        from src.handlers.refund_handler import PaymentRefundedHandler
-        from src.events.payment_events import PaymentRefundedEvent
+        from vbwd.handlers.refund_handler import PaymentRefundedHandler
+        from vbwd.events.payment_events import PaymentRefundedEvent
 
         invoice_id = uuid4()
         mock_invoice = MagicMock()
@@ -121,8 +121,8 @@ class TestPaymentRefundedHandler:
 
     def test_handler_handles_exception(self):
         """Handler catches exception and returns error result."""
-        from src.handlers.refund_handler import PaymentRefundedHandler
-        from src.events.payment_events import PaymentRefundedEvent
+        from vbwd.handlers.refund_handler import PaymentRefundedHandler
+        from vbwd.events.payment_events import PaymentRefundedEvent
 
         container = MagicMock()
         container.refund_service.side_effect = RuntimeError("Container wiring error")

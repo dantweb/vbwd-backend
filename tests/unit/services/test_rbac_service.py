@@ -2,7 +2,7 @@
 import pytest
 from unittest.mock import Mock
 from uuid import uuid4
-from src.services.rbac_service import RBACService
+from vbwd.services.rbac_service import RBACService
 
 
 class TestRBACService:

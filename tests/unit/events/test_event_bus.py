@@ -1,7 +1,7 @@
 """Unit tests for EventBus."""
 from unittest.mock import MagicMock
 
-from src.events.bus import EventBus
+from vbwd.events.bus import EventBus
 
 
 # ---------------------------------------------------------------------------
@@ -132,11 +132,11 @@ class TestPublish:
 
 class TestSingleton:
     def test_event_bus_singleton_importable(self):
-        from src.events.bus import event_bus
+        from vbwd.events.bus import event_bus
 
         assert isinstance(event_bus, EventBus)
 
     def test_event_bus_importable_from_events_init(self):
-        from src.events import event_bus
+        from vbwd.events import event_bus
 
         assert isinstance(event_bus, EventBus)

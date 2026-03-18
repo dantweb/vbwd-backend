@@ -43,7 +43,7 @@ cleanup-test-data:
 
 # Reset database to clean demo state (3 plans, 2 addons, 3 token bundles)
 reset-demo:
-	docker compose exec api flask --app "src:create_app()" reset-demo --yes
+	docker compose exec api flask --app "vbwd:create_app()" reset-demo --yes
 
 # Populate GHRM CMS data (layouts, widgets, pages) — idempotent, safe to re-run
 populate-ghrm:
@@ -51,7 +51,7 @@ populate-ghrm:
 
 # Run tests with coverage
 test-coverage:
-	docker compose run --rm test pytest --cov=src --cov-report=term-missing
+	docker compose run --rm test pytest --cov=vbwd --cov-report=term-missing
 
 # Run all tests (unit + integration)
 test-all: test test-integration

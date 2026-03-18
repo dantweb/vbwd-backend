@@ -2,7 +2,7 @@
 from unittest.mock import MagicMock
 from uuid import uuid4
 
-from src.models.enums import TokenTransactionType
+from vbwd.models.enums import TokenTransactionType
 
 
 class TestTokenServiceRefundTokens:
@@ -10,7 +10,7 @@ class TestTokenServiceRefundTokens:
 
     def test_refund_tokens_debits_balance(self):
         """refund_tokens debits the correct amount from balance."""
-        from src.services.token_service import TokenService
+        from vbwd.services.token_service import TokenService
 
         user_id = uuid4()
         balance_mock = MagicMock(balance=100)
@@ -42,7 +42,7 @@ class TestTokenServiceRefundTokens:
 
     def test_refund_tokens_clamps_to_zero(self):
         """refund_tokens clamps debit to available balance when insufficient."""
-        from src.services.token_service import TokenService
+        from vbwd.services.token_service import TokenService
 
         user_id = uuid4()
         balance_mock = MagicMock(balance=30)
@@ -67,7 +67,7 @@ class TestTokenServiceRefundTokens:
 
     def test_refund_tokens_returns_zero_when_no_balance(self):
         """refund_tokens returns 0 when user has no balance record."""
-        from src.services.token_service import TokenService
+        from vbwd.services.token_service import TokenService
 
         balance_repo = MagicMock()
         balance_repo.find_by_user_id.return_value = None
@@ -92,7 +92,7 @@ class TestTokenServiceCreditTokens:
 
     def test_credit_tokens_increases_balance(self):
         """credit_tokens increases user balance."""
-        from src.services.token_service import TokenService
+        from vbwd.services.token_service import TokenService
 
         user_id = uuid4()
         balance_mock = MagicMock(balance=10)
@@ -119,7 +119,7 @@ class TestTokenServiceCreditTokens:
 
     def test_credit_tokens_rejects_non_positive(self):
         """credit_tokens raises ValueError for non-positive amount."""
-        from src.services.token_service import TokenService
+        from vbwd.services.token_service import TokenService
         import pytest
 
         service = TokenService(
@@ -141,7 +141,7 @@ class TestTokenServiceDebitTokens:
 
     def test_debit_tokens_raises_on_insufficient_balance(self):
         """debit_tokens raises ValueError when balance insufficient."""
-        from src.services.token_service import TokenService
+        from vbwd.services.token_service import TokenService
         import pytest
 
         balance_repo = MagicMock()

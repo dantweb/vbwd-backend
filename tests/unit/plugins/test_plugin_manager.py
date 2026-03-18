@@ -1,8 +1,8 @@
 """Tests for PluginManager."""
 import pytest
-from src.plugins.manager import PluginManager
-from src.plugins.base import BasePlugin, PluginMetadata, PluginStatus
-from src.events.dispatcher import Event
+from vbwd.plugins.manager import PluginManager
+from vbwd.plugins.base import BasePlugin, PluginMetadata, PluginStatus
+from vbwd.events.dispatcher import Event
 
 
 class MockPlugin(BasePlugin):

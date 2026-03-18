@@ -2,8 +2,8 @@
 from datetime import datetime, timedelta
 from unittest.mock import patch  # noqa: F401
 
-from src.models.enums import SubscriptionStatus
-from src.models.subscription import Subscription
+from vbwd.models.enums import SubscriptionStatus
+from vbwd.models.subscription import Subscription
 
 
 class TestSubscriptionTrial:

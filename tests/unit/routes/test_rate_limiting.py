@@ -6,8 +6,8 @@ from unittest.mock import patch, MagicMock
 class TestRateLimiting:
     """Tests for rate limiting functionality."""
 
-    @patch("src.routes.auth.UserRepository")
-    @patch("src.routes.auth.AuthService")
+    @patch("vbwd.routes.auth.UserRepository")
+    @patch("vbwd.routes.auth.AuthService")
     def test_login_allows_requests_under_limit(
         self, mock_auth_service, mock_repo, client
     ):
@@ -31,8 +31,8 @@ class TestRateLimiting:
     @pytest.mark.skip(
         reason="Rate limiting not reliably testable in unit test environment"
     )
-    @patch("src.routes.auth.UserRepository")
-    @patch("src.routes.auth.AuthService")
+    @patch("vbwd.routes.auth.UserRepository")
+    @patch("vbwd.routes.auth.AuthService")
     def test_login_rate_limited_after_exceeded(
         self, mock_auth_service, mock_repo, client
     ):
@@ -94,8 +94,8 @@ class TestRateLimiting:
     @pytest.mark.skip(
         reason="Rate limiting not reliably testable in unit test environment"
     )
-    @patch("src.routes.auth.UserRepository")
-    @patch("src.routes.auth.AuthService")
+    @patch("vbwd.routes.auth.UserRepository")
+    @patch("vbwd.routes.auth.AuthService")
     def test_rate_limit_response_includes_retry_after(
         self, mock_auth_service, mock_repo, client
     ):
@@ -123,8 +123,8 @@ class TestRateLimiting:
     @pytest.mark.skip(
         reason="Rate limiting not reliably testable in unit test environment"
     )
-    @patch("src.routes.auth.UserRepository")
-    @patch("src.routes.auth.AuthService")
+    @patch("vbwd.routes.auth.UserRepository")
+    @patch("vbwd.routes.auth.AuthService")
     def test_rate_limit_response_body(self, mock_auth_service, mock_repo, client):
         """Rate limited response has appropriate error message."""
         # Mock auth service to return failure
@@ -153,13 +153,13 @@ class TestRateLimitingConfiguration:
 
     def test_limiter_uses_redis_storage(self, app):
         """Rate limiter uses Redis for distributed storage."""
-        from src.extensions import limiter
+        from vbwd.extensions import limiter
 
         # Limiter should be configured
         assert limiter is not None
 
     def test_limiter_is_enabled(self, app):
         """Rate limiter is enabled in the application."""
-        from src.extensions import limiter
+        from vbwd.extensions import limiter
 
         assert limiter.enabled is True

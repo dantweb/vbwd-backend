@@ -1,15 +1,15 @@
 """Tests for admin user routes."""
 from unittest.mock import patch, MagicMock
 from uuid import uuid4
-from src.models.enums import UserRole, UserStatus
+from vbwd.models.enums import UserRole, UserStatus
 
 
 class TestAdminListUsers:
     """Tests for admin list users endpoint."""
 
-    @patch("src.routes.admin.users.UserRepository")
-    @patch("src.middleware.auth.AuthService")
-    @patch("src.middleware.auth.UserRepository")
+    @patch("vbwd.routes.admin.users.UserRepository")
+    @patch("vbwd.middleware.auth.AuthService")
+    @patch("vbwd.middleware.auth.UserRepository")
     def test_list_users_as_admin(
         self, mock_auth_user_repo_class, mock_auth_class, mock_user_repo_class, client
     ):
@@ -53,9 +53,9 @@ class TestAdminListUsers:
         assert "users" in data
         assert "total" in data
 
-    @patch("src.routes.admin.users.UserRepository")
-    @patch("src.middleware.auth.AuthService")
-    @patch("src.middleware.auth.UserRepository")
+    @patch("vbwd.routes.admin.users.UserRepository")
+    @patch("vbwd.middleware.auth.AuthService")
+    @patch("vbwd.middleware.auth.UserRepository")
     def test_list_users_with_pagination(
         self, mock_auth_user_repo_class, mock_auth_class, mock_user_repo_class, client
     ):
@@ -90,8 +90,8 @@ class TestAdminListUsers:
         assert call_kwargs[1]["limit"] == 10
         assert call_kwargs[1]["offset"] == 20
 
-    @patch("src.middleware.auth.AuthService")
-    @patch("src.middleware.auth.UserRepository")
+    @patch("vbwd.middleware.auth.AuthService")
+    @patch("vbwd.middleware.auth.UserRepository")
     def test_list_users_as_regular_user(
         self, mock_user_repo_class, mock_auth_class, client
     ):
@@ -127,9 +127,9 @@ class TestAdminListUsers:
 class TestAdminGetUser:
     """Tests for admin get user detail endpoint."""
 
-    @patch("src.routes.admin.users.UserRepository")
-    @patch("src.middleware.auth.AuthService")
-    @patch("src.middleware.auth.UserRepository")
+    @patch("vbwd.routes.admin.users.UserRepository")
+    @patch("vbwd.middleware.auth.AuthService")
+    @patch("vbwd.middleware.auth.UserRepository")
     def test_get_user_detail(
         self, mock_auth_user_repo_class, mock_auth_class, mock_user_repo_class, client
     ):
@@ -171,9 +171,9 @@ class TestAdminGetUser:
         data = response.get_json()
         assert "user" in data
 
-    @patch("src.routes.admin.users.UserRepository")
-    @patch("src.middleware.auth.AuthService")
-    @patch("src.middleware.auth.UserRepository")
+    @patch("vbwd.routes.admin.users.UserRepository")
+    @patch("vbwd.middleware.auth.AuthService")
+    @patch("vbwd.middleware.auth.UserRepository")
     def test_get_user_not_found(
         self, mock_auth_user_repo_class, mock_auth_class, mock_user_repo_class, client
     ):
@@ -208,9 +208,9 @@ class TestAdminGetUser:
 class TestAdminUpdateUser:
     """Tests for admin update user endpoint."""
 
-    @patch("src.routes.admin.users.UserRepository")
-    @patch("src.middleware.auth.AuthService")
-    @patch("src.middleware.auth.UserRepository")
+    @patch("vbwd.routes.admin.users.UserRepository")
+    @patch("vbwd.middleware.auth.AuthService")
+    @patch("vbwd.middleware.auth.UserRepository")
     def test_update_user_status(
         self, mock_auth_user_repo_class, mock_auth_class, mock_user_repo_class, client
     ):
@@ -249,9 +249,9 @@ class TestAdminUpdateUser:
 
         assert response.status_code == 200
 
-    @patch("src.routes.admin.users.UserRepository")
-    @patch("src.middleware.auth.AuthService")
-    @patch("src.middleware.auth.UserRepository")
+    @patch("vbwd.routes.admin.users.UserRepository")
+    @patch("vbwd.middleware.auth.AuthService")
+    @patch("vbwd.middleware.auth.UserRepository")
     def test_suspend_user(
         self, mock_auth_user_repo_class, mock_auth_class, mock_user_repo_class, client
     ):
@@ -289,9 +289,9 @@ class TestAdminUpdateUser:
 
         assert response.status_code == 200
 
-    @patch("src.routes.admin.users.UserRepository")
-    @patch("src.middleware.auth.AuthService")
-    @patch("src.middleware.auth.UserRepository")
+    @patch("vbwd.routes.admin.users.UserRepository")
+    @patch("vbwd.middleware.auth.AuthService")
+    @patch("vbwd.middleware.auth.UserRepository")
     def test_activate_user(
         self, mock_auth_user_repo_class, mock_auth_class, mock_user_repo_class, client
     ):

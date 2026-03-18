@@ -16,7 +16,7 @@ class TestCurrencyServiceGetDefault:
     @pytest.fixture
     def currency_service(self, mock_currency_repo):
         """Create CurrencyService with mocked dependencies."""
-        from src.services.currency_service import CurrencyService
+        from vbwd.services.currency_service import CurrencyService
 
         return CurrencyService(currency_repo=mock_currency_repo)
 
@@ -24,7 +24,7 @@ class TestCurrencyServiceGetDefault:
         self, currency_service, mock_currency_repo
     ):
         """get_default_currency should return the default currency."""
-        from src.models.currency import Currency
+        from vbwd.models.currency import Currency
 
         default_currency = Currency()
         default_currency.id = uuid4()
@@ -63,7 +63,7 @@ class TestCurrencyServiceConvert:
     @pytest.fixture
     def currency_service(self, mock_currency_repo):
         """Create CurrencyService with mocked dependencies."""
-        from src.services.currency_service import CurrencyService
+        from vbwd.services.currency_service import CurrencyService
 
         return CurrencyService(currency_repo=mock_currency_repo)
 
@@ -71,7 +71,7 @@ class TestCurrencyServiceConvert:
         self, currency_service, mock_currency_repo
     ):
         """convert should convert amount between currencies."""
-        from src.models.currency import Currency
+        from vbwd.models.currency import Currency
 
         eur = Currency()
         eur.code = "EUR"
@@ -123,7 +123,7 @@ class TestCurrencyServiceGetActive:
     @pytest.fixture
     def currency_service(self, mock_currency_repo):
         """Create CurrencyService with mocked dependencies."""
-        from src.services.currency_service import CurrencyService
+        from vbwd.services.currency_service import CurrencyService
 
         return CurrencyService(currency_repo=mock_currency_repo)
 
@@ -131,7 +131,7 @@ class TestCurrencyServiceGetActive:
         self, currency_service, mock_currency_repo
     ):
         """get_active_currencies should return active currencies."""
-        from src.models.currency import Currency
+        from vbwd.models.currency import Currency
 
         eur = Currency()
         eur.code = "EUR"
@@ -163,7 +163,7 @@ class TestCurrencyServiceGetByCode:
     @pytest.fixture
     def currency_service(self, mock_currency_repo):
         """Create CurrencyService with mocked dependencies."""
-        from src.services.currency_service import CurrencyService
+        from vbwd.services.currency_service import CurrencyService
 
         return CurrencyService(currency_repo=mock_currency_repo)
 
@@ -171,7 +171,7 @@ class TestCurrencyServiceGetByCode:
         self, currency_service, mock_currency_repo
     ):
         """get_currency_by_code should return currency."""
-        from src.models.currency import Currency
+        from vbwd.models.currency import Currency
 
         usd = Currency()
         usd.code = "USD"
@@ -188,7 +188,7 @@ class TestCurrencyServiceGetByCode:
         self, currency_service, mock_currency_repo
     ):
         """get_currency_by_code should uppercase the code."""
-        from src.models.currency import Currency
+        from vbwd.models.currency import Currency
 
         usd = Currency()
         usd.code = "USD"

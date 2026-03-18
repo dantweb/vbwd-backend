@@ -9,10 +9,10 @@ from datetime import datetime
 from uuid import uuid4
 from unittest.mock import MagicMock
 
-from src.handlers.subscription_cancel_handler import SubscriptionCancelledHandler
-from src.events.payment_events import SubscriptionCancelledEvent
-from src.events.domain import EventResult
-from src.models.enums import SubscriptionStatus
+from vbwd.handlers.subscription_cancel_handler import SubscriptionCancelledHandler
+from vbwd.events.payment_events import SubscriptionCancelledEvent
+from vbwd.events.domain import EventResult
+from vbwd.models.enums import SubscriptionStatus
 
 
 @pytest.fixture

@@ -21,7 +21,7 @@ class TestPasswordResetService:
     @pytest.fixture
     def service(self, mock_user_repo, mock_reset_repo):
         """Create PasswordResetService with mocked dependencies."""
-        from src.services.password_reset_service import PasswordResetService
+        from vbwd.services.password_reset_service import PasswordResetService
 
         return PasswordResetService(
             user_repository=mock_user_repo, reset_repository=mock_reset_repo

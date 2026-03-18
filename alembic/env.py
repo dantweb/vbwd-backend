@@ -19,11 +19,11 @@ from alembic import context
 # Ensure the project root is on sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from src.config import get_database_url
-from src.extensions import db
+from vbwd.config import get_database_url
+from vbwd.extensions import db
 
 # Import core models so their tables are visible to autogenerate
-import src.models  # noqa: F401  — side-effect: registers all core model classes
+import vbwd.models  # noqa: F401  — side-effect: registers all core model classes
 
 # Dynamically import every model module from every plugin's src/models/ directory.
 # No plugin names are hard-coded here; new plugins are picked up automatically.

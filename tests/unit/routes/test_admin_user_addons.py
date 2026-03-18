@@ -1,7 +1,7 @@
 """Tests for admin user addons endpoint."""
 from unittest.mock import patch, MagicMock
 from uuid import uuid4
-from src.models.enums import UserRole, SubscriptionStatus, InvoiceStatus
+from vbwd.models.enums import UserRole, SubscriptionStatus, InvoiceStatus
 
 
 class TestAdminGetUserAddons:
@@ -25,9 +25,9 @@ class TestAdminGetUserAddons:
 
         return admin_id
 
-    @patch("src.routes.admin.users.UserRepository")
-    @patch("src.middleware.auth.AuthService")
-    @patch("src.middleware.auth.UserRepository")
+    @patch("vbwd.routes.admin.users.UserRepository")
+    @patch("vbwd.middleware.auth.AuthService")
+    @patch("vbwd.middleware.auth.UserRepository")
     def test_returns_addon_subscriptions_for_user(
         self,
         mock_auth_user_repo_class,
@@ -96,9 +96,9 @@ class TestAdminGetUserAddons:
         assert data["addon_subscriptions"][0]["addon_name"] == "Extra Storage"
         assert data["addon_subscriptions"][0]["status"] == "ACTIVE"
 
-    @patch("src.routes.admin.users.UserRepository")
-    @patch("src.middleware.auth.AuthService")
-    @patch("src.middleware.auth.UserRepository")
+    @patch("vbwd.routes.admin.users.UserRepository")
+    @patch("vbwd.middleware.auth.AuthService")
+    @patch("vbwd.middleware.auth.UserRepository")
     def test_returns_empty_list_for_user_with_no_addons(
         self,
         mock_auth_user_repo_class,
@@ -136,9 +136,9 @@ class TestAdminGetUserAddons:
         data = response.get_json()
         assert data["addon_subscriptions"] == []
 
-    @patch("src.routes.admin.users.UserRepository")
-    @patch("src.middleware.auth.AuthService")
-    @patch("src.middleware.auth.UserRepository")
+    @patch("vbwd.routes.admin.users.UserRepository")
+    @patch("vbwd.middleware.auth.AuthService")
+    @patch("vbwd.middleware.auth.UserRepository")
     def test_includes_invoice_data_in_response(
         self,
         mock_auth_user_repo_class,
@@ -202,9 +202,9 @@ class TestAdminGetUserAddons:
         assert addon["first_invoice"]["invoice_number"] == "INV-100"
         assert addon["last_invoice"]["invoice_number"] == "INV-100"
 
-    @patch("src.routes.admin.users.UserRepository")
-    @patch("src.middleware.auth.AuthService")
-    @patch("src.middleware.auth.UserRepository")
+    @patch("vbwd.routes.admin.users.UserRepository")
+    @patch("vbwd.middleware.auth.AuthService")
+    @patch("vbwd.middleware.auth.UserRepository")
     def test_returns_404_for_nonexistent_user(
         self, mock_auth_user_repo_class, mock_auth_class, mock_user_repo_class, client
     ):
@@ -222,8 +222,8 @@ class TestAdminGetUserAddons:
 
         assert response.status_code == 404
 
-    @patch("src.middleware.auth.AuthService")
-    @patch("src.middleware.auth.UserRepository")
+    @patch("vbwd.middleware.auth.AuthService")
+    @patch("vbwd.middleware.auth.UserRepository")
     def test_requires_admin_auth(self, mock_user_repo_class, mock_auth_class, client):
         """Regular user cannot access admin addon endpoint."""
         user_id = uuid4()

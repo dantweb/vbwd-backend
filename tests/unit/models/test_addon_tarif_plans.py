@@ -1,6 +1,6 @@
 """Tests for AddOn tarif_plans many-to-many relationship (Sprint 13)."""
 from decimal import Decimal
-from src.models.addon import AddOn, addon_tarif_plans
+from vbwd.models.addon import AddOn, addon_tarif_plans
 
 
 class TestAddOnTarifPlanRelationship:

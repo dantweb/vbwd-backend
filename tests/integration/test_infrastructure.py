@@ -3,8 +3,8 @@ import pytest
 import psycopg2
 import redis
 from sqlalchemy import create_engine, text
-from src.config import get_database_url, get_redis_url
-from src.app import create_app
+from vbwd.config import get_database_url, get_redis_url
+from vbwd.app import create_app
 
 
 class TestDockerInfrastructure:
@@ -118,7 +118,7 @@ class TestDockerInfrastructure:
 
     def test_redis_lock_mechanism(self):
         """Test Redis distributed lock mechanism."""
-        from src.utils.redis_client import RedisClient
+        from vbwd.utils.redis_client import RedisClient
 
         try:
             redis_client = RedisClient()
@@ -138,7 +138,7 @@ class TestDockerInfrastructure:
 
     def test_flask_app_creation(self):
         """Test Flask app can be created successfully."""
-        from src.config import get_database_url
+        from vbwd.config import get_database_url
 
         try:
             app = create_app(
@@ -148,7 +148,7 @@ class TestDockerInfrastructure:
                 }
             )
             assert app is not None
-            assert app.name == "src.app"
+            assert app.name == "vbwd.app"
         except Exception as e:
             pytest.fail(f"Flask app creation failed: {e}")
 
@@ -162,7 +162,7 @@ class TestDockerInfrastructure:
 
     def test_database_connection_pooling(self):
         """Test database connection pooling is configured."""
-        from src.extensions import engine
+        from vbwd.extensions import engine
 
         assert engine is not None
         assert engine.pool.size() == 20  # Configured pool size
@@ -170,7 +170,7 @@ class TestDockerInfrastructure:
 
     def test_database_isolation_level(self):
         """Test database isolation level is READ COMMITTED."""
-        from src.extensions import engine
+        from vbwd.extensions import engine
 
         with engine.connect() as connection:
             result = connection.execute(text("SHOW transaction_isolation"))
@@ -226,7 +226,7 @@ class TestDockerInfrastructure:
     def test_cross_service_communication_python_to_postgres(self):
         """Test Python service can communicate with PostgreSQL service."""
         try:
-            from src.extensions import engine
+            from vbwd.extensions import engine
 
             # Test connection via SQLAlchemy
             with engine.connect() as connection:
@@ -244,7 +244,7 @@ class TestDockerInfrastructure:
     def test_cross_service_communication_python_to_redis(self):
         """Test Python service can communicate with Redis service."""
         try:
-            from src.utils.redis_client import redis_client
+            from vbwd.utils.redis_client import redis_client
 
             # Test ping
             assert redis_client.ping() is True
@@ -292,7 +292,7 @@ class TestDockerInfrastructure:
 
         # Check Python (Flask app)
         try:
-            from src.config import get_database_url
+            from vbwd.config import get_database_url
 
             app = create_app(
                 {

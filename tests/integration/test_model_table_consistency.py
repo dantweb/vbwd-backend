@@ -14,8 +14,8 @@ import pytest
 from sqlalchemy import inspect, text
 from sqlalchemy.types import Enum as SQLAlchemyEnum
 
-from src.extensions import db
-from src.models.base import BaseModel
+from vbwd.extensions import db
+from vbwd.models.base import BaseModel
 
 
 def get_all_models() -> list[Type[BaseModel]]:

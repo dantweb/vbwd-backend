@@ -1,15 +1,15 @@
 """Tests for admin analytics routes."""
 from unittest.mock import patch, MagicMock
 from uuid import uuid4
-from src.models.enums import UserRole
+from vbwd.models.enums import UserRole
 
 
 class TestAdminAnalyticsDashboard:
     """Tests for admin analytics dashboard endpoint."""
 
     @patch("plugins.analytics.src.routes.db")
-    @patch("src.middleware.auth.AuthService")
-    @patch("src.middleware.auth.UserRepository")
+    @patch("vbwd.middleware.auth.AuthService")
+    @patch("vbwd.middleware.auth.UserRepository")
     def test_dashboard_returns_metrics(
         self, mock_auth_user_repo_class, mock_auth_class, mock_db, client
     ):
@@ -57,8 +57,8 @@ class TestAdminAnalyticsDashboard:
         assert "total" in data["mrr"]
         assert isinstance(data["mrr"]["total"], (int, float))
 
-    @patch("src.middleware.auth.AuthService")
-    @patch("src.middleware.auth.UserRepository")
+    @patch("vbwd.middleware.auth.AuthService")
+    @patch("vbwd.middleware.auth.UserRepository")
     def test_dashboard_requires_admin(
         self, mock_user_repo_class, mock_auth_class, client
     ):

@@ -1,8 +1,8 @@
 """Tests for PluginManager.discover() auto-discovery."""
 import pytest
 from unittest.mock import patch
-from src.plugins.manager import PluginManager
-from src.plugins.base import PluginStatus
+from vbwd.plugins.manager import PluginManager
+from vbwd.plugins.base import PluginStatus
 from plugins.demoplugin import DemoPlugin
 
 
@@ -58,7 +58,7 @@ class TestPluginDiscovery:
 
     def test_handles_import_errors_gracefully(self, plugin_manager):
         """discover() handles import errors without crashing."""
-        count = plugin_manager.discover("src.plugins.nonexistent")
+        count = plugin_manager.discover("vbwd.plugins.nonexistent")
         assert count == 0
 
     def test_empty_package_returns_zero(self):

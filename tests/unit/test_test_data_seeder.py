@@ -12,7 +12,7 @@ class TestTestDataSeeder:
 
     def test_seeder_skips_when_env_false(self):
         """Seeder should skip when TEST_DATA_SEED is false."""
-        from src.testing.test_data_seeder import TestDataSeeder
+        from vbwd.testing.test_data_seeder import TestDataSeeder
 
         with patch.dict(os.environ, {"TEST_DATA_SEED": "false"}, clear=False):
             seeder = TestDataSeeder(db_session=MagicMock())
@@ -21,7 +21,7 @@ class TestTestDataSeeder:
 
     def test_seeder_skips_when_env_not_set(self):
         """Seeder should skip when TEST_DATA_SEED is not set (default)."""
-        from src.testing.test_data_seeder import TestDataSeeder
+        from vbwd.testing.test_data_seeder import TestDataSeeder
 
         env = os.environ.copy()
         env.pop("TEST_DATA_SEED", None)
@@ -32,7 +32,7 @@ class TestTestDataSeeder:
 
     def test_seeder_runs_when_env_true(self):
         """Seeder should run when TEST_DATA_SEED is true."""
-        from src.testing.test_data_seeder import TestDataSeeder
+        from vbwd.testing.test_data_seeder import TestDataSeeder
 
         mock_session = MagicMock()
         # Mock query to return None (no existing data)
@@ -46,7 +46,7 @@ class TestTestDataSeeder:
 
     def test_seeder_runs_when_env_TRUE_uppercase(self):
         """Seeder should handle uppercase TRUE."""
-        from src.testing.test_data_seeder import TestDataSeeder
+        from vbwd.testing.test_data_seeder import TestDataSeeder
 
         mock_session = MagicMock()
         mock_session.query.return_value.filter_by.return_value.first.return_value = None
@@ -58,7 +58,7 @@ class TestTestDataSeeder:
 
     def test_seeder_creates_test_user(self):
         """Seeder should create test user with configured credentials."""
-        from src.testing.test_data_seeder import TestDataSeeder
+        from vbwd.testing.test_data_seeder import TestDataSeeder
 
         mock_session = MagicMock()
         mock_session.query.return_value.filter_by.return_value.first.return_value = None
@@ -80,7 +80,7 @@ class TestTestDataSeeder:
 
     def test_seeder_uses_default_email_when_not_configured(self):
         """Seeder should use default email when TEST_USER_EMAIL not set."""
-        from src.testing.test_data_seeder import TestDataSeeder
+        from vbwd.testing.test_data_seeder import TestDataSeeder
 
         mock_session = MagicMock()
         mock_session.query.return_value.filter_by.return_value.first.return_value = None
@@ -94,7 +94,7 @@ class TestTestDataSeeder:
 
     def test_seeder_creates_test_admin(self):
         """Seeder should create admin user."""
-        from src.testing.test_data_seeder import TestDataSeeder
+        from vbwd.testing.test_data_seeder import TestDataSeeder
 
         mock_session = MagicMock()
         mock_session.query.return_value.filter_by.return_value.first.return_value = None
@@ -114,7 +114,7 @@ class TestTestDataSeeder:
 
     def test_seeder_creates_test_tariff_plan(self):
         """Seeder should create test tariff plan."""
-        from src.testing.test_data_seeder import TestDataSeeder
+        from vbwd.testing.test_data_seeder import TestDataSeeder
 
         mock_session = MagicMock()
         mock_session.query.return_value.filter_by.return_value.first.return_value = None
@@ -127,7 +127,7 @@ class TestTestDataSeeder:
 
     def test_seeder_skips_existing_user(self):
         """Seeder should not duplicate existing test user."""
-        from src.testing.test_data_seeder import TestDataSeeder
+        from vbwd.testing.test_data_seeder import TestDataSeeder
 
         mock_session = MagicMock()
         existing_user = MagicMock()
@@ -149,7 +149,7 @@ class TestTestDataSeeder:
 
     def test_cleanup_skips_when_env_false(self):
         """Cleanup should skip when TEST_DATA_CLEANUP is false."""
-        from src.testing.test_data_seeder import TestDataSeeder
+        from vbwd.testing.test_data_seeder import TestDataSeeder
 
         mock_session = MagicMock()
         with patch.dict(os.environ, {"TEST_DATA_CLEANUP": "false"}, clear=False):
@@ -160,7 +160,7 @@ class TestTestDataSeeder:
 
     def test_cleanup_skips_when_env_not_set(self):
         """Cleanup should skip when TEST_DATA_CLEANUP is not set (default)."""
-        from src.testing.test_data_seeder import TestDataSeeder
+        from vbwd.testing.test_data_seeder import TestDataSeeder
 
         mock_session = MagicMock()
         env = os.environ.copy()
@@ -172,7 +172,7 @@ class TestTestDataSeeder:
 
     def test_cleanup_runs_when_env_true(self):
         """Cleanup should remove test data when TEST_DATA_CLEANUP is true."""
-        from src.testing.test_data_seeder import TestDataSeeder
+        from vbwd.testing.test_data_seeder import TestDataSeeder
 
         mock_session = MagicMock()
         mock_session.query.return_value.filter.return_value.all.return_value = []
@@ -185,7 +185,7 @@ class TestTestDataSeeder:
 
     def test_should_seed_returns_bool(self):
         """should_seed() should return boolean."""
-        from src.testing.test_data_seeder import TestDataSeeder
+        from vbwd.testing.test_data_seeder import TestDataSeeder
 
         seeder = TestDataSeeder(db_session=MagicMock())
 
@@ -197,7 +197,7 @@ class TestTestDataSeeder:
 
     def test_should_cleanup_returns_bool(self):
         """should_cleanup() should return boolean."""
-        from src.testing.test_data_seeder import TestDataSeeder
+        from vbwd.testing.test_data_seeder import TestDataSeeder
 
         seeder = TestDataSeeder(db_session=MagicMock())
 
@@ -213,7 +213,7 @@ class TestTestDataSeederMarker:
 
     def test_marker_is_defined(self):
         """TestDataSeeder should have a TEST_DATA_MARKER constant."""
-        from src.testing.test_data_seeder import TestDataSeeder
+        from vbwd.testing.test_data_seeder import TestDataSeeder
 
         assert hasattr(TestDataSeeder, "TEST_DATA_MARKER")
         assert isinstance(TestDataSeeder.TEST_DATA_MARKER, str)
@@ -221,7 +221,7 @@ class TestTestDataSeederMarker:
 
     def test_marker_used_in_plan_name(self):
         """Test plans should use the marker prefix for identification."""
-        from src.testing.test_data_seeder import TestDataSeeder
+        from vbwd.testing.test_data_seeder import TestDataSeeder
 
         mock_session = MagicMock()
         mock_session.query.return_value.filter_by.return_value.first.return_value = None

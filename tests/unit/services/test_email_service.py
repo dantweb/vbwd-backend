@@ -9,7 +9,7 @@ class TestEmailServiceConfiguration:
 
     def test_service_initializes_with_smtp_config(self):
         """Service initializes with valid SMTP configuration."""
-        from src.services.email_service import EmailService
+        from vbwd.services.email_service import EmailService
 
         service = EmailService(
             smtp_host="smtp.example.com",
@@ -26,7 +26,7 @@ class TestEmailServiceConfiguration:
 
     def test_service_validates_smtp_config(self):
         """Service validates required SMTP config."""
-        from src.services.email_service import EmailService, EmailConfigError
+        from vbwd.services.email_service import EmailService, EmailConfigError
 
         with pytest.raises(EmailConfigError) as exc_info:
             EmailService(
@@ -41,7 +41,7 @@ class TestEmailServiceConfiguration:
 
     def test_service_handles_missing_config(self):
         """Service raises error for missing config."""
-        from src.services.email_service import EmailService, EmailConfigError
+        from vbwd.services.email_service import EmailService, EmailConfigError
 
         with pytest.raises(EmailConfigError):
             EmailService(
@@ -59,7 +59,7 @@ class TestEmailServiceSend:
     @pytest.fixture
     def email_service(self):
         """Create email service with mocked SMTP."""
-        from src.services.email_service import EmailService
+        from vbwd.services.email_service import EmailService
 
         return EmailService(
             smtp_host="smtp.example.com",
@@ -70,7 +70,7 @@ class TestEmailServiceSend:
             from_name="VBWD",
         )
 
-    @patch("src.services.email_service.smtplib.SMTP")
+    @patch("vbwd.services.email_service.smtplib.SMTP")
     def test_send_email_success(self, mock_smtp_class, email_service):
         """Send email successfully."""
         mock_smtp = MagicMock()
@@ -87,7 +87,7 @@ class TestEmailServiceSend:
         assert result.error is None
         mock_smtp.sendmail.assert_called_once()
 
-    @patch("src.services.email_service.smtplib.SMTP")
+    @patch("vbwd.services.email_service.smtplib.SMTP")
     def test_send_email_with_html(self, mock_smtp_class, email_service):
         """Send email with HTML body."""
         mock_smtp = MagicMock()
@@ -103,7 +103,7 @@ class TestEmailServiceSend:
 
         assert result.success is True
 
-    @patch("src.services.email_service.smtplib.SMTP")
+    @patch("vbwd.services.email_service.smtplib.SMTP")
     def test_send_email_with_attachment(self, mock_smtp_class, email_service):
         """Send email with attachment."""
         mock_smtp = MagicMock()
@@ -120,7 +120,7 @@ class TestEmailServiceSend:
 
         assert result.success is True
 
-    @patch("src.services.email_service.smtplib.SMTP")
+    @patch("vbwd.services.email_service.smtplib.SMTP")
     def test_send_email_failure_logged(self, mock_smtp_class, email_service):
         """Failed email send is logged and returns error."""
         mock_smtp = MagicMock()
@@ -153,7 +153,7 @@ class TestEmailServiceTemplates:
     @pytest.fixture
     def email_service_with_templates(self, tmp_path):
         """Create email service with test templates."""
-        from src.services.email_service import EmailService
+        from vbwd.services.email_service import EmailService
 
         # Create test templates
         template_dir = tmp_path / "templates"
@@ -196,7 +196,7 @@ class TestEmailServiceTemplates:
 
     def test_render_template_not_found(self, email_service_with_templates):
         """Render non-existent template raises error."""
-        from src.services.email_service import TemplateNotFoundError
+        from vbwd.services.email_service import TemplateNotFoundError
 
         with pytest.raises(TemplateNotFoundError):
             email_service_with_templates.render_template(
@@ -220,7 +220,7 @@ class TestEmailServiceConvenienceMethods:
     @pytest.fixture
     def email_service(self, tmp_path):
         """Create email service with test templates."""
-        from src.services.email_service import EmailService
+        from vbwd.services.email_service import EmailService
 
         # Create minimal templates
         template_dir = tmp_path / "templates"
@@ -249,7 +249,7 @@ class TestEmailServiceConvenienceMethods:
             template_dir=str(template_dir),
         )
 
-    @patch("src.services.email_service.smtplib.SMTP")
+    @patch("vbwd.services.email_service.smtplib.SMTP")
     def test_send_welcome_email(self, mock_smtp_class, email_service):
         """Send welcome email to new user."""
         mock_smtp = MagicMock()
@@ -262,7 +262,7 @@ class TestEmailServiceConvenienceMethods:
 
         assert result.success is True
 
-    @patch("src.services.email_service.smtplib.SMTP")
+    @patch("vbwd.services.email_service.smtplib.SMTP")
     def test_send_subscription_activated_email(self, mock_smtp_class, email_service):
         """Send subscription activation email."""
         mock_smtp = MagicMock()
@@ -278,7 +278,7 @@ class TestEmailServiceConvenienceMethods:
 
         assert result.success is True
 
-    @patch("src.services.email_service.smtplib.SMTP")
+    @patch("vbwd.services.email_service.smtplib.SMTP")
     def test_send_subscription_cancelled_email(self, mock_smtp_class, email_service):
         """Send subscription cancellation email."""
         mock_smtp = MagicMock()
@@ -291,7 +291,7 @@ class TestEmailServiceConvenienceMethods:
 
         assert result.success is True
 
-    @patch("src.services.email_service.smtplib.SMTP")
+    @patch("vbwd.services.email_service.smtplib.SMTP")
     def test_send_payment_receipt_email(self, mock_smtp_class, email_service):
         """Send payment receipt email."""
         mock_smtp = MagicMock()
@@ -307,7 +307,7 @@ class TestEmailServiceConvenienceMethods:
 
         assert result.success is True
 
-    @patch("src.services.email_service.smtplib.SMTP")
+    @patch("vbwd.services.email_service.smtplib.SMTP")
     def test_send_payment_failed_email(self, mock_smtp_class, email_service):
         """Send payment failed notification."""
         mock_smtp = MagicMock()
@@ -323,7 +323,7 @@ class TestEmailServiceConvenienceMethods:
 
         assert result.success is True
 
-    @patch("src.services.email_service.smtplib.SMTP")
+    @patch("vbwd.services.email_service.smtplib.SMTP")
     def test_send_invoice_email(self, mock_smtp_class, email_service):
         """Send invoice email."""
         mock_smtp = MagicMock()
@@ -340,7 +340,7 @@ class TestEmailServiceConvenienceMethods:
 
         assert result.success is True
 
-    @patch("src.services.email_service.smtplib.SMTP")
+    @patch("vbwd.services.email_service.smtplib.SMTP")
     def test_send_renewal_reminder_email(self, mock_smtp_class, email_service):
         """Send renewal reminder email."""
         mock_smtp = MagicMock()

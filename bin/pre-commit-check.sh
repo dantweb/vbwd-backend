@@ -117,14 +117,14 @@ run_static_analysis() {
     # A.1: Black - Code Formatter (check mode)
     echo -e "${YELLOW}[A.1] Running Black (code formatter check)...${NC}"
     if $IN_DOCKER; then
-        black --check --diff src/ tests/ 2>&1 || failed=1
+        black --check --diff vbwd/ tests/ 2>&1 || failed=1
     else
-        docker compose run --rm -T test black --check --diff src/ tests/ 2>&1 || failed=1
+        docker compose run --rm -T test black --check --diff vbwd/ tests/ 2>&1 || failed=1
     fi
     print_result "Black formatter check" $failed
 
     if [ $failed -ne 0 ]; then
-        echo -e "${YELLOW}  Tip: Run 'black src/ tests/' to auto-fix formatting${NC}"
+        echo -e "${YELLOW}  Tip: Run 'black vbwd/ tests/' to auto-fix formatting${NC}"
     fi
 
     # A.2: Flake8 - Code Sniffer (style checker)
@@ -132,9 +132,9 @@ run_static_analysis() {
     echo -e "${YELLOW}[A.2] Running Flake8 (code style checker)...${NC}"
     local flake_failed=0
     if $IN_DOCKER; then
-        flake8 src/ tests/ --max-line-length=120 --extend-ignore=E203,W503 2>&1 || flake_failed=1
+        flake8 vbwd/ tests/ --max-line-length=120 --extend-ignore=E203,W503 2>&1 || flake_failed=1
     else
-        docker compose run --rm -T test flake8 src/ tests/ --max-line-length=120 --extend-ignore=E203,W503 2>&1 || flake_failed=1
+        docker compose run --rm -T test flake8 vbwd/ tests/ --max-line-length=120 --extend-ignore=E203,W503 2>&1 || flake_failed=1
     fi
     print_result "Flake8 style check" $flake_failed
     [ $flake_failed -ne 0 ] && failed=1
@@ -144,9 +144,9 @@ run_static_analysis() {
     echo -e "${YELLOW}[A.3] Running Mypy (static type analyzer)...${NC}"
     local mypy_failed=0
     if $IN_DOCKER; then
-        mypy src/ --ignore-missing-imports --no-error-summary 2>&1 || mypy_failed=1
+        mypy vbwd/ --ignore-missing-imports --no-error-summary 2>&1 || mypy_failed=1
     else
-        docker compose run --rm -T test mypy src/ --ignore-missing-imports --no-error-summary 2>&1 || mypy_failed=1
+        docker compose run --rm -T test mypy vbwd/ --ignore-missing-imports --no-error-summary 2>&1 || mypy_failed=1
     fi
     print_result "Mypy type check" $mypy_failed
     [ $mypy_failed -ne 0 ] && failed=1

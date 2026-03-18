@@ -2,8 +2,8 @@
 import json
 import os
 import pytest
-from src.plugins.json_config_store import JsonFilePluginConfigStore
-from src.plugins.config_store import PluginConfigStore, PluginConfigEntry
+from vbwd.plugins.json_config_store import JsonFilePluginConfigStore
+from vbwd.plugins.config_store import PluginConfigStore, PluginConfigEntry
 
 
 class TestJsonFilePluginConfigStore:

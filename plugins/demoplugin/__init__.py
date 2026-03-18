@@ -1,6 +1,6 @@
 """Demo plugin — validates the external plugin system."""
 from typing import Optional, TYPE_CHECKING
-from src.plugins.base import BasePlugin, PluginMetadata
+from vbwd.plugins.base import BasePlugin, PluginMetadata
 
 if TYPE_CHECKING:
     from flask import Blueprint

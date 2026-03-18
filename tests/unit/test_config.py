@@ -17,7 +17,7 @@ class TestProductionConfig:
             # Remove the key entirely
             os.environ.pop("FLASK_SECRET_KEY", None)
 
-            from src.config import ProductionConfig
+            from vbwd.config import ProductionConfig
 
             with pytest.raises(ValueError, match="FLASK_SECRET_KEY must be set"):
                 ProductionConfig()
@@ -31,7 +31,7 @@ class TestProductionConfig:
         ):
             os.environ.pop("JWT_SECRET_KEY", None)
 
-            from src.config import ProductionConfig
+            from vbwd.config import ProductionConfig
 
             with pytest.raises(ValueError, match="JWT_SECRET_KEY must be set"):
                 ProductionConfig()
@@ -46,7 +46,7 @@ class TestProductionConfig:
             },
             clear=False,
         ):
-            from src.config import ProductionConfig
+            from vbwd.config import ProductionConfig
 
             with pytest.raises(ValueError, match="insecure default"):
                 ProductionConfig()
@@ -61,7 +61,7 @@ class TestProductionConfig:
             },
             clear=False,
         ):
-            from src.config import ProductionConfig
+            from vbwd.config import ProductionConfig
 
             with pytest.raises(ValueError, match="insecure default"):
                 ProductionConfig()
@@ -76,7 +76,7 @@ class TestProductionConfig:
             },
             clear=False,
         ):
-            from src.config import ProductionConfig
+            from vbwd.config import ProductionConfig
 
             config = ProductionConfig()
 
@@ -89,7 +89,7 @@ class TestConfigConstants:
 
     def test_jwt_expiration_hours_default(self):
         """JWT_EXPIRATION_HOURS has sensible default."""
-        from src.config import Config
+        from vbwd.config import Config
 
         # Should have JWT_EXPIRATION_HOURS attribute
         assert hasattr(Config, "JWT_EXPIRATION_HOURS")
@@ -101,11 +101,11 @@ class TestConfigConstants:
         with patch.dict(os.environ, {"JWT_EXPIRATION_HOURS": "48"}):
             # Need to reload config to pick up env var
             import importlib
-            import src.config
+            import vbwd.config
 
-            importlib.reload(src.config)
+            importlib.reload(vbwd.config)
 
-            assert src.config.Config.JWT_EXPIRATION_HOURS == 48
+            assert vbwd.config.Config.JWT_EXPIRATION_HOURS == 48
 
 
 class TestDevelopmentConfig:
@@ -113,7 +113,7 @@ class TestDevelopmentConfig:
 
     def test_development_config_allows_defaults(self):
         """DevelopmentConfig allows default secrets for convenience."""
-        from src.config import DevelopmentConfig
+        from vbwd.config import DevelopmentConfig
 
         config = DevelopmentConfig()
 
@@ -127,7 +127,7 @@ class TestTestingConfig:
 
     def test_testing_config_uses_sqlite(self):
         """TestingConfig uses in-memory SQLite."""
-        from src.config import TestingConfig
+        from vbwd.config import TestingConfig
 
         config = TestingConfig()
 

@@ -1,7 +1,7 @@
 """Tests for user addon detail and cancel endpoints."""
 from unittest.mock import patch, MagicMock
 from uuid import uuid4
-from src.models.enums import SubscriptionStatus, InvoiceStatus
+from vbwd.models.enums import SubscriptionStatus, InvoiceStatus
 
 
 class TestGetAddonDetail:
@@ -26,8 +26,8 @@ class TestGetAddonDetail:
 
         return user_id
 
-    @patch("src.middleware.auth.AuthService")
-    @patch("src.middleware.auth.UserRepository")
+    @patch("vbwd.middleware.auth.AuthService")
+    @patch("vbwd.middleware.auth.UserRepository")
     def test_returns_addon_detail_with_addon_info(
         self, mock_auth_user_repo_class, mock_auth_class, client, app
     ):
@@ -101,8 +101,8 @@ class TestGetAddonDetail:
         assert data["addon_subscription"]["addon"]["name"] == "Extra Storage"
         assert data["addon_subscription"]["invoice"]["invoice_number"] == "INV-001"
 
-    @patch("src.middleware.auth.AuthService")
-    @patch("src.middleware.auth.UserRepository")
+    @patch("vbwd.middleware.auth.AuthService")
+    @patch("vbwd.middleware.auth.UserRepository")
     def test_returns_404_for_nonexistent(
         self, mock_auth_user_repo_class, mock_auth_class, client, app
     ):
@@ -125,8 +125,8 @@ class TestGetAddonDetail:
 
         assert response.status_code == 404
 
-    @patch("src.middleware.auth.AuthService")
-    @patch("src.middleware.auth.UserRepository")
+    @patch("vbwd.middleware.auth.AuthService")
+    @patch("vbwd.middleware.auth.UserRepository")
     def test_returns_403_for_other_users_addon(
         self, mock_auth_user_repo_class, mock_auth_class, client, app
     ):
@@ -177,9 +177,9 @@ class TestCancelAddon:
 
         return user_id
 
-    @patch("src.routes.user.db")
-    @patch("src.middleware.auth.AuthService")
-    @patch("src.middleware.auth.UserRepository")
+    @patch("vbwd.routes.user.db")
+    @patch("vbwd.middleware.auth.AuthService")
+    @patch("vbwd.middleware.auth.UserRepository")
     def test_cancel_succeeds_for_active_addon(
         self, mock_auth_user_repo_class, mock_auth_class, mock_db, client, app
     ):
@@ -216,8 +216,8 @@ class TestCancelAddon:
         assert "message" in data
         mock_addon_sub.cancel.assert_called_once()
 
-    @patch("src.middleware.auth.AuthService")
-    @patch("src.middleware.auth.UserRepository")
+    @patch("vbwd.middleware.auth.AuthService")
+    @patch("vbwd.middleware.auth.UserRepository")
     def test_cancel_fails_for_already_cancelled(
         self, mock_auth_user_repo_class, mock_auth_class, client, app
     ):
@@ -246,8 +246,8 @@ class TestCancelAddon:
 
         assert response.status_code == 400
 
-    @patch("src.middleware.auth.AuthService")
-    @patch("src.middleware.auth.UserRepository")
+    @patch("vbwd.middleware.auth.AuthService")
+    @patch("vbwd.middleware.auth.UserRepository")
     def test_cancel_returns_403_for_other_users_addon(
         self, mock_auth_user_repo_class, mock_auth_class, client, app
     ):

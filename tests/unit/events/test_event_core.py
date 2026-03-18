@@ -7,7 +7,7 @@ class TestEventInterface:
 
     def test_event_interface_has_name(self):
         """EventInterface requires name property."""
-        from src.events.core.base import Event
+        from vbwd.events.core.base import Event
 
         event = Event(name="test.event")
         # Should satisfy EventInterface protocol
@@ -16,7 +16,7 @@ class TestEventInterface:
 
     def test_event_interface_has_data(self):
         """EventInterface requires data property."""
-        from src.events.core.base import Event
+        from vbwd.events.core.base import Event
 
         event = Event(name="test.event", data={"key": "value"})
         assert hasattr(event, "data")
@@ -24,7 +24,7 @@ class TestEventInterface:
 
     def test_event_interface_has_stop_propagation(self):
         """EventInterface requires stop_propagation method."""
-        from src.events.core.base import Event
+        from vbwd.events.core.base import Event
 
         event = Event(name="test.event")
         assert hasattr(event, "stop_propagation")
@@ -32,7 +32,7 @@ class TestEventInterface:
 
     def test_event_interface_has_is_propagation_stopped(self):
         """EventInterface requires is_propagation_stopped method."""
-        from src.events.core.base import Event
+        from vbwd.events.core.base import Event
 
         event = Event(name="test.event")
         assert hasattr(event, "is_propagation_stopped")
@@ -41,7 +41,7 @@ class TestEventInterface:
 
     def test_event_stop_propagation_works(self):
         """stop_propagation sets propagation stopped flag."""
-        from src.events.core.base import Event
+        from vbwd.events.core.base import Event
 
         event = Event(name="test.event")
         assert event.is_propagation_stopped() is False
@@ -54,7 +54,7 @@ class TestEventContext:
 
     def test_context_stores_data(self):
         """Context stores data for current request."""
-        from src.events.core.context import EventContext
+        from vbwd.events.core.context import EventContext
 
         ctx = EventContext()
         ctx.set("user_id", "123")
@@ -62,21 +62,21 @@ class TestEventContext:
 
     def test_context_get_returns_none_for_missing(self):
         """get() returns None for missing keys."""
-        from src.events.core.context import EventContext
+        from vbwd.events.core.context import EventContext
 
         ctx = EventContext()
         assert ctx.get("nonexistent") is None
 
     def test_context_get_returns_default(self):
         """get() returns default for missing keys."""
-        from src.events.core.context import EventContext
+        from vbwd.events.core.context import EventContext
 
         ctx = EventContext()
         assert ctx.get("nonexistent", "default") == "default"
 
     def test_context_get_or_compute_caches(self):
         """get_or_compute only calls factory once."""
-        from src.events.core.context import EventContext
+        from vbwd.events.core.context import EventContext
 
         ctx = EventContext()
         call_count = 0
@@ -98,7 +98,7 @@ class TestEventContext:
 
     def test_context_clear_removes_all(self):
         """clear() removes all cached data."""
-        from src.events.core.context import EventContext
+        from vbwd.events.core.context import EventContext
 
         ctx = EventContext()
         ctx.set("key1", "value1")
@@ -111,7 +111,7 @@ class TestEventContext:
 
     def test_context_has_key(self):
         """has() checks if key exists."""
-        from src.events.core.context import EventContext
+        from vbwd.events.core.context import EventContext
 
         ctx = EventContext()
         assert ctx.has("key") is False
@@ -120,7 +120,7 @@ class TestEventContext:
 
     def test_context_delete_key(self):
         """delete() removes specific key."""
-        from src.events.core.context import EventContext
+        from vbwd.events.core.context import EventContext
 
         ctx = EventContext()
         ctx.set("key1", "value1")
@@ -137,37 +137,37 @@ class TestHandlerPriority:
 
     def test_highest_is_100(self):
         """HIGHEST priority is 100."""
-        from src.events.core.handler import HandlerPriority
+        from vbwd.events.core.handler import HandlerPriority
 
         assert HandlerPriority.HIGHEST == 100
 
     def test_high_is_75(self):
         """HIGH priority is 75."""
-        from src.events.core.handler import HandlerPriority
+        from vbwd.events.core.handler import HandlerPriority
 
         assert HandlerPriority.HIGH == 75
 
     def test_normal_is_50(self):
         """NORMAL priority is 50."""
-        from src.events.core.handler import HandlerPriority
+        from vbwd.events.core.handler import HandlerPriority
 
         assert HandlerPriority.NORMAL == 50
 
     def test_low_is_25(self):
         """LOW priority is 25."""
-        from src.events.core.handler import HandlerPriority
+        from vbwd.events.core.handler import HandlerPriority
 
         assert HandlerPriority.LOW == 25
 
     def test_lowest_is_0(self):
         """LOWEST priority is 0."""
-        from src.events.core.handler import HandlerPriority
+        from vbwd.events.core.handler import HandlerPriority
 
         assert HandlerPriority.LOWEST == 0
 
     def test_priority_ordering(self):
         """HIGHEST > HIGH > NORMAL > LOW > LOWEST."""
-        from src.events.core.handler import HandlerPriority
+        from vbwd.events.core.handler import HandlerPriority
 
         assert HandlerPriority.HIGHEST > HandlerPriority.HIGH
         assert HandlerPriority.HIGH > HandlerPriority.NORMAL
@@ -180,15 +180,15 @@ class TestIEventHandler:
 
     def test_handler_has_get_handled_event_class(self):
         """Handler must declare which event class it handles."""
-        from src.events.core.handler import IEventHandler
+        from vbwd.events.core.handler import IEventHandler
 
         assert hasattr(IEventHandler, "get_handled_event_class")
 
     def test_handler_has_get_priority(self):
         """Handler returns priority (default NORMAL)."""
-        from src.events.core.handler import HandlerPriority
-        from src.events.core.base_handler import AbstractHandler
-        from src.events.domain import EventResult
+        from vbwd.events.core.handler import HandlerPriority
+        from vbwd.events.core.base_handler import AbstractHandler
+        from vbwd.events.domain import EventResult
 
         class TestHandler(AbstractHandler):
             @staticmethod
@@ -206,21 +206,21 @@ class TestIEventHandler:
 
     def test_handler_has_can_handle(self):
         """Handler checks if it can handle specific event."""
-        from src.events.core.handler import IEventHandler
+        from vbwd.events.core.handler import IEventHandler
 
         assert hasattr(IEventHandler, "can_handle")
 
     def test_handler_has_handle(self):
         """Handler processes event and returns result."""
-        from src.events.core.handler import IEventHandler
+        from vbwd.events.core.handler import IEventHandler
 
         assert hasattr(IEventHandler, "handle")
 
     def test_concrete_handler_implements_interface(self):
         """Concrete handler implements IEventHandler interface."""
-        from src.events.core.handler import IEventHandler, HandlerPriority
-        from src.events.core.base_handler import AbstractHandler
-        from src.events.domain import EventResult
+        from vbwd.events.core.handler import IEventHandler, HandlerPriority
+        from vbwd.events.core.base_handler import AbstractHandler
+        from vbwd.events.domain import EventResult
 
         class ConcreteHandler(AbstractHandler):
             @staticmethod
@@ -248,9 +248,9 @@ class TestAbstractHandler:
 
     def test_abstract_handler_default_priority(self):
         """Default priority is NORMAL."""
-        from src.events.core.handler import HandlerPriority
-        from src.events.core.base_handler import AbstractHandler
-        from src.events.domain import EventResult
+        from vbwd.events.core.handler import HandlerPriority
+        from vbwd.events.core.base_handler import AbstractHandler
+        from vbwd.events.domain import EventResult
 
         class TestHandler(AbstractHandler):
             @staticmethod
@@ -268,8 +268,8 @@ class TestAbstractHandler:
 
     def test_abstract_handler_provides_emit(self):
         """AbstractHandler provides emit() for event chaining."""
-        from src.events.core.base_handler import AbstractHandler
-        from src.events.domain import EventResult
+        from vbwd.events.core.base_handler import AbstractHandler
+        from vbwd.events.domain import EventResult
 
         class TestHandler(AbstractHandler):
             @staticmethod
@@ -288,9 +288,9 @@ class TestAbstractHandler:
 
     def test_abstract_handler_emit_without_dispatcher(self):
         """emit() returns no_handler when no dispatcher set."""
-        from src.events.core.base_handler import AbstractHandler
-        from src.events.core.base import Event
-        from src.events.domain import EventResult
+        from vbwd.events.core.base_handler import AbstractHandler
+        from vbwd.events.core.base import Event
+        from vbwd.events.domain import EventResult
 
         class TestHandler(AbstractHandler):
             @staticmethod
@@ -312,9 +312,9 @@ class TestAbstractHandler:
 
     def test_abstract_handler_emit_uses_dispatcher(self):
         """emit() delegates to injected dispatcher."""
-        from src.events.core.base_handler import AbstractHandler
-        from src.events.core.base import Event
-        from src.events.domain import EventResult
+        from vbwd.events.core.base_handler import AbstractHandler
+        from vbwd.events.core.base import Event
+        from vbwd.events.domain import EventResult
 
         mock_dispatcher = Mock()
         mock_dispatcher.dispatch.return_value = EventResult.success_result(
@@ -342,9 +342,9 @@ class TestAbstractHandler:
 
     def test_abstract_handler_with_context(self):
         """AbstractHandler can use EventContext."""
-        from src.events.core.base_handler import AbstractHandler
-        from src.events.core.context import EventContext
-        from src.events.domain import EventResult
+        from vbwd.events.core.base_handler import AbstractHandler
+        from vbwd.events.core.context import EventContext
+        from vbwd.events.domain import EventResult
 
         ctx = EventContext()
         ctx.set("request_id", "req-123")
@@ -370,9 +370,9 @@ class TestEnhancedEventDispatcher:
 
     def test_dispatcher_register_handler(self):
         """Register handler with dispatcher."""
-        from src.events.core.dispatcher import EnhancedEventDispatcher
-        from src.events.core.base_handler import AbstractHandler
-        from src.events.domain import EventResult
+        from vbwd.events.core.dispatcher import EnhancedEventDispatcher
+        from vbwd.events.core.base_handler import AbstractHandler
+        from vbwd.events.domain import EventResult
 
         class TestHandler(AbstractHandler):
             @staticmethod
@@ -394,10 +394,10 @@ class TestEnhancedEventDispatcher:
 
     def test_dispatcher_dispatch_to_handler(self):
         """Dispatch event to registered handler."""
-        from src.events.core.dispatcher import EnhancedEventDispatcher
-        from src.events.core.base_handler import AbstractHandler
-        from src.events.core.base import Event
-        from src.events.domain import EventResult
+        from vbwd.events.core.dispatcher import EnhancedEventDispatcher
+        from vbwd.events.core.base_handler import AbstractHandler
+        from vbwd.events.core.base import Event
+        from vbwd.events.domain import EventResult
 
         class TestHandler(AbstractHandler):
             @staticmethod
@@ -420,11 +420,11 @@ class TestEnhancedEventDispatcher:
 
     def test_dispatch_sorts_by_priority(self):
         """Handlers execute in priority order (highest first)."""
-        from src.events.core.dispatcher import EnhancedEventDispatcher
-        from src.events.core.handler import HandlerPriority
-        from src.events.core.base_handler import AbstractHandler
-        from src.events.core.base import Event
-        from src.events.domain import EventResult
+        from vbwd.events.core.dispatcher import EnhancedEventDispatcher
+        from vbwd.events.core.handler import HandlerPriority
+        from vbwd.events.core.base_handler import AbstractHandler
+        from vbwd.events.core.base import Event
+        from vbwd.events.domain import EventResult
 
         execution_order = []
 
@@ -490,11 +490,11 @@ class TestEnhancedEventDispatcher:
 
     def test_dispatch_stops_on_propagation_stopped(self):
         """Stops calling handlers after stop_propagation()."""
-        from src.events.core.dispatcher import EnhancedEventDispatcher
-        from src.events.core.handler import HandlerPriority
-        from src.events.core.base_handler import AbstractHandler
-        from src.events.core.base import Event
-        from src.events.domain import EventResult
+        from vbwd.events.core.dispatcher import EnhancedEventDispatcher
+        from vbwd.events.core.handler import HandlerPriority
+        from vbwd.events.core.base_handler import AbstractHandler
+        from vbwd.events.core.base import Event
+        from vbwd.events.domain import EventResult
 
         execution_order = []
 
@@ -543,11 +543,11 @@ class TestEnhancedEventDispatcher:
 
     def test_dispatch_with_context(self):
         """Dispatcher passes context to handlers."""
-        from src.events.core.dispatcher import EnhancedEventDispatcher
-        from src.events.core.context import EventContext
-        from src.events.core.base_handler import AbstractHandler
-        from src.events.core.base import Event
-        from src.events.domain import EventResult
+        from vbwd.events.core.dispatcher import EnhancedEventDispatcher
+        from vbwd.events.core.context import EventContext
+        from vbwd.events.core.base_handler import AbstractHandler
+        from vbwd.events.core.base import Event
+        from vbwd.events.domain import EventResult
 
         ctx = EventContext()
         ctx.set("request_id", "req-456")
@@ -575,11 +575,11 @@ class TestEnhancedEventDispatcher:
 
     def test_dispatch_handles_exceptions(self):
         """Handler exceptions don't crash dispatcher."""
-        from src.events.core.dispatcher import EnhancedEventDispatcher
-        from src.events.core.handler import HandlerPriority
-        from src.events.core.base_handler import AbstractHandler
-        from src.events.core.base import Event
-        from src.events.domain import EventResult
+        from vbwd.events.core.dispatcher import EnhancedEventDispatcher
+        from vbwd.events.core.handler import HandlerPriority
+        from vbwd.events.core.base_handler import AbstractHandler
+        from vbwd.events.core.base import Event
+        from vbwd.events.domain import EventResult
 
         class FailingHandler(AbstractHandler):
             @staticmethod
@@ -624,8 +624,8 @@ class TestEnhancedEventDispatcher:
 
     def test_dispatch_no_handlers(self):
         """Dispatch returns no_handler when no handlers registered."""
-        from src.events.core.dispatcher import EnhancedEventDispatcher
-        from src.events.core.base import Event
+        from vbwd.events.core.dispatcher import EnhancedEventDispatcher
+        from vbwd.events.core.base import Event
 
         dispatcher = EnhancedEventDispatcher()
         event = Event(name="unhandled.event")
@@ -636,10 +636,10 @@ class TestEnhancedEventDispatcher:
 
     def test_dispatch_can_handle_filtering(self):
         """Only handlers that can_handle are called."""
-        from src.events.core.dispatcher import EnhancedEventDispatcher
-        from src.events.core.base_handler import AbstractHandler
-        from src.events.core.base import Event
-        from src.events.domain import EventResult
+        from vbwd.events.core.dispatcher import EnhancedEventDispatcher
+        from vbwd.events.core.base_handler import AbstractHandler
+        from vbwd.events.core.base import Event
+        from vbwd.events.domain import EventResult
 
         executed = []
 

@@ -3,13 +3,13 @@ import pytest
 from uuid import uuid4
 from datetime import datetime, timedelta
 from decimal import Decimal
-from src.handlers.subscription_handlers import (
+from vbwd.handlers.subscription_handlers import (
     SubscriptionActivatedHandler,
     SubscriptionCancelledHandler,
     PaymentCompletedHandler,
     PaymentFailedHandler,
 )
-from src.events.subscription_events import (
+from vbwd.events.subscription_events import (
     SubscriptionActivatedEvent,
     SubscriptionCancelledEvent,
     PaymentCompletedEvent,

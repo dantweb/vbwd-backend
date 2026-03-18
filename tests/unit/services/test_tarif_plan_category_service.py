@@ -3,9 +3,9 @@ import pytest
 from unittest.mock import Mock
 from uuid import uuid4
 
-from src.services.tarif_plan_category_service import TarifPlanCategoryService
-from src.models.tarif_plan_category import TarifPlanCategory
-from src.models.tarif_plan import TarifPlan
+from vbwd.services.tarif_plan_category_service import TarifPlanCategoryService
+from vbwd.models.tarif_plan_category import TarifPlanCategory
+from vbwd.models.tarif_plan import TarifPlan
 
 
 class TestTarifPlanCategoryServiceCreate:

@@ -1,9 +1,9 @@
 """Unit tests — BasePlugin.register_event_handlers + PluginManager wiring."""
 from unittest.mock import MagicMock, patch
 
-from src.plugins.base import BasePlugin, PluginMetadata, PluginStatus
-from src.plugins.manager import PluginManager
-from src.events.bus import EventBus
+from vbwd.plugins.base import BasePlugin, PluginMetadata, PluginStatus
+from vbwd.plugins.manager import PluginManager
+from vbwd.events.bus import EventBus
 
 
 # ---------------------------------------------------------------------------
@@ -74,10 +74,10 @@ class TestPluginManagerCallsHook:
         plugin = _SimplePlugin()
         manager = self._make_manager(plugin)
 
-        # manager.enable_plugin does `from src.events.bus import event_bus`
+        # manager.enable_plugin does `from vbwd.events.bus import event_bus`
         # so patch the module-level singleton that gets imported
         real_bus = EventBus()
-        with patch("src.events.bus.event_bus", real_bus):
+        with patch("vbwd.events.bus.event_bus", real_bus):
             manager.enable_plugin("simple")
 
         assert plugin.registered_bus is not None
@@ -88,7 +88,7 @@ class TestPluginManagerCallsHook:
         manager = self._make_manager(plugin)
         real_bus = EventBus()
 
-        with patch("src.events.bus.event_bus", real_bus):
+        with patch("vbwd.events.bus.event_bus", real_bus):
             manager.enable_plugin("simple")
 
         real_bus.publish("simple.event", {"x": 42})

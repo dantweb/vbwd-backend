@@ -31,19 +31,19 @@ from decimal import Decimal
 import bcrypt
 import uuid
 
-from src.extensions import Session
-from src.models.user import User
-from src.models.user_details import UserDetails
-from src.models.currency import Currency
-from src.models.price import Price
-from src.models.tarif_plan import TarifPlan
-from src.models.tarif_plan_category import TarifPlanCategory
-from src.models.subscription import Subscription
-from src.models.invoice import UserInvoice
-from src.models.addon import AddOn
-from src.models.addon_subscription import AddOnSubscription
-from src.models.token_bundle import TokenBundle
-from src.models.enums import (
+from vbwd.extensions import Session
+from vbwd.models.user import User
+from vbwd.models.user_details import UserDetails
+from vbwd.models.currency import Currency
+from vbwd.models.price import Price
+from vbwd.models.tarif_plan import TarifPlan
+from vbwd.models.tarif_plan_category import TarifPlanCategory
+from vbwd.models.subscription import Subscription
+from vbwd.models.invoice import UserInvoice
+from vbwd.models.addon import AddOn
+from vbwd.models.addon_subscription import AddOnSubscription
+from vbwd.models.token_bundle import TokenBundle
+from vbwd.models.enums import (
     UserStatus, UserRole, BillingPeriod,
     SubscriptionStatus, InvoiceStatus
 )

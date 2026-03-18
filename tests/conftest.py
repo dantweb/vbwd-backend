@@ -14,8 +14,8 @@ os.environ["TESTING"] = "true"
 @pytest.fixture
 def app():
     """Create application for testing."""
-    from src.app import create_app
-    from src.config import get_database_url
+    from vbwd.app import create_app
+    from vbwd.config import get_database_url
 
     # Test configuration with database URI
     test_config = {
@@ -29,7 +29,7 @@ def app():
     app = create_app(test_config)
 
     # Reset rate limiter state between tests
-    from src.extensions import limiter
+    from vbwd.extensions import limiter
 
     limiter.reset()
 
@@ -52,7 +52,7 @@ def runner(app):
 # @pytest.fixture
 # def db_session(app):
 #     """Database session for tests."""
-#     from src.extensions import db
+#     from vbwd.extensions import db
 #     with app.app_context():
 #         db.create_all()
 #         yield db.session

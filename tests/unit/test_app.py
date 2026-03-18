@@ -7,12 +7,12 @@ class TestAppFactory:
     def test_create_app_returns_flask_instance(self, app):
         """create_app should return a Flask application instance."""
         assert app is not None
-        assert app.name == "src.app"
+        assert app.name == "vbwd.app"
 
     def test_create_app_with_test_config(self):
         """create_app should accept test configuration."""
-        from src.app import create_app
-        from src.config import get_database_url
+        from vbwd.app import create_app
+        from vbwd.config import get_database_url
 
         app = create_app(
             {
@@ -62,7 +62,7 @@ class TestContainerWiring:
 
     def test_container_has_db_session_override(self, app, client):
         """Container should have db_session properly configured."""
-        from src.extensions import db
+        from vbwd.extensions import db
 
         # Make a request to trigger before_request hook
         client.get("/api/v1/health")
@@ -75,10 +75,10 @@ class TestContainerWiring:
 
     def test_container_provides_working_services(self, app, client):
         """Container services should work with db session."""
-        from src.extensions import db
-        from src.services.auth_service import AuthService
-        from src.services.user_service import UserService
-        from src.services.subscription_service import SubscriptionService
+        from vbwd.extensions import db
+        from vbwd.services.auth_service import AuthService
+        from vbwd.services.user_service import UserService
+        from vbwd.services.subscription_service import SubscriptionService
 
         with app.app_context():
             # Override db_session to simulate request context
@@ -104,8 +104,8 @@ class TestEventHandlerRegistration:
         configured before event handlers are registered during app creation.
         """
         import logging
-        from src.app import create_app
-        from src.config import get_database_url
+        from vbwd.app import create_app
+        from vbwd.config import get_database_url
 
         caplog.set_level(logging.WARNING)
 
@@ -133,8 +133,8 @@ class TestEventHandlerRegistration:
 
     def test_event_dispatcher_has_handlers_registered(self):
         """Event dispatcher should have password reset handlers registered."""
-        from src.app import create_app
-        from src.config import get_database_url
+        from vbwd.app import create_app
+        from vbwd.config import get_database_url
 
         app = create_app(
             {
@@ -158,7 +158,7 @@ class TestConfig:
     def test_config_loads_from_environment(self):
         """Configuration should load from environment variables."""
         import os
-        from src.config import get_config
+        from vbwd.config import get_config
 
         os.environ["FLASK_ENV"] = "testing"
         config = get_config("testing")
@@ -168,7 +168,7 @@ class TestConfig:
 
     def test_database_url_helper(self):
         """get_database_url should return correct URL."""
-        from src.config import get_database_url
+        from vbwd.config import get_database_url
 
         url = get_database_url()
         assert url is not None
@@ -176,7 +176,7 @@ class TestConfig:
 
     def test_redis_url_helper(self):
         """get_redis_url should return correct URL."""
-        from src.config import get_redis_url
+        from vbwd.config import get_redis_url
 
         url = get_redis_url()
         assert url is not None

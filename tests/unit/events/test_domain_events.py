@@ -1,6 +1,6 @@
 """Tests for domain event system."""
 import pytest
-from src.events.domain import (
+from vbwd.events.domain import (
     DomainEvent,
     EventResult,
     IEventHandler,

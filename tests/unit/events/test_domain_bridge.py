@@ -1,8 +1,8 @@
 """Unit tests — DomainEventDispatcher bridges to EventBus."""
 from unittest.mock import MagicMock
 
-from src.events.bus import EventBus
-from src.events.domain import (
+from vbwd.events.bus import EventBus
+from vbwd.events.domain import (
     DomainEvent,
     DomainEventDispatcher,
     IEventHandler,

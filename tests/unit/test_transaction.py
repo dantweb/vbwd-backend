@@ -8,7 +8,7 @@ class TestTransactionContext:
 
     def test_transaction_commits_on_success(self):
         """Transaction commits when block completes successfully."""
-        from src.utils.transaction import TransactionContext
+        from vbwd.utils.transaction import TransactionContext
 
         mock_session = MagicMock()
         with TransactionContext(mock_session):
@@ -20,7 +20,7 @@ class TestTransactionContext:
 
     def test_transaction_rolls_back_on_exception(self):
         """Transaction rolls back when exception occurs."""
-        from src.utils.transaction import TransactionContext
+        from vbwd.utils.transaction import TransactionContext
 
         mock_session = MagicMock()
         with pytest.raises(ValueError):
@@ -32,7 +32,7 @@ class TestTransactionContext:
 
     def test_transaction_re_raises_exception(self):
         """Transaction context re-raises the original exception."""
-        from src.utils.transaction import TransactionContext
+        from vbwd.utils.transaction import TransactionContext
 
         mock_session = MagicMock()
         with pytest.raises(ValueError) as exc_info:
@@ -43,7 +43,7 @@ class TestTransactionContext:
 
     def test_nested_transaction_uses_savepoint(self):
         """Nested transaction uses savepoint for inner transaction."""
-        from src.utils.transaction import TransactionContext
+        from vbwd.utils.transaction import TransactionContext
 
         mock_session = MagicMock()
         mock_session.begin_nested.return_value = MagicMock()
@@ -56,7 +56,7 @@ class TestTransactionContext:
 
     def test_nested_transaction_rollback_does_not_affect_outer(self):
         """Nested transaction rollback doesn't affect outer transaction."""
-        from src.utils.transaction import TransactionContext
+        from vbwd.utils.transaction import TransactionContext
 
         mock_session = MagicMock()
         mock_savepoint = MagicMock()
@@ -80,7 +80,7 @@ class TestTransactional:
 
     def test_transactional_decorator_commits_on_success(self):
         """@transactional decorator commits when function succeeds."""
-        from src.utils.transaction import transactional
+        from vbwd.utils.transaction import transactional
 
         mock_session = MagicMock()
 
@@ -95,7 +95,7 @@ class TestTransactional:
 
     def test_transactional_decorator_rolls_back_on_exception(self):
         """@transactional decorator rolls back when function raises."""
-        from src.utils.transaction import transactional
+        from vbwd.utils.transaction import transactional
 
         mock_session = MagicMock()
 
@@ -110,7 +110,7 @@ class TestTransactional:
 
     def test_transactional_decorator_preserves_function_args(self):
         """@transactional decorator passes arguments correctly."""
-        from src.utils.transaction import transactional
+        from vbwd.utils.transaction import transactional
 
         mock_session = MagicMock()
         received_args = []
@@ -127,7 +127,7 @@ class TestTransactional:
 
     def test_transactional_with_session_getter(self):
         """@transactional decorator works with session getter function."""
-        from src.utils.transaction import transactional
+        from vbwd.utils.transaction import transactional
 
         mock_session = MagicMock()
         session_getter = MagicMock(return_value=mock_session)
@@ -148,7 +148,7 @@ class TestUnitOfWork:
 
     def test_unit_of_work_context_commits_on_exit(self):
         """UnitOfWork commits when exiting context successfully."""
-        from src.utils.transaction import UnitOfWork
+        from vbwd.utils.transaction import UnitOfWork
 
         mock_session = MagicMock()
         uow = UnitOfWork(mock_session)
@@ -160,7 +160,7 @@ class TestUnitOfWork:
 
     def test_unit_of_work_rolls_back_on_exception(self):
         """UnitOfWork rolls back when exception occurs."""
-        from src.utils.transaction import UnitOfWork
+        from vbwd.utils.transaction import UnitOfWork
 
         mock_session = MagicMock()
         uow = UnitOfWork(mock_session)
@@ -173,7 +173,7 @@ class TestUnitOfWork:
 
     def test_unit_of_work_rollback_method(self):
         """UnitOfWork provides explicit rollback method."""
-        from src.utils.transaction import UnitOfWork
+        from vbwd.utils.transaction import UnitOfWork
 
         mock_session = MagicMock()
         uow = UnitOfWork(mock_session)
@@ -185,7 +185,7 @@ class TestUnitOfWork:
 
     def test_unit_of_work_commit_method(self):
         """UnitOfWork provides explicit commit method."""
-        from src.utils.transaction import UnitOfWork
+        from vbwd.utils.transaction import UnitOfWork
 
         mock_session = MagicMock()
         uow = UnitOfWork(mock_session)

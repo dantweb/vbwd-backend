@@ -1,6 +1,6 @@
 """Tests for EventDispatcher."""
 import pytest
-from src.events.dispatcher import EventDispatcher, Event, EventPriority
+from vbwd.events.dispatcher import EventDispatcher, Event, EventPriority
 
 
 class TestEventDispatcherBasic:

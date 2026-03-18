@@ -16,13 +16,13 @@ class TestTaxServiceGetApplicable:
     @pytest.fixture
     def tax_service(self, mock_tax_repo):
         """Create TaxService with mocked dependencies."""
-        from src.services.tax_service import TaxService
+        from vbwd.services.tax_service import TaxService
 
         return TaxService(tax_repo=mock_tax_repo)
 
     def test_get_applicable_tax_for_country(self, tax_service, mock_tax_repo):
         """get_applicable_tax should return tax for country."""
-        from src.models.tax import Tax
+        from vbwd.models.tax import Tax
 
         vat_de = Tax()
         vat_de.id = uuid4()
@@ -53,7 +53,7 @@ class TestTaxServiceGetApplicable:
 
     def test_get_applicable_tax_prefers_regional_tax(self, tax_service, mock_tax_repo):
         """get_applicable_tax should prefer regional tax over country tax."""
-        from src.models.tax import Tax
+        from vbwd.models.tax import Tax
 
         country_tax = Tax()
         country_tax.code = "VAT_US"
@@ -87,13 +87,13 @@ class TestTaxServiceCalculate:
     @pytest.fixture
     def tax_service(self, mock_tax_repo):
         """Create TaxService with mocked dependencies."""
-        from src.services.tax_service import TaxService
+        from vbwd.services.tax_service import TaxService
 
         return TaxService(tax_repo=mock_tax_repo)
 
     def test_calculate_tax_for_amount(self, tax_service, mock_tax_repo):
         """calculate_tax should compute tax amount."""
-        from src.models.tax import Tax
+        from vbwd.models.tax import Tax
 
         vat = Tax()
         vat.code = "VAT_DE"
@@ -118,7 +118,7 @@ class TestTaxServiceCalculate:
 
     def test_calculate_total_with_tax(self, tax_service, mock_tax_repo):
         """calculate_total_with_tax should return gross amount."""
-        from src.models.tax import Tax
+        from vbwd.models.tax import Tax
 
         vat = Tax()
         vat.code = "VAT_DE"
@@ -152,13 +152,13 @@ class TestTaxServiceGetBreakdown:
     @pytest.fixture
     def tax_service(self, mock_tax_repo):
         """Create TaxService with mocked dependencies."""
-        from src.services.tax_service import TaxService
+        from vbwd.services.tax_service import TaxService
 
         return TaxService(tax_repo=mock_tax_repo)
 
     def test_get_tax_breakdown_with_tax(self, tax_service, mock_tax_repo):
         """get_tax_breakdown should return detailed breakdown."""
-        from src.models.tax import Tax
+        from vbwd.models.tax import Tax
 
         vat_de = Tax()
         vat_de.code = "VAT_DE"

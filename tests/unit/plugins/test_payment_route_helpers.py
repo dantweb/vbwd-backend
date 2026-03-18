@@ -5,14 +5,14 @@ from unittest.mock import MagicMock
 
 from flask import Flask
 
-from src.plugins.config_store import PluginConfigEntry
-from src.plugins.payment_route_helpers import (
+from vbwd.plugins.config_store import PluginConfigEntry
+from vbwd.plugins.payment_route_helpers import (
     check_plugin_enabled,
     validate_invoice_for_payment,
     emit_payment_captured,
 )
-from src.events.payment_events import PaymentCapturedEvent
-from src.models.enums import InvoiceStatus
+from vbwd.events.payment_events import PaymentCapturedEvent
+from vbwd.models.enums import InvoiceStatus
 
 
 @pytest.fixture

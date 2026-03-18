@@ -29,7 +29,7 @@ def seed_test_data_before_integration_tests():
         db_session = SessionLocal()
 
         # Import seeder
-        from src.testing.test_data_seeder import TestDataSeeder
+        from vbwd.testing.test_data_seeder import TestDataSeeder
 
         # Seed test data
         seeder = TestDataSeeder(db_session)

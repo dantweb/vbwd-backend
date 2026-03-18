@@ -1,9 +1,9 @@
 """Tests for PluginManager persistence (config_repo integration)."""
 import pytest
 from unittest.mock import MagicMock
-from src.plugins.manager import PluginManager
-from src.plugins.base import BasePlugin, PluginMetadata, PluginStatus
-from src.plugins.config_store import PluginConfigStore, PluginConfigEntry
+from vbwd.plugins.manager import PluginManager
+from vbwd.plugins.base import BasePlugin, PluginMetadata, PluginStatus
+from vbwd.plugins.config_store import PluginConfigStore, PluginConfigEntry
 
 
 class MockPlugin(BasePlugin):

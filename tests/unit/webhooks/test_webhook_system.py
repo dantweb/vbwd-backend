@@ -8,31 +8,31 @@ class TestWebhookStatus:
 
     def test_webhook_status_has_received(self):
         """WebhookStatus has RECEIVED value."""
-        from src.webhooks.enums import WebhookStatus
+        from vbwd.webhooks.enums import WebhookStatus
 
         assert WebhookStatus.RECEIVED.value == "received"
 
     def test_webhook_status_has_processing(self):
         """WebhookStatus has PROCESSING value."""
-        from src.webhooks.enums import WebhookStatus
+        from vbwd.webhooks.enums import WebhookStatus
 
         assert WebhookStatus.PROCESSING.value == "processing"
 
     def test_webhook_status_has_processed(self):
         """WebhookStatus has PROCESSED value."""
-        from src.webhooks.enums import WebhookStatus
+        from vbwd.webhooks.enums import WebhookStatus
 
         assert WebhookStatus.PROCESSED.value == "processed"
 
     def test_webhook_status_has_failed(self):
         """WebhookStatus has FAILED value."""
-        from src.webhooks.enums import WebhookStatus
+        from vbwd.webhooks.enums import WebhookStatus
 
         assert WebhookStatus.FAILED.value == "failed"
 
     def test_webhook_status_has_skipped(self):
         """WebhookStatus has SKIPPED value."""
-        from src.webhooks.enums import WebhookStatus
+        from vbwd.webhooks.enums import WebhookStatus
 
         assert WebhookStatus.SKIPPED.value == "skipped"
 
@@ -42,43 +42,43 @@ class TestWebhookEventType:
 
     def test_event_type_has_payment_succeeded(self):
         """WebhookEventType has PAYMENT_SUCCEEDED."""
-        from src.webhooks.enums import WebhookEventType
+        from vbwd.webhooks.enums import WebhookEventType
 
         assert WebhookEventType.PAYMENT_SUCCEEDED.value == "payment.succeeded"
 
     def test_event_type_has_payment_failed(self):
         """WebhookEventType has PAYMENT_FAILED."""
-        from src.webhooks.enums import WebhookEventType
+        from vbwd.webhooks.enums import WebhookEventType
 
         assert WebhookEventType.PAYMENT_FAILED.value == "payment.failed"
 
     def test_event_type_has_subscription_created(self):
         """WebhookEventType has SUBSCRIPTION_CREATED."""
-        from src.webhooks.enums import WebhookEventType
+        from vbwd.webhooks.enums import WebhookEventType
 
         assert WebhookEventType.SUBSCRIPTION_CREATED.value == "subscription.created"
 
     def test_event_type_has_subscription_updated(self):
         """WebhookEventType has SUBSCRIPTION_UPDATED."""
-        from src.webhooks.enums import WebhookEventType
+        from vbwd.webhooks.enums import WebhookEventType
 
         assert WebhookEventType.SUBSCRIPTION_UPDATED.value == "subscription.updated"
 
     def test_event_type_has_subscription_cancelled(self):
         """WebhookEventType has SUBSCRIPTION_CANCELLED."""
-        from src.webhooks.enums import WebhookEventType
+        from vbwd.webhooks.enums import WebhookEventType
 
         assert WebhookEventType.SUBSCRIPTION_CANCELLED.value == "subscription.cancelled"
 
     def test_event_type_has_refund_created(self):
         """WebhookEventType has REFUND_CREATED."""
-        from src.webhooks.enums import WebhookEventType
+        from vbwd.webhooks.enums import WebhookEventType
 
         assert WebhookEventType.REFUND_CREATED.value == "refund.created"
 
     def test_event_type_has_unknown(self):
         """WebhookEventType has UNKNOWN for unhandled events."""
-        from src.webhooks.enums import WebhookEventType
+        from vbwd.webhooks.enums import WebhookEventType
 
         assert WebhookEventType.UNKNOWN.value == "unknown"
 
@@ -88,8 +88,8 @@ class TestNormalizedWebhookEvent:
 
     def test_normalized_event_has_provider(self):
         """NormalizedWebhookEvent has provider field."""
-        from src.webhooks.dto import NormalizedWebhookEvent
-        from src.webhooks.enums import WebhookEventType
+        from vbwd.webhooks.dto import NormalizedWebhookEvent
+        from vbwd.webhooks.enums import WebhookEventType
 
         event = NormalizedWebhookEvent(
             provider="stripe",
@@ -101,8 +101,8 @@ class TestNormalizedWebhookEvent:
 
     def test_normalized_event_has_event_id(self):
         """NormalizedWebhookEvent has event_id field."""
-        from src.webhooks.dto import NormalizedWebhookEvent
-        from src.webhooks.enums import WebhookEventType
+        from vbwd.webhooks.dto import NormalizedWebhookEvent
+        from vbwd.webhooks.enums import WebhookEventType
 
         event = NormalizedWebhookEvent(
             provider="stripe",
@@ -114,8 +114,8 @@ class TestNormalizedWebhookEvent:
 
     def test_normalized_event_has_event_type(self):
         """NormalizedWebhookEvent has event_type field."""
-        from src.webhooks.dto import NormalizedWebhookEvent
-        from src.webhooks.enums import WebhookEventType
+        from vbwd.webhooks.dto import NormalizedWebhookEvent
+        from vbwd.webhooks.enums import WebhookEventType
 
         event = NormalizedWebhookEvent(
             provider="stripe",
@@ -127,8 +127,8 @@ class TestNormalizedWebhookEvent:
 
     def test_normalized_event_optional_fields(self):
         """NormalizedWebhookEvent has optional payment fields."""
-        from src.webhooks.dto import NormalizedWebhookEvent
-        from src.webhooks.enums import WebhookEventType
+        from vbwd.webhooks.dto import NormalizedWebhookEvent
+        from vbwd.webhooks.enums import WebhookEventType
 
         user_id = uuid4()
         event = NormalizedWebhookEvent(
@@ -148,8 +148,8 @@ class TestNormalizedWebhookEvent:
 
     def test_normalized_event_default_metadata(self):
         """NormalizedWebhookEvent has empty default metadata."""
-        from src.webhooks.dto import NormalizedWebhookEvent
-        from src.webhooks.enums import WebhookEventType
+        from vbwd.webhooks.dto import NormalizedWebhookEvent
+        from vbwd.webhooks.enums import WebhookEventType
 
         event = NormalizedWebhookEvent(
             provider="stripe",
@@ -166,7 +166,7 @@ class TestWebhookResult:
 
     def test_webhook_result_success(self):
         """WebhookResult for successful processing."""
-        from src.webhooks.dto import WebhookResult
+        from vbwd.webhooks.dto import WebhookResult
 
         result = WebhookResult(success=True, message="Processed successfully")
 
@@ -176,7 +176,7 @@ class TestWebhookResult:
 
     def test_webhook_result_failure(self):
         """WebhookResult for failed processing."""
-        from src.webhooks.dto import WebhookResult
+        from vbwd.webhooks.dto import WebhookResult
 
         result = WebhookResult(success=False, error="Signature verification failed")
 
@@ -185,7 +185,7 @@ class TestWebhookResult:
 
     def test_webhook_result_with_data(self):
         """WebhookResult can include data."""
-        from src.webhooks.dto import WebhookResult
+        from vbwd.webhooks.dto import WebhookResult
 
         result = WebhookResult(
             success=True, message="Payment processed", data={"payment_id": "pay_123"}
@@ -199,33 +199,33 @@ class TestIWebhookHandler:
 
     def test_handler_has_provider_property(self):
         """IWebhookHandler has provider property."""
-        from src.webhooks.handlers.base import IWebhookHandler
+        from vbwd.webhooks.handlers.base import IWebhookHandler
 
         assert hasattr(IWebhookHandler, "provider")
 
     def test_handler_has_verify_signature(self):
         """IWebhookHandler has verify_signature method."""
-        from src.webhooks.handlers.base import IWebhookHandler
+        from vbwd.webhooks.handlers.base import IWebhookHandler
 
         assert hasattr(IWebhookHandler, "verify_signature")
 
     def test_handler_has_parse_event(self):
         """IWebhookHandler has parse_event method."""
-        from src.webhooks.handlers.base import IWebhookHandler
+        from vbwd.webhooks.handlers.base import IWebhookHandler
 
         assert hasattr(IWebhookHandler, "parse_event")
 
     def test_handler_has_handle(self):
         """IWebhookHandler has handle method."""
-        from src.webhooks.handlers.base import IWebhookHandler
+        from vbwd.webhooks.handlers.base import IWebhookHandler
 
         assert hasattr(IWebhookHandler, "handle")
 
     def test_concrete_handler_implements_interface(self):
         """Concrete handler can implement IWebhookHandler."""
-        from src.webhooks.handlers.base import IWebhookHandler
-        from src.webhooks.dto import NormalizedWebhookEvent, WebhookResult
-        from src.webhooks.enums import WebhookEventType
+        from vbwd.webhooks.handlers.base import IWebhookHandler
+        from vbwd.webhooks.dto import NormalizedWebhookEvent, WebhookResult
+        from vbwd.webhooks.enums import WebhookEventType
 
         class TestHandler(IWebhookHandler):
             @property
@@ -257,22 +257,22 @@ class TestMockWebhookHandler:
 
     def test_mock_handler_implements_interface(self):
         """MockWebhookHandler implements IWebhookHandler."""
-        from src.webhooks.handlers.mock import MockWebhookHandler
-        from src.webhooks.handlers.base import IWebhookHandler
+        from vbwd.webhooks.handlers.mock import MockWebhookHandler
+        from vbwd.webhooks.handlers.base import IWebhookHandler
 
         handler = MockWebhookHandler()
         assert isinstance(handler, IWebhookHandler)
 
     def test_mock_handler_provider_name(self):
         """MockWebhookHandler has provider 'mock'."""
-        from src.webhooks.handlers.mock import MockWebhookHandler
+        from vbwd.webhooks.handlers.mock import MockWebhookHandler
 
         handler = MockWebhookHandler()
         assert handler.provider == "mock"
 
     def test_mock_handler_verify_signature_valid(self):
         """MockWebhookHandler verifies 'valid_signature'."""
-        from src.webhooks.handlers.mock import MockWebhookHandler
+        from vbwd.webhooks.handlers.mock import MockWebhookHandler
 
         handler = MockWebhookHandler()
         result = handler.verify_signature(b"payload", "valid_signature", "secret")
@@ -281,7 +281,7 @@ class TestMockWebhookHandler:
 
     def test_mock_handler_verify_signature_invalid(self):
         """MockWebhookHandler rejects other signatures."""
-        from src.webhooks.handlers.mock import MockWebhookHandler
+        from vbwd.webhooks.handlers.mock import MockWebhookHandler
 
         handler = MockWebhookHandler()
         result = handler.verify_signature(b"payload", "bad_signature", "secret")
@@ -290,8 +290,8 @@ class TestMockWebhookHandler:
 
     def test_mock_handler_parse_event(self):
         """MockWebhookHandler parses payload to NormalizedWebhookEvent."""
-        from src.webhooks.handlers.mock import MockWebhookHandler
-        from src.webhooks.enums import WebhookEventType
+        from vbwd.webhooks.handlers.mock import MockWebhookHandler
+        from vbwd.webhooks.enums import WebhookEventType
 
         handler = MockWebhookHandler()
         payload = {
@@ -311,9 +311,9 @@ class TestMockWebhookHandler:
 
     def test_mock_handler_handle_succeeds(self):
         """MockWebhookHandler handle() returns success."""
-        from src.webhooks.handlers.mock import MockWebhookHandler
-        from src.webhooks.dto import NormalizedWebhookEvent
-        from src.webhooks.enums import WebhookEventType
+        from vbwd.webhooks.handlers.mock import MockWebhookHandler
+        from vbwd.webhooks.dto import NormalizedWebhookEvent
+        from vbwd.webhooks.enums import WebhookEventType
 
         handler = MockWebhookHandler()
         event = NormalizedWebhookEvent(
@@ -328,9 +328,9 @@ class TestMockWebhookHandler:
 
     def test_mock_handler_can_fail(self):
         """MockWebhookHandler can be configured to fail."""
-        from src.webhooks.handlers.mock import MockWebhookHandler
-        from src.webhooks.dto import NormalizedWebhookEvent
-        from src.webhooks.enums import WebhookEventType
+        from vbwd.webhooks.handlers.mock import MockWebhookHandler
+        from vbwd.webhooks.dto import NormalizedWebhookEvent
+        from vbwd.webhooks.enums import WebhookEventType
 
         handler = MockWebhookHandler(should_fail=True)
         event = NormalizedWebhookEvent(
@@ -346,9 +346,9 @@ class TestMockWebhookHandler:
 
     def test_mock_handler_tracks_handled_events(self):
         """MockWebhookHandler tracks all handled events."""
-        from src.webhooks.handlers.mock import MockWebhookHandler
-        from src.webhooks.dto import NormalizedWebhookEvent
-        from src.webhooks.enums import WebhookEventType
+        from vbwd.webhooks.handlers.mock import MockWebhookHandler
+        from vbwd.webhooks.dto import NormalizedWebhookEvent
+        from vbwd.webhooks.enums import WebhookEventType
 
         handler = MockWebhookHandler()
         event1 = NormalizedWebhookEvent(
@@ -375,7 +375,7 @@ class TestWebhookService:
 
     def test_service_rejects_unknown_provider(self):
         """Unknown provider returns error."""
-        from src.webhooks.service import WebhookService
+        from vbwd.webhooks.service import WebhookService
 
         service = WebhookService(handlers={})
 
@@ -388,8 +388,8 @@ class TestWebhookService:
 
     def test_service_verifies_signature(self):
         """Signature verified before processing."""
-        from src.webhooks.service import WebhookService
-        from src.webhooks.handlers.mock import MockWebhookHandler
+        from vbwd.webhooks.service import WebhookService
+        from vbwd.webhooks.handlers.mock import MockWebhookHandler
 
         handler = MockWebhookHandler()
         service = WebhookService(
@@ -408,8 +408,8 @@ class TestWebhookService:
 
     def test_service_processes_valid_webhook(self):
         """Valid webhook is processed successfully."""
-        from src.webhooks.service import WebhookService
-        from src.webhooks.handlers.mock import MockWebhookHandler
+        from vbwd.webhooks.service import WebhookService
+        from vbwd.webhooks.handlers.mock import MockWebhookHandler
 
         handler = MockWebhookHandler()
         service = WebhookService(
@@ -427,8 +427,8 @@ class TestWebhookService:
 
     def test_service_calls_handler_handle(self):
         """Service calls handler's handle method."""
-        from src.webhooks.service import WebhookService
-        from src.webhooks.handlers.mock import MockWebhookHandler
+        from vbwd.webhooks.service import WebhookService
+        from vbwd.webhooks.handlers.mock import MockWebhookHandler
 
         handler = MockWebhookHandler()
         service = WebhookService(
@@ -447,8 +447,8 @@ class TestWebhookService:
 
     def test_service_handles_handler_failure(self):
         """Handler failure is returned correctly."""
-        from src.webhooks.service import WebhookService
-        from src.webhooks.handlers.mock import MockWebhookHandler
+        from vbwd.webhooks.service import WebhookService
+        from vbwd.webhooks.handlers.mock import MockWebhookHandler
 
         handler = MockWebhookHandler(should_fail=True)
         service = WebhookService(
@@ -466,8 +466,8 @@ class TestWebhookService:
 
     def test_service_handles_invalid_json(self):
         """Invalid JSON returns error."""
-        from src.webhooks.service import WebhookService
-        from src.webhooks.handlers.mock import MockWebhookHandler
+        from vbwd.webhooks.service import WebhookService
+        from vbwd.webhooks.handlers.mock import MockWebhookHandler
 
         handler = MockWebhookHandler()
         service = WebhookService(
@@ -486,8 +486,8 @@ class TestWebhookService:
 
     def test_service_register_handler(self):
         """Service can register handlers dynamically."""
-        from src.webhooks.service import WebhookService
-        from src.webhooks.handlers.mock import MockWebhookHandler
+        from vbwd.webhooks.service import WebhookService
+        from vbwd.webhooks.handlers.mock import MockWebhookHandler
 
         service = WebhookService(handlers={}, webhook_secrets={})
         handler = MockWebhookHandler()
@@ -498,8 +498,8 @@ class TestWebhookService:
 
     def test_service_get_handler(self):
         """Service returns registered handler."""
-        from src.webhooks.service import WebhookService
-        from src.webhooks.handlers.mock import MockWebhookHandler
+        from vbwd.webhooks.service import WebhookService
+        from vbwd.webhooks.handlers.mock import MockWebhookHandler
 
         handler = MockWebhookHandler()
         service = WebhookService(

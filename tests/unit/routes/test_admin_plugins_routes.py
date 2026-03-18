@@ -2,9 +2,9 @@
 import json
 from unittest.mock import patch, MagicMock
 from uuid import uuid4
-from src.models.enums import UserRole
-from src.plugins.base import BasePlugin, PluginMetadata, PluginStatus
-from src.plugins.config_store import PluginConfigStore, PluginConfigEntry
+from vbwd.models.enums import UserRole
+from vbwd.plugins.base import BasePlugin, PluginMetadata, PluginStatus
+from vbwd.plugins.config_store import PluginConfigStore, PluginConfigEntry
 
 
 class MockPlugin(BasePlugin):
@@ -57,8 +57,8 @@ def _make_config_store(plugin_name="backend-demo-plugin", status="disabled"):
 class TestGetPluginDetail:
     """Tests for GET /api/v1/admin/plugins/<name>."""
 
-    @patch("src.middleware.auth.AuthService")
-    @patch("src.middleware.auth.UserRepository")
+    @patch("vbwd.middleware.auth.AuthService")
+    @patch("vbwd.middleware.auth.UserRepository")
     def test_returns_plugin_detail_with_config_schema(
         self, mock_repo_class, mock_auth_class, app, client
     ):
@@ -97,8 +97,8 @@ class TestGetPluginDetail:
         assert data["adminConfig"]["tabs"][0]["id"] == "general"
         assert data["savedConfig"]["greeting"] == "Custom Hello"
 
-    @patch("src.middleware.auth.AuthService")
-    @patch("src.middleware.auth.UserRepository")
+    @patch("vbwd.middleware.auth.AuthService")
+    @patch("vbwd.middleware.auth.UserRepository")
     def test_returns_inactive_status_from_config_store(
         self, mock_repo_class, mock_auth_class, app, client
     ):
@@ -121,8 +121,8 @@ class TestGetPluginDetail:
         data = response.get_json()
         assert data["status"] == "inactive"
 
-    @patch("src.middleware.auth.AuthService")
-    @patch("src.middleware.auth.UserRepository")
+    @patch("vbwd.middleware.auth.AuthService")
+    @patch("vbwd.middleware.auth.UserRepository")
     def test_returns_404_for_unknown_plugin(
         self, mock_repo_class, mock_auth_class, app, client
     ):
@@ -140,8 +140,8 @@ class TestGetPluginDetail:
 class TestPutPluginConfig:
     """Tests for PUT /api/v1/admin/plugins/<name>/config."""
 
-    @patch("src.middleware.auth.AuthService")
-    @patch("src.middleware.auth.UserRepository")
+    @patch("vbwd.middleware.auth.AuthService")
+    @patch("vbwd.middleware.auth.UserRepository")
     def test_saves_config_values(self, mock_repo_class, mock_auth_class, app, client):
         """PUT /admin/plugins/<name>/config saves config values."""
         _mock_admin_auth(mock_repo_class, mock_auth_class)
@@ -167,8 +167,8 @@ class TestPutPluginConfig:
             "backend-demo-plugin", {"greeting": "Hello World"}
         )
 
-    @patch("src.middleware.auth.AuthService")
-    @patch("src.middleware.auth.UserRepository")
+    @patch("vbwd.middleware.auth.AuthService")
+    @patch("vbwd.middleware.auth.UserRepository")
     def test_returns_404_for_unknown_plugin(
         self, mock_repo_class, mock_auth_class, app, client
     ):
@@ -188,8 +188,8 @@ class TestPutPluginConfig:
 class TestEnablePlugin:
     """Tests for POST /api/v1/admin/plugins/<name>/enable."""
 
-    @patch("src.middleware.auth.AuthService")
-    @patch("src.middleware.auth.UserRepository")
+    @patch("vbwd.middleware.auth.AuthService")
+    @patch("vbwd.middleware.auth.UserRepository")
     def test_enable_persists_to_config_store(
         self, mock_repo_class, mock_auth_class, app, client
     ):
@@ -213,8 +213,8 @@ class TestEnablePlugin:
         assert data["status"] == "enabled"
         mock_store.save.assert_called_once_with("backend-demo-plugin", "enabled", {})
 
-    @patch("src.middleware.auth.AuthService")
-    @patch("src.middleware.auth.UserRepository")
+    @patch("vbwd.middleware.auth.AuthService")
+    @patch("vbwd.middleware.auth.UserRepository")
     def test_enable_returns_404_for_unknown(
         self, mock_repo_class, mock_auth_class, app, client
     ):
@@ -232,8 +232,8 @@ class TestEnablePlugin:
 class TestDisablePlugin:
     """Tests for POST /api/v1/admin/plugins/<name>/disable."""
 
-    @patch("src.middleware.auth.AuthService")
-    @patch("src.middleware.auth.UserRepository")
+    @patch("vbwd.middleware.auth.AuthService")
+    @patch("vbwd.middleware.auth.UserRepository")
     def test_disable_persists_to_config_store(
         self, mock_repo_class, mock_auth_class, app, client
     ):
@@ -256,8 +256,8 @@ class TestDisablePlugin:
         assert data["status"] == "disabled"
         mock_store.save.assert_called_once_with("backend-demo-plugin", "disabled", {})
 
-    @patch("src.middleware.auth.AuthService")
-    @patch("src.middleware.auth.UserRepository")
+    @patch("vbwd.middleware.auth.AuthService")
+    @patch("vbwd.middleware.auth.UserRepository")
     def test_disable_does_not_400_from_initialized_state(
         self, mock_repo_class, mock_auth_class, app, client
     ):
@@ -281,8 +281,8 @@ class TestDisablePlugin:
         data = response.get_json()
         assert data["status"] == "disabled"
 
-    @patch("src.middleware.auth.AuthService")
-    @patch("src.middleware.auth.UserRepository")
+    @patch("vbwd.middleware.auth.AuthService")
+    @patch("vbwd.middleware.auth.UserRepository")
     def test_disable_returns_404_for_unknown(
         self, mock_repo_class, mock_auth_class, app, client
     ):
@@ -300,8 +300,8 @@ class TestDisablePlugin:
 class TestListPluginsHasConfig:
     """Tests for GET /api/v1/admin/plugins with hasConfig flag."""
 
-    @patch("src.middleware.auth.AuthService")
-    @patch("src.middleware.auth.UserRepository")
+    @patch("vbwd.middleware.auth.AuthService")
+    @patch("vbwd.middleware.auth.UserRepository")
     def test_list_includes_has_config_flag(
         self, mock_repo_class, mock_auth_class, app, client
     ):
@@ -332,8 +332,8 @@ class TestListPluginsHasConfig:
         assert found[0]["hasConfig"] is True
         assert found[0]["status"] == "active"
 
-    @patch("src.middleware.auth.AuthService")
-    @patch("src.middleware.auth.UserRepository")
+    @patch("vbwd.middleware.auth.AuthService")
+    @patch("vbwd.middleware.auth.UserRepository")
     def test_list_reads_status_from_config_store(
         self, mock_repo_class, mock_auth_class, app, client
     ):

@@ -2,7 +2,7 @@
 import pytest
 from uuid import uuid4
 from types import SimpleNamespace
-from src.schemas.user_schemas import (
+from vbwd.schemas.user_schemas import (
     UserDetailsSchema,
     UserDetailsUpdateSchema,
     UserProfileSchema,

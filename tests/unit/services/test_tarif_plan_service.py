@@ -16,7 +16,7 @@ class TestTarifPlanServiceGetActive:
     @pytest.fixture
     def tarif_plan_service(self, mock_plan_repo):
         """Create TarifPlanService with mocked dependencies."""
-        from src.services.tarif_plan_service import TarifPlanService
+        from vbwd.services.tarif_plan_service import TarifPlanService
 
         return TarifPlanService(tarif_plan_repo=mock_plan_repo)
 
@@ -24,8 +24,8 @@ class TestTarifPlanServiceGetActive:
         self, tarif_plan_service, mock_plan_repo
     ):
         """get_active_plans should return only active plans."""
-        from src.models.tarif_plan import TarifPlan
-        from src.models.enums import BillingPeriod
+        from vbwd.models.tarif_plan import TarifPlan
+        from vbwd.models.enums import BillingPeriod
 
         plan1 = TarifPlan()
         plan1.id = uuid4()
@@ -65,13 +65,13 @@ class TestTarifPlanServiceGetBySlug:
     @pytest.fixture
     def tarif_plan_service(self, mock_plan_repo):
         """Create TarifPlanService with mocked dependencies."""
-        from src.services.tarif_plan_service import TarifPlanService
+        from vbwd.services.tarif_plan_service import TarifPlanService
 
         return TarifPlanService(tarif_plan_repo=mock_plan_repo)
 
     def test_get_plan_by_slug_returns_plan(self, tarif_plan_service, mock_plan_repo):
         """get_plan_by_slug should return plan if found."""
-        from src.models.tarif_plan import TarifPlan
+        from vbwd.models.tarif_plan import TarifPlan
 
         plan = TarifPlan()
         plan.id = uuid4()
@@ -108,13 +108,13 @@ class TestTarifPlanServiceGetById:
     @pytest.fixture
     def tarif_plan_service(self, mock_plan_repo):
         """Create TarifPlanService with mocked dependencies."""
-        from src.services.tarif_plan_service import TarifPlanService
+        from vbwd.services.tarif_plan_service import TarifPlanService
 
         return TarifPlanService(tarif_plan_repo=mock_plan_repo)
 
     def test_get_plan_by_id_returns_plan(self, tarif_plan_service, mock_plan_repo):
         """get_plan_by_id should return plan if found."""
-        from src.models.tarif_plan import TarifPlan
+        from vbwd.models.tarif_plan import TarifPlan
 
         plan_id = uuid4()
         plan = TarifPlan()
@@ -153,7 +153,7 @@ class TestTarifPlanServiceGetWithPricing:
         self, mock_plan_repo, mock_currency_service, mock_tax_service
     ):
         """Create TarifPlanService with mocked dependencies."""
-        from src.services.tarif_plan_service import TarifPlanService
+        from vbwd.services.tarif_plan_service import TarifPlanService
 
         return TarifPlanService(
             tarif_plan_repo=mock_plan_repo,
@@ -165,9 +165,9 @@ class TestTarifPlanServiceGetWithPricing:
         self, tarif_plan_service, mock_currency_service
     ):
         """get_plan_with_pricing should include currency information."""
-        from src.models.tarif_plan import TarifPlan
-        from src.models.currency import Currency
-        from src.models.enums import BillingPeriod
+        from vbwd.models.tarif_plan import TarifPlan
+        from vbwd.models.currency import Currency
+        from vbwd.models.enums import BillingPeriod
 
         plan = TarifPlan()
         plan.id = uuid4()
@@ -194,9 +194,9 @@ class TestTarifPlanServiceGetWithPricing:
         self, tarif_plan_service, mock_currency_service, mock_tax_service
     ):
         """get_plan_with_pricing should include tax breakdown if country provided."""
-        from src.models.tarif_plan import TarifPlan
-        from src.models.currency import Currency
-        from src.models.enums import BillingPeriod
+        from vbwd.models.tarif_plan import TarifPlan
+        from vbwd.models.currency import Currency
+        from vbwd.models.enums import BillingPeriod
 
         plan = TarifPlan()
         plan.id = uuid4()

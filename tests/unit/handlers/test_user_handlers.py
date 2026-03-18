@@ -1,17 +1,17 @@
 """Tests for user event handlers."""
 import pytest
 from uuid import uuid4
-from src.handlers.user_handlers import (
+from vbwd.handlers.user_handlers import (
     UserCreatedHandler,
     UserStatusUpdatedHandler,
     UserDeletedHandler,
 )
-from src.events.user_events import (
+from vbwd.events.user_events import (
     UserCreatedEvent,
     UserStatusUpdatedEvent,
     UserDeletedEvent,
 )
-from src.events.domain import DomainEvent
+from vbwd.events.domain import DomainEvent
 
 
 class TestUserCreatedHandler:

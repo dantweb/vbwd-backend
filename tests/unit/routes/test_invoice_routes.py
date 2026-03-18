@@ -6,10 +6,10 @@ from uuid import uuid4
 class TestInvoiceRoutes:
     """Tests for invoice route endpoints."""
 
-    @patch("src.routes.invoices.InvoiceService")
-    @patch("src.routes.invoices.InvoiceRepository")
-    @patch("src.middleware.auth.AuthService")
-    @patch("src.middleware.auth.UserRepository")
+    @patch("vbwd.routes.invoices.InvoiceService")
+    @patch("vbwd.routes.invoices.InvoiceRepository")
+    @patch("vbwd.middleware.auth.AuthService")
+    @patch("vbwd.middleware.auth.UserRepository")
     def test_get_invoices_authenticated(
         self,
         mock_user_repo_class,
@@ -55,10 +55,10 @@ class TestInvoiceRoutes:
 
         assert response.status_code == 401
 
-    @patch("src.routes.invoices.InvoiceService")
-    @patch("src.routes.invoices.InvoiceRepository")
-    @patch("src.middleware.auth.AuthService")
-    @patch("src.middleware.auth.UserRepository")
+    @patch("vbwd.routes.invoices.InvoiceService")
+    @patch("vbwd.routes.invoices.InvoiceRepository")
+    @patch("vbwd.middleware.auth.AuthService")
+    @patch("vbwd.middleware.auth.UserRepository")
     def test_get_invoice_detail(
         self,
         mock_user_repo_class,
@@ -106,10 +106,10 @@ class TestInvoiceRoutes:
         assert "invoice" in data
         assert data["invoice"]["id"] == str(invoice_id)
 
-    @patch("src.routes.invoices.InvoiceService")
-    @patch("src.routes.invoices.InvoiceRepository")
-    @patch("src.middleware.auth.AuthService")
-    @patch("src.middleware.auth.UserRepository")
+    @patch("vbwd.routes.invoices.InvoiceService")
+    @patch("vbwd.routes.invoices.InvoiceRepository")
+    @patch("vbwd.middleware.auth.AuthService")
+    @patch("vbwd.middleware.auth.UserRepository")
     def test_get_invoice_not_found(
         self,
         mock_user_repo_class,
@@ -144,10 +144,10 @@ class TestInvoiceRoutes:
 
         assert response.status_code == 404
 
-    @patch("src.routes.invoices.InvoiceService")
-    @patch("src.routes.invoices.InvoiceRepository")
-    @patch("src.middleware.auth.AuthService")
-    @patch("src.middleware.auth.UserRepository")
+    @patch("vbwd.routes.invoices.InvoiceService")
+    @patch("vbwd.routes.invoices.InvoiceRepository")
+    @patch("vbwd.middleware.auth.AuthService")
+    @patch("vbwd.middleware.auth.UserRepository")
     def test_get_invoice_not_owned(
         self,
         mock_user_repo_class,

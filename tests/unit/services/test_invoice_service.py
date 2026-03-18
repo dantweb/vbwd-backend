@@ -4,7 +4,7 @@ from decimal import Decimal
 from datetime import datetime, timedelta
 from uuid import uuid4
 
-from src.models.enums import InvoiceStatus
+from vbwd.models.enums import InvoiceStatus
 
 
 class TestInvoiceServiceCreation:
@@ -12,7 +12,7 @@ class TestInvoiceServiceCreation:
 
     def test_create_invoice_success(self):
         """Create invoice with PENDING status."""
-        from src.services.invoice_service import InvoiceService
+        from vbwd.services.invoice_service import InvoiceService
 
         mock_repo = MagicMock()
         mock_repo.save.return_value = MagicMock(
@@ -37,7 +37,7 @@ class TestInvoiceServiceCreation:
 
     def test_create_invoice_generates_unique_number(self):
         """Create invoice generates unique invoice number."""
-        from src.services.invoice_service import InvoiceService
+        from vbwd.services.invoice_service import InvoiceService
 
         mock_repo = MagicMock()
         saved_invoice = None
@@ -63,7 +63,7 @@ class TestInvoiceServiceCreation:
 
     def test_create_invoice_links_to_subscription(self):
         """Create invoice links to subscription."""
-        from src.services.invoice_service import InvoiceService
+        from vbwd.services.invoice_service import InvoiceService
 
         mock_repo = MagicMock()
         saved_invoice = None
@@ -89,7 +89,7 @@ class TestInvoiceServiceCreation:
 
     def test_create_invoice_sets_due_date(self):
         """Create invoice sets default due date (30 days)."""
-        from src.services.invoice_service import InvoiceService
+        from vbwd.services.invoice_service import InvoiceService
 
         mock_repo = MagicMock()
         saved_invoice = None
@@ -123,7 +123,7 @@ class TestInvoiceServiceRetrieval:
 
     def test_get_invoice_by_id(self):
         """Get invoice by ID returns invoice."""
-        from src.services.invoice_service import InvoiceService
+        from vbwd.services.invoice_service import InvoiceService
 
         invoice_id = uuid4()
         mock_invoice = MagicMock(id=invoice_id)
@@ -138,7 +138,7 @@ class TestInvoiceServiceRetrieval:
 
     def test_get_invoice_not_found(self):
         """Get invoice returns None when not found."""
-        from src.services.invoice_service import InvoiceService
+        from vbwd.services.invoice_service import InvoiceService
 
         mock_repo = MagicMock()
         mock_repo.find_by_id.return_value = None
@@ -150,7 +150,7 @@ class TestInvoiceServiceRetrieval:
 
     def test_get_user_invoices(self):
         """Get all invoices for user."""
-        from src.services.invoice_service import InvoiceService
+        from vbwd.services.invoice_service import InvoiceService
 
         user_id = uuid4()
         mock_invoices = [MagicMock(), MagicMock()]
@@ -165,7 +165,7 @@ class TestInvoiceServiceRetrieval:
 
     def test_get_user_invoices_empty(self):
         """Get user invoices returns empty list when none exist."""
-        from src.services.invoice_service import InvoiceService
+        from vbwd.services.invoice_service import InvoiceService
 
         mock_repo = MagicMock()
         mock_repo.find_by_user.return_value = []
@@ -177,7 +177,7 @@ class TestInvoiceServiceRetrieval:
 
     def test_get_subscription_invoices(self):
         """Get all invoices for subscription."""
-        from src.services.invoice_service import InvoiceService
+        from vbwd.services.invoice_service import InvoiceService
 
         subscription_id = uuid4()
         mock_invoices = [MagicMock(), MagicMock(), MagicMock()]
@@ -196,7 +196,7 @@ class TestInvoiceServiceStatusTransitions:
 
     def test_mark_paid_success(self):
         """Mark invoice as paid (PENDING → PAID)."""
-        from src.services.invoice_service import InvoiceService
+        from vbwd.services.invoice_service import InvoiceService
 
         invoice_id = uuid4()
         mock_invoice = MagicMock(id=invoice_id, status=InvoiceStatus.PENDING)
@@ -217,7 +217,7 @@ class TestInvoiceServiceStatusTransitions:
 
     def test_mark_paid_sets_payment_reference(self):
         """Mark paid stores payment reference."""
-        from src.services.invoice_service import InvoiceService
+        from vbwd.services.invoice_service import InvoiceService
 
         mock_invoice = MagicMock(status=InvoiceStatus.PENDING)
         mock_repo = MagicMock()
@@ -235,7 +235,7 @@ class TestInvoiceServiceStatusTransitions:
 
     def test_mark_paid_already_paid(self):
         """Mark paid returns error if already paid."""
-        from src.services.invoice_service import InvoiceService
+        from vbwd.services.invoice_service import InvoiceService
 
         mock_invoice = MagicMock(status=InvoiceStatus.PAID)
         mock_repo = MagicMock()
@@ -253,7 +253,7 @@ class TestInvoiceServiceStatusTransitions:
 
     def test_mark_paid_not_found(self):
         """Mark paid returns error if invoice not found."""
-        from src.services.invoice_service import InvoiceService
+        from vbwd.services.invoice_service import InvoiceService
 
         mock_repo = MagicMock()
         mock_repo.find_by_id.return_value = None
@@ -270,7 +270,7 @@ class TestInvoiceServiceStatusTransitions:
 
     def test_mark_failed(self):
         """Mark invoice as failed (PENDING → FAILED)."""
-        from src.services.invoice_service import InvoiceService
+        from vbwd.services.invoice_service import InvoiceService
 
         mock_invoice = MagicMock(status=InvoiceStatus.PENDING)
         mock_repo = MagicMock()
@@ -285,7 +285,7 @@ class TestInvoiceServiceStatusTransitions:
 
     def test_mark_cancelled(self):
         """Mark invoice as cancelled (PENDING → CANCELLED)."""
-        from src.services.invoice_service import InvoiceService
+        from vbwd.services.invoice_service import InvoiceService
 
         mock_invoice = MagicMock(status=InvoiceStatus.PENDING)
         mock_repo = MagicMock()
@@ -300,7 +300,7 @@ class TestInvoiceServiceStatusTransitions:
 
     def test_mark_refunded(self):
         """Mark invoice as refunded (PAID → REFUNDED)."""
-        from src.services.invoice_service import InvoiceService
+        from vbwd.services.invoice_service import InvoiceService
 
         mock_invoice = MagicMock(status=InvoiceStatus.PAID)
         mock_repo = MagicMock()
@@ -317,7 +317,7 @@ class TestInvoiceServiceStatusTransitions:
 
     def test_mark_refunded_not_paid(self):
         """Mark refunded returns error if not paid."""
-        from src.services.invoice_service import InvoiceService
+        from vbwd.services.invoice_service import InvoiceService
 
         mock_invoice = MagicMock(status=InvoiceStatus.PENDING)
         mock_repo = MagicMock()
@@ -340,7 +340,7 @@ class TestInvoiceServiceQueries:
 
     def test_get_pending_invoices(self):
         """Get all pending invoices."""
-        from src.services.invoice_service import InvoiceService
+        from vbwd.services.invoice_service import InvoiceService
 
         mock_invoices = [MagicMock(), MagicMock()]
         mock_repo = MagicMock()
@@ -354,7 +354,7 @@ class TestInvoiceServiceQueries:
 
     def test_get_overdue_invoices(self):
         """Get invoices past due date."""
-        from src.services.invoice_service import InvoiceService
+        from vbwd.services.invoice_service import InvoiceService
 
         mock_invoices = [MagicMock()]
         mock_repo = MagicMock()

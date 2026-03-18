@@ -3,7 +3,7 @@ from datetime import datetime
 from unittest.mock import MagicMock
 from uuid import uuid4
 
-from src.models.enums import (
+from vbwd.models.enums import (
     InvoiceStatus,
     LineItemType,
     SubscriptionStatus,
@@ -52,7 +52,7 @@ class TestRestoreServiceProcessRestore:
 
     def test_restore_refunded_invoice(self):
         """Restore a refunded invoice marks it as PAID."""
-        from src.services.restore_service import RestoreService
+        from vbwd.services.restore_service import RestoreService
 
         invoice = _make_invoice(InvoiceStatus.REFUNDED)
         invoice_repo = MagicMock()
@@ -72,7 +72,7 @@ class TestRestoreServiceProcessRestore:
 
     def test_restore_reactivates_cancelled_subscription(self):
         """Restore re-activates a cancelled subscription."""
-        from src.services.restore_service import RestoreService
+        from vbwd.services.restore_service import RestoreService
 
         sub_id = uuid4()
         line_item = _make_line_item(LineItemType.SUBSCRIPTION, sub_id)
@@ -112,7 +112,7 @@ class TestRestoreServiceProcessRestore:
 
     def test_restore_recredits_tokens(self):
         """Restore re-credits tokens for a refunded purchase."""
-        from src.services.restore_service import RestoreService
+        from vbwd.services.restore_service import RestoreService
 
         purchase_id = uuid4()
         user_id = uuid4()
@@ -162,7 +162,7 @@ class TestRestoreServiceProcessRestore:
 
     def test_restore_creates_balance_if_none(self):
         """If user has no token balance, one should be created on restore."""
-        from src.services.restore_service import RestoreService
+        from vbwd.services.restore_service import RestoreService
 
         purchase_id = uuid4()
         user_id = uuid4()
@@ -201,7 +201,7 @@ class TestRestoreServiceProcessRestore:
 
     def test_restore_reactivates_addon(self):
         """Restore re-activates a cancelled add-on subscription."""
-        from src.services.restore_service import RestoreService
+        from vbwd.services.restore_service import RestoreService
 
         addon_id = uuid4()
         line_item = _make_line_item(LineItemType.ADD_ON, addon_id)
@@ -237,7 +237,7 @@ class TestRestoreServiceProcessRestore:
 
     def test_restore_rejects_non_refunded_invoice(self):
         """Restore rejects invoice that is not REFUNDED."""
-        from src.services.restore_service import RestoreService
+        from vbwd.services.restore_service import RestoreService
 
         invoice = _make_invoice(InvoiceStatus.PAID)
         invoice_repo = MagicMock()
@@ -253,7 +253,7 @@ class TestRestoreServiceProcessRestore:
 
     def test_restore_rejects_missing_invoice(self):
         """Restore rejects when invoice not found."""
-        from src.services.restore_service import RestoreService
+        from vbwd.services.restore_service import RestoreService
 
         invoice_repo = MagicMock()
         invoice_repo.find_by_id.return_value = None
@@ -268,7 +268,7 @@ class TestRestoreServiceProcessRestore:
 
     def test_restore_handles_mixed_items(self):
         """Restore handles invoice with subscription + tokens + add-on."""
-        from src.services.restore_service import RestoreService
+        from vbwd.services.restore_service import RestoreService
 
         sub_id = uuid4()
         purchase_id = uuid4()

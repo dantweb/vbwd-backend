@@ -1,7 +1,7 @@
 """Tests for plugin blueprint registration."""
 import pytest
-from src.plugins.base import BasePlugin, PluginMetadata
-from src.plugins.manager import PluginManager
+from vbwd.plugins.base import BasePlugin, PluginMetadata
+from vbwd.plugins.manager import PluginManager
 from plugins.demoplugin import DemoPlugin
 
 

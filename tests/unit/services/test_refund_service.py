@@ -2,7 +2,7 @@
 from unittest.mock import MagicMock
 from uuid import uuid4
 
-from src.models.enums import (
+from vbwd.models.enums import (
     InvoiceStatus,
     LineItemType,
     SubscriptionStatus,
@@ -37,7 +37,7 @@ class TestRefundServiceProcessRefund:
 
     def test_refund_paid_invoice(self):
         """Refund a paid invoice marks it as REFUNDED."""
-        from src.services.refund_service import RefundService
+        from vbwd.services.refund_service import RefundService
 
         invoice = _make_invoice(InvoiceStatus.PAID)
         invoice_repo = MagicMock()
@@ -62,7 +62,7 @@ class TestRefundServiceProcessRefund:
 
     def test_refund_reverses_subscription(self):
         """Refund cancels an active subscription and debits default tokens."""
-        from src.services.refund_service import RefundService
+        from vbwd.services.refund_service import RefundService
 
         sub_id = uuid4()
         line_item = _make_line_item(LineItemType.SUBSCRIPTION, sub_id)
@@ -104,7 +104,7 @@ class TestRefundServiceProcessRefund:
 
     def test_refund_rejects_insufficient_balance(self):
         """Refund is rejected when user has insufficient token balance."""
-        from src.services.refund_service import RefundService
+        from vbwd.services.refund_service import RefundService
 
         sub_id = uuid4()
         line_item = _make_line_item(LineItemType.SUBSCRIPTION, sub_id)
@@ -141,7 +141,7 @@ class TestRefundServiceProcessRefund:
 
     def test_refund_debits_tokens(self):
         """Refund debits tokens for token bundle purchase."""
-        from src.services.refund_service import RefundService
+        from vbwd.services.refund_service import RefundService
 
         purchase_id = uuid4()
         line_item = _make_line_item(LineItemType.TOKEN_BUNDLE, purchase_id)
@@ -186,7 +186,7 @@ class TestRefundServiceProcessRefund:
 
     def test_refund_cancels_addon(self):
         """Refund cancels an active add-on subscription."""
-        from src.services.refund_service import RefundService
+        from vbwd.services.refund_service import RefundService
 
         addon_id = uuid4()
         line_item = _make_line_item(LineItemType.ADD_ON, addon_id)
@@ -219,7 +219,7 @@ class TestRefundServiceProcessRefund:
 
     def test_refund_rejects_non_paid_invoice(self):
         """Refund rejects invoice that is not PAID."""
-        from src.services.refund_service import RefundService
+        from vbwd.services.refund_service import RefundService
 
         invoice = _make_invoice(InvoiceStatus.PENDING)
 
@@ -240,7 +240,7 @@ class TestRefundServiceProcessRefund:
 
     def test_refund_rejects_missing_invoice(self):
         """Refund rejects when invoice not found."""
-        from src.services.refund_service import RefundService
+        from vbwd.services.refund_service import RefundService
 
         service = RefundService(
             invoice_repo=MagicMock(find_by_id=MagicMock(return_value=None)),
@@ -257,7 +257,7 @@ class TestRefundServiceProcessRefund:
 
     def test_refund_handles_token_only_invoice(self):
         """Refund handles invoice with only token bundles (the original bug)."""
-        from src.services.refund_service import RefundService
+        from vbwd.services.refund_service import RefundService
 
         purchase_id = uuid4()
         line_item = _make_line_item(LineItemType.TOKEN_BUNDLE, purchase_id)
@@ -296,7 +296,7 @@ class TestRefundServiceProcessRefund:
 
     def test_refund_handles_mixed_items(self):
         """Refund handles invoice with subscription + tokens + add-on."""
-        from src.services.refund_service import RefundService
+        from vbwd.services.refund_service import RefundService
 
         sub_id = uuid4()
         purchase_id = uuid4()

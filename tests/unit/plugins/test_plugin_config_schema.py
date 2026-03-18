@@ -1,7 +1,7 @@
 """Tests for PluginConfigSchemaReader."""
 import json
 import pytest
-from src.plugins.config_schema import PluginConfigSchemaReader
+from vbwd.plugins.config_schema import PluginConfigSchemaReader
 
 
 class TestPluginConfigSchemaReader:

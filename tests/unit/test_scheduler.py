@@ -27,12 +27,12 @@ class TestRunSubscriptionJobs:
         mock_svc_instance.send_dunning_emails.return_value = []
         mock_svc_cls.return_value = mock_svc_instance
 
-        mocker.patch("src.scheduler.SubscriptionRepository", mock_repo_cls)
-        mocker.patch("src.scheduler.InvoiceRepository", mock_invoice_repo_cls)
-        mocker.patch("src.scheduler.SubscriptionService", mock_svc_cls)
-        mocker.patch("src.scheduler.db", mock_db)
+        mocker.patch("vbwd.scheduler.SubscriptionRepository", mock_repo_cls)
+        mocker.patch("vbwd.scheduler.InvoiceRepository", mock_invoice_repo_cls)
+        mocker.patch("vbwd.scheduler.SubscriptionService", mock_svc_cls)
+        mocker.patch("vbwd.scheduler.db", mock_db)
 
-        from src.scheduler import _run_subscription_jobs
+        from vbwd.scheduler import _run_subscription_jobs
 
         _run_subscription_jobs(mock_app)
 
@@ -52,12 +52,12 @@ class TestRunSubscriptionJobs:
         mock_svc_instance.send_dunning_emails.return_value = []
         mock_svc_cls.return_value = mock_svc_instance
 
-        mocker.patch("src.scheduler.SubscriptionRepository", mock_repo_cls)
-        mocker.patch("src.scheduler.InvoiceRepository", mock_invoice_repo_cls)
-        mocker.patch("src.scheduler.SubscriptionService", mock_svc_cls)
-        mocker.patch("src.scheduler.db", mock_db)
+        mocker.patch("vbwd.scheduler.SubscriptionRepository", mock_repo_cls)
+        mocker.patch("vbwd.scheduler.InvoiceRepository", mock_invoice_repo_cls)
+        mocker.patch("vbwd.scheduler.SubscriptionService", mock_svc_cls)
+        mocker.patch("vbwd.scheduler.db", mock_db)
 
-        from src.scheduler import _run_subscription_jobs
+        from vbwd.scheduler import _run_subscription_jobs
 
         _run_subscription_jobs(mock_app)
 
@@ -77,12 +77,12 @@ class TestRunSubscriptionJobs:
         mock_svc_instance.send_dunning_emails.return_value = []
         mock_svc_cls.return_value = mock_svc_instance
 
-        mocker.patch("src.scheduler.SubscriptionRepository", mock_repo_cls)
-        mocker.patch("src.scheduler.InvoiceRepository", mock_invoice_repo_cls)
-        mocker.patch("src.scheduler.SubscriptionService", mock_svc_cls)
-        mocker.patch("src.scheduler.db", mock_db)
+        mocker.patch("vbwd.scheduler.SubscriptionRepository", mock_repo_cls)
+        mocker.patch("vbwd.scheduler.InvoiceRepository", mock_invoice_repo_cls)
+        mocker.patch("vbwd.scheduler.SubscriptionService", mock_svc_cls)
+        mocker.patch("vbwd.scheduler.db", mock_db)
 
-        from src.scheduler import _run_subscription_jobs
+        from vbwd.scheduler import _run_subscription_jobs
 
         _run_subscription_jobs(mock_app)
 
@@ -102,14 +102,14 @@ class TestRunSubscriptionJobs:
         mock_svc_instance.send_dunning_emails.return_value = ["d1", "d2", "d3"]
         mock_svc_cls.return_value = mock_svc_instance
 
-        mocker.patch("src.scheduler.SubscriptionRepository", mock_repo_cls)
-        mocker.patch("src.scheduler.InvoiceRepository", mock_invoice_repo_cls)
-        mocker.patch("src.scheduler.SubscriptionService", mock_svc_cls)
-        mocker.patch("src.scheduler.db", mock_db)
+        mocker.patch("vbwd.scheduler.SubscriptionRepository", mock_repo_cls)
+        mocker.patch("vbwd.scheduler.InvoiceRepository", mock_invoice_repo_cls)
+        mocker.patch("vbwd.scheduler.SubscriptionService", mock_svc_cls)
+        mocker.patch("vbwd.scheduler.db", mock_db)
 
-        mock_logger = mocker.patch("src.scheduler.logger")
+        mock_logger = mocker.patch("vbwd.scheduler.logger")
 
-        from src.scheduler import _run_subscription_jobs
+        from vbwd.scheduler import _run_subscription_jobs
 
         _run_subscription_jobs(mock_app)
 

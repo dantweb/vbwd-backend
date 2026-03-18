@@ -7,8 +7,8 @@ class TestContainer:
 
     def test_container_provides_user_repository(self):
         """Container provides UserRepository instance."""
-        from src.container import Container
-        from src.repositories.user_repository import UserRepository
+        from vbwd.container import Container
+        from vbwd.repositories.user_repository import UserRepository
 
         container = Container()
         # Provide a mock session
@@ -21,8 +21,8 @@ class TestContainer:
 
     def test_container_provides_subscription_repository(self):
         """Container provides SubscriptionRepository instance."""
-        from src.container import Container
-        from src.repositories.subscription_repository import SubscriptionRepository
+        from vbwd.container import Container
+        from vbwd.repositories.subscription_repository import SubscriptionRepository
 
         container = Container()
         mock_session = MagicMock()
@@ -34,8 +34,8 @@ class TestContainer:
 
     def test_container_provides_auth_service(self):
         """Container provides AuthService with injected dependencies."""
-        from src.container import Container
-        from src.services.auth_service import AuthService
+        from vbwd.container import Container
+        from vbwd.services.auth_service import AuthService
 
         container = Container()
         mock_session = MagicMock()
@@ -47,8 +47,8 @@ class TestContainer:
 
     def test_container_provides_user_service(self):
         """Container provides UserService with injected dependencies."""
-        from src.container import Container
-        from src.services.user_service import UserService
+        from vbwd.container import Container
+        from vbwd.services.user_service import UserService
 
         container = Container()
         mock_session = MagicMock()
@@ -60,8 +60,8 @@ class TestContainer:
 
     def test_container_provides_subscription_service(self):
         """Container provides SubscriptionService with injected dependencies."""
-        from src.container import Container
-        from src.services.subscription_service import SubscriptionService
+        from vbwd.container import Container
+        from vbwd.services.subscription_service import SubscriptionService
 
         container = Container()
         mock_session = MagicMock()
@@ -73,7 +73,7 @@ class TestContainer:
 
     def test_container_services_use_same_session(self):
         """Services from same container use same db session."""
-        from src.container import Container
+        from vbwd.container import Container
 
         container = Container()
         mock_session = MagicMock()
@@ -88,7 +88,7 @@ class TestContainer:
 
     def test_container_reset_singletons(self):
         """Container can reset singleton providers."""
-        from src.container import Container
+        from vbwd.container import Container
 
         container = Container()
         mock_session1 = MagicMock()

@@ -8,8 +8,8 @@ class TestRefundReversedHandler:
 
     def test_handler_calls_restore_service(self):
         """Handler delegates to RestoreService.process_restore()."""
-        from src.handlers.restore_handler import RefundReversedHandler
-        from src.events.payment_events import RefundReversedEvent
+        from vbwd.handlers.restore_handler import RefundReversedHandler
+        from vbwd.events.payment_events import RefundReversedEvent
 
         invoice_id = uuid4()
         mock_invoice = MagicMock()
@@ -37,7 +37,9 @@ class TestRefundReversedHandler:
         # Patch the RestoreService to return mock result
         from unittest.mock import patch
 
-        with patch("src.handlers.restore_handler.RestoreService") as MockRestoreService:
+        with patch(
+            "vbwd.handlers.restore_handler.RestoreService"
+        ) as MockRestoreService:
             mock_service = MagicMock()
             mock_service.process_restore.return_value = mock_result
             MockRestoreService.return_value = mock_service
@@ -53,8 +55,8 @@ class TestRefundReversedHandler:
 
     def test_handler_returns_error_on_service_failure(self):
         """Handler returns error when RestoreService reports failure."""
-        from src.handlers.restore_handler import RefundReversedHandler
-        from src.events.payment_events import RefundReversedEvent
+        from vbwd.handlers.restore_handler import RefundReversedHandler
+        from vbwd.events.payment_events import RefundReversedEvent
 
         mock_result = MagicMock()
         mock_result.success = False
@@ -70,7 +72,9 @@ class TestRefundReversedHandler:
 
         from unittest.mock import patch
 
-        with patch("src.handlers.restore_handler.RestoreService") as MockRestoreService:
+        with patch(
+            "vbwd.handlers.restore_handler.RestoreService"
+        ) as MockRestoreService:
             mock_service = MagicMock()
             mock_service.process_restore.return_value = mock_result
             MockRestoreService.return_value = mock_service
@@ -82,8 +86,8 @@ class TestRefundReversedHandler:
 
     def test_handler_returns_success_with_data(self):
         """Handler returns success result with invoice and items_restored."""
-        from src.handlers.restore_handler import RefundReversedHandler
-        from src.events.payment_events import RefundReversedEvent
+        from vbwd.handlers.restore_handler import RefundReversedHandler
+        from vbwd.events.payment_events import RefundReversedEvent
 
         invoice_id = uuid4()
         mock_invoice = MagicMock()
@@ -109,7 +113,9 @@ class TestRefundReversedHandler:
 
         from unittest.mock import patch
 
-        with patch("src.handlers.restore_handler.RestoreService") as MockRestoreService:
+        with patch(
+            "vbwd.handlers.restore_handler.RestoreService"
+        ) as MockRestoreService:
             mock_service = MagicMock()
             mock_service.process_restore.return_value = mock_result
             MockRestoreService.return_value = mock_service
@@ -123,8 +129,8 @@ class TestRefundReversedHandler:
 
     def test_handler_handles_exception(self):
         """Handler catches exception and returns error result."""
-        from src.handlers.restore_handler import RefundReversedHandler
-        from src.events.payment_events import RefundReversedEvent
+        from vbwd.handlers.restore_handler import RefundReversedHandler
+        from vbwd.events.payment_events import RefundReversedEvent
 
         container = MagicMock()
         handler = RefundReversedHandler(container)
@@ -136,7 +142,9 @@ class TestRefundReversedHandler:
 
         from unittest.mock import patch
 
-        with patch("src.handlers.restore_handler.RestoreService") as MockRestoreService:
+        with patch(
+            "vbwd.handlers.restore_handler.RestoreService"
+        ) as MockRestoreService:
             MockRestoreService.side_effect = RuntimeError("Container wiring error")
 
             result = handler.handle(event)
@@ -146,8 +154,8 @@ class TestRefundReversedHandler:
 
     def test_handler_rejects_invalid_event_type(self):
         """Handler rejects events that are not RefundReversedEvent."""
-        from src.handlers.restore_handler import RefundReversedHandler
-        from src.events.payment_events import PaymentCapturedEvent
+        from vbwd.handlers.restore_handler import RefundReversedHandler
+        from vbwd.events.payment_events import PaymentCapturedEvent
 
         container = MagicMock()
         handler = RefundReversedHandler(container)

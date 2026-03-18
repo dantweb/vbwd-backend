@@ -1,5 +1,5 @@
 """Tests for TarifPlanCategory model."""
-from src.models.tarif_plan_category import TarifPlanCategory, tarif_plan_category_plans
+from vbwd.models.tarif_plan_category import TarifPlanCategory, tarif_plan_category_plans
 
 
 class TestTarifPlanCategoryJunctionTable:

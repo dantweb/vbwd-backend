@@ -12,7 +12,7 @@ class TestPaymentMethodModel:
 
     def test_payment_method_has_required_fields(self):
         """PaymentMethod should have all required fields."""
-        from src.models.payment_method import PaymentMethod
+        from vbwd.models.payment_method import PaymentMethod
 
         method = PaymentMethod(
             code="invoice",
@@ -24,7 +24,7 @@ class TestPaymentMethodModel:
 
     def test_payment_method_has_optional_fields(self):
         """PaymentMethod should support optional fields."""
-        from src.models.payment_method import PaymentMethod
+        from vbwd.models.payment_method import PaymentMethod
 
         method = PaymentMethod(
             code="stripe",
@@ -64,7 +64,7 @@ class TestPaymentMethodModel:
 
     def test_payment_method_defaults(self):
         """PaymentMethod column defaults should be defined correctly."""
-        from src.models.payment_method import PaymentMethod
+        from vbwd.models.payment_method import PaymentMethod
 
         # Test that column defaults are defined (not applied to instances)
         # Defaults are applied when persisting to database, not on object creation
@@ -89,7 +89,7 @@ class TestPaymentMethodModel:
 
     def test_payment_method_to_dict(self):
         """PaymentMethod.to_dict() should return proper dictionary."""
-        from src.models.payment_method import PaymentMethod
+        from vbwd.models.payment_method import PaymentMethod
 
         method = PaymentMethod(
             code="invoice",
@@ -110,7 +110,7 @@ class TestPaymentMethodModel:
 
     def test_payment_method_to_public_dict(self):
         """PaymentMethod.to_public_dict() should exclude sensitive fields."""
-        from src.models.payment_method import PaymentMethod
+        from vbwd.models.payment_method import PaymentMethod
 
         method = PaymentMethod(
             code="stripe",
@@ -130,7 +130,7 @@ class TestPaymentMethodModel:
 
     def test_payment_method_fee_calculation_none(self):
         """PaymentMethod with fee_type='none' should return zero fee."""
-        from src.models.payment_method import PaymentMethod
+        from vbwd.models.payment_method import PaymentMethod
 
         method = PaymentMethod(code="test", name="Test", fee_type="none")
 
@@ -140,7 +140,7 @@ class TestPaymentMethodModel:
 
     def test_payment_method_fee_calculation_fixed(self):
         """PaymentMethod with fee_type='fixed' should return fixed amount."""
-        from src.models.payment_method import PaymentMethod
+        from vbwd.models.payment_method import PaymentMethod
 
         method = PaymentMethod(
             code="test",
@@ -155,7 +155,7 @@ class TestPaymentMethodModel:
 
     def test_payment_method_fee_calculation_percentage(self):
         """PaymentMethod with fee_type='percentage' should return percentage."""
-        from src.models.payment_method import PaymentMethod
+        from vbwd.models.payment_method import PaymentMethod
 
         method = PaymentMethod(
             code="test",
@@ -170,7 +170,7 @@ class TestPaymentMethodModel:
 
     def test_payment_method_is_available_for_amount(self):
         """PaymentMethod.is_available_for_amount() should check min/max."""
-        from src.models.payment_method import PaymentMethod
+        from vbwd.models.payment_method import PaymentMethod
 
         method = PaymentMethod(
             code="test",
@@ -186,7 +186,7 @@ class TestPaymentMethodModel:
 
     def test_payment_method_is_available_for_currency(self):
         """PaymentMethod.is_available_for_currency() should check currencies."""
-        from src.models.payment_method import PaymentMethod
+        from vbwd.models.payment_method import PaymentMethod
 
         method = PaymentMethod(
             code="test",
@@ -201,7 +201,7 @@ class TestPaymentMethodModel:
 
     def test_payment_method_empty_currencies_means_all(self):
         """Empty currencies list means available for all currencies."""
-        from src.models.payment_method import PaymentMethod
+        from vbwd.models.payment_method import PaymentMethod
 
         method = PaymentMethod(
             code="test",
@@ -215,7 +215,7 @@ class TestPaymentMethodModel:
 
     def test_payment_method_is_available_for_country(self):
         """PaymentMethod.is_available_for_country() should check countries."""
-        from src.models.payment_method import PaymentMethod
+        from vbwd.models.payment_method import PaymentMethod
 
         method = PaymentMethod(
             code="test",
@@ -230,7 +230,7 @@ class TestPaymentMethodModel:
 
     def test_payment_method_empty_countries_means_all(self):
         """Empty countries list means available for all countries."""
-        from src.models.payment_method import PaymentMethod
+        from vbwd.models.payment_method import PaymentMethod
 
         method = PaymentMethod(
             code="test",
@@ -248,7 +248,7 @@ class TestPaymentMethodTranslation:
 
     def test_translation_has_required_fields(self):
         """PaymentMethodTranslation should have required fields."""
-        from src.models.payment_method import PaymentMethodTranslation
+        from vbwd.models.payment_method import PaymentMethodTranslation
 
         translation = PaymentMethodTranslation(
             payment_method_id=uuid4(),
@@ -261,7 +261,7 @@ class TestPaymentMethodTranslation:
 
     def test_translation_has_optional_fields(self):
         """PaymentMethodTranslation should support optional fields."""
-        from src.models.payment_method import PaymentMethodTranslation
+        from vbwd.models.payment_method import PaymentMethodTranslation
 
         translation = PaymentMethodTranslation(
             payment_method_id=uuid4(),

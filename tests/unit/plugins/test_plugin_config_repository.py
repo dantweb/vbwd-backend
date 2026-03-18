@@ -1,9 +1,9 @@
 """Tests for PluginConfigRepository."""
 import pytest
 from unittest.mock import MagicMock
-from src.repositories.plugin_config_repository import PluginConfigRepository
-from src.models.plugin_config import PluginConfig
-from src.plugins.config_store import PluginConfigStore, PluginConfigEntry
+from vbwd.repositories.plugin_config_repository import PluginConfigRepository
+from vbwd.models.plugin_config import PluginConfig
+from vbwd.plugins.config_store import PluginConfigStore, PluginConfigEntry
 
 
 class FakeQuery:

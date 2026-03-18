@@ -2,9 +2,9 @@
 import pytest
 from unittest.mock import Mock
 from uuid import uuid4
-from src.models.user import User
-from src.models.user_details import UserDetails
-from src.models.enums import UserStatus, UserRole
+from vbwd.models.user import User
+from vbwd.models.user_details import UserDetails
+from vbwd.models.enums import UserStatus, UserRole
 
 
 class TestUserService:
@@ -30,7 +30,7 @@ class TestUserService:
     @pytest.fixture
     def user_service(self, mock_user_repo, mock_user_details_repo):
         """Create UserService with mocked dependencies."""
-        from src.services.user_service import UserService
+        from vbwd.services.user_service import UserService
 
         return UserService(
             user_repository=mock_user_repo,

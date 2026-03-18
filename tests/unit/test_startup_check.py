@@ -18,7 +18,7 @@ class TestValidateEnvironment:
 
     def test_validates_required_vars_present(self):
         """Returns True when all required vars are present."""
-        from src.utils.startup_check import validate_environment
+        from vbwd.utils.startup_check import validate_environment
 
         os.environ["DATABASE_URL"] = "postgresql://test:test@localhost/test"
         os.environ["REDIS_URL"] = "redis://localhost:6379/0"
@@ -30,7 +30,7 @@ class TestValidateEnvironment:
 
     def test_returns_false_when_database_url_missing(self):
         """Returns False when DATABASE_URL is missing."""
-        from src.utils.startup_check import validate_environment
+        from vbwd.utils.startup_check import validate_environment
 
         os.environ.pop("DATABASE_URL", None)
         os.environ["REDIS_URL"] = "redis://localhost:6379/0"
@@ -42,7 +42,7 @@ class TestValidateEnvironment:
 
     def test_returns_false_when_redis_url_missing(self):
         """Returns False when REDIS_URL is missing."""
-        from src.utils.startup_check import validate_environment
+        from vbwd.utils.startup_check import validate_environment
 
         os.environ["DATABASE_URL"] = "postgresql://test:test@localhost/test"
         os.environ.pop("REDIS_URL", None)
@@ -54,7 +54,7 @@ class TestValidateEnvironment:
 
     def test_production_requires_secret_key(self):
         """Production mode requires SECRET_KEY."""
-        from src.utils.startup_check import validate_environment
+        from vbwd.utils.startup_check import validate_environment
 
         os.environ["DATABASE_URL"] = "postgresql://test:test@localhost/test"
         os.environ["REDIS_URL"] = "redis://localhost:6379/0"
@@ -67,7 +67,7 @@ class TestValidateEnvironment:
 
     def test_production_requires_jwt_secret_key(self):
         """Production mode requires JWT_SECRET_KEY."""
-        from src.utils.startup_check import validate_environment
+        from vbwd.utils.startup_check import validate_environment
 
         os.environ["DATABASE_URL"] = "postgresql://test:test@localhost/test"
         os.environ["REDIS_URL"] = "redis://localhost:6379/0"
@@ -80,7 +80,7 @@ class TestValidateEnvironment:
 
     def test_production_rejects_default_secret_key(self):
         """Production mode rejects insecure default SECRET_KEY."""
-        from src.utils.startup_check import validate_environment
+        from vbwd.utils.startup_check import validate_environment
 
         os.environ["DATABASE_URL"] = "postgresql://test:test@localhost/test"
         os.environ["REDIS_URL"] = "redis://localhost:6379/0"
@@ -93,7 +93,7 @@ class TestValidateEnvironment:
 
     def test_production_rejects_default_jwt_secret(self):
         """Production mode rejects insecure default JWT_SECRET_KEY."""
-        from src.utils.startup_check import validate_environment
+        from vbwd.utils.startup_check import validate_environment
 
         os.environ["DATABASE_URL"] = "postgresql://test:test@localhost/test"
         os.environ["REDIS_URL"] = "redis://localhost:6379/0"
@@ -106,7 +106,7 @@ class TestValidateEnvironment:
 
     def test_production_accepts_secure_secrets(self):
         """Production mode accepts secure secrets."""
-        from src.utils.startup_check import validate_environment
+        from vbwd.utils.startup_check import validate_environment
 
         os.environ["DATABASE_URL"] = "postgresql://test:test@localhost/test"
         os.environ["REDIS_URL"] = "redis://localhost:6379/0"
@@ -120,7 +120,7 @@ class TestValidateEnvironment:
 
     def test_development_allows_missing_secrets(self):
         """Development mode continues with missing secrets."""
-        from src.utils.startup_check import validate_environment
+        from vbwd.utils.startup_check import validate_environment
 
         os.environ["DATABASE_URL"] = "postgresql://test:test@localhost/test"
         os.environ["REDIS_URL"] = "redis://localhost:6379/0"
@@ -147,7 +147,7 @@ class TestGetMissingVars:
 
     def test_returns_empty_list_when_all_present(self):
         """Returns empty list when all vars are present."""
-        from src.utils.startup_check import get_missing_vars
+        from vbwd.utils.startup_check import get_missing_vars
 
         os.environ["DATABASE_URL"] = "postgresql://test:test@localhost/test"
         os.environ["REDIS_URL"] = "redis://localhost:6379/0"
@@ -158,7 +158,7 @@ class TestGetMissingVars:
 
     def test_returns_list_of_missing_vars(self):
         """Returns list of missing variable names."""
-        from src.utils.startup_check import get_missing_vars
+        from vbwd.utils.startup_check import get_missing_vars
 
         os.environ["DATABASE_URL"] = "postgresql://test:test@localhost/test"
         os.environ.pop("REDIS_URL", None)

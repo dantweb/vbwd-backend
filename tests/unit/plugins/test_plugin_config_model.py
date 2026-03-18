@@ -1,5 +1,5 @@
 """Tests for PluginConfig model."""
-from src.models.plugin_config import PluginConfig
+from vbwd.models.plugin_config import PluginConfig
 
 
 class TestPluginConfigModel:

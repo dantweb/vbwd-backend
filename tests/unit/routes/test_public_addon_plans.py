@@ -1,13 +1,13 @@
 """Tests for public add-on route with plan filtering (Sprint 13)."""
 from unittest.mock import patch, MagicMock
 from uuid import uuid4
-from src.models.enums import SubscriptionStatus
+from vbwd.models.enums import SubscriptionStatus
 
 
 class TestPublicAddonPlanFiltering:
     """Tests for GET /api/v1/addons/ with plan-based filtering."""
 
-    @patch("src.routes.addons.AddOnRepository")
+    @patch("vbwd.routes.addons.AddOnRepository")
     def test_unauthenticated_user_gets_independent_addons(
         self, mock_addon_repo_class, client
     ):
@@ -29,10 +29,10 @@ class TestPublicAddonPlanFiltering:
         # Called with plan_id=None for unauthenticated user
         mock_repo.find_available_for_plan.assert_called_once_with(None)
 
-    @patch("src.routes.addons.db")
-    @patch("src.routes.addons.AddOnRepository")
-    @patch("src.middleware.auth.AuthService")
-    @patch("src.middleware.auth.UserRepository")
+    @patch("vbwd.routes.addons.db")
+    @patch("vbwd.routes.addons.AddOnRepository")
+    @patch("vbwd.middleware.auth.AuthService")
+    @patch("vbwd.middleware.auth.UserRepository")
     def test_authenticated_user_with_subscription_gets_plan_addons(
         self,
         mock_auth_user_repo_class,
@@ -80,10 +80,10 @@ class TestPublicAddonPlanFiltering:
         assert response.status_code == 200
         mock_repo.find_available_for_plan.assert_called_once_with(plan_id)
 
-    @patch("src.routes.addons.db")
-    @patch("src.routes.addons.AddOnRepository")
-    @patch("src.middleware.auth.AuthService")
-    @patch("src.middleware.auth.UserRepository")
+    @patch("vbwd.routes.addons.db")
+    @patch("vbwd.routes.addons.AddOnRepository")
+    @patch("vbwd.middleware.auth.AuthService")
+    @patch("vbwd.middleware.auth.UserRepository")
     def test_authenticated_user_without_subscription_gets_independent_only(
         self,
         mock_auth_user_repo_class,
@@ -126,7 +126,7 @@ class TestPublicAddonPlanFiltering:
         assert response.status_code == 200
         mock_repo.find_available_for_plan.assert_called_once_with(None)
 
-    @patch("src.routes.addons.AddOnRepository")
+    @patch("vbwd.routes.addons.AddOnRepository")
     def test_public_addons_returns_correct_structure(
         self, mock_addon_repo_class, client
     ):

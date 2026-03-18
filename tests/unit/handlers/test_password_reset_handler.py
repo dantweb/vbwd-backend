@@ -28,7 +28,7 @@ class TestPasswordResetHandler:
         self, mock_password_reset_service, mock_email_service, mock_activity_logger
     ):
         """Create PasswordResetHandler with mocked dependencies."""
-        from src.handlers.password_reset_handler import PasswordResetHandler
+        from vbwd.handlers.password_reset_handler import PasswordResetHandler
 
         return PasswordResetHandler(
             password_reset_service=mock_password_reset_service,
@@ -44,8 +44,8 @@ class TestPasswordResetHandler:
     ):
         """Handler calls service to create reset token."""
         # Arrange
-        from src.events.security_events import PasswordResetRequestEvent
-        from src.services.password_reset_service import ResetRequestResult
+        from vbwd.events.security_events import PasswordResetRequestEvent
+        from vbwd.services.password_reset_service import ResetRequestResult
 
         mock_password_reset_service.create_reset_token.return_value = (
             ResetRequestResult(
@@ -75,8 +75,8 @@ class TestPasswordResetHandler:
     ):
         """Email sent when user exists and token created."""
         # Arrange
-        from src.events.security_events import PasswordResetRequestEvent
-        from src.services.password_reset_service import ResetRequestResult
+        from vbwd.events.security_events import PasswordResetRequestEvent
+        from vbwd.services.password_reset_service import ResetRequestResult
 
         mock_password_reset_service.create_reset_token.return_value = (
             ResetRequestResult(
@@ -108,8 +108,8 @@ class TestPasswordResetHandler:
     ):
         """No email sent when user doesn't exist."""
         # Arrange
-        from src.events.security_events import PasswordResetRequestEvent
-        from src.services.password_reset_service import ResetRequestResult
+        from vbwd.events.security_events import PasswordResetRequestEvent
+        from vbwd.services.password_reset_service import ResetRequestResult
 
         mock_password_reset_service.create_reset_token.return_value = ResetRequestResult(
             success=True,
@@ -132,8 +132,8 @@ class TestPasswordResetHandler:
     ):
         """Activity logged when reset requested."""
         # Arrange
-        from src.events.security_events import PasswordResetRequestEvent
-        from src.services.password_reset_service import ResetRequestResult
+        from vbwd.events.security_events import PasswordResetRequestEvent
+        from vbwd.services.password_reset_service import ResetRequestResult
 
         user_id = str(uuid4())
         mock_password_reset_service.create_reset_token.return_value = (
@@ -165,8 +165,8 @@ class TestPasswordResetHandler:
     ):
         """Always return success to not reveal if email exists."""
         # Arrange
-        from src.events.security_events import PasswordResetRequestEvent
-        from src.services.password_reset_service import ResetRequestResult
+        from vbwd.events.security_events import PasswordResetRequestEvent
+        from vbwd.services.password_reset_service import ResetRequestResult
 
         mock_password_reset_service.create_reset_token.return_value = (
             ResetRequestResult(success=True)  # User not found but still success
@@ -189,8 +189,8 @@ class TestPasswordResetHandler:
     ):
         """Handler calls service to reset password."""
         # Arrange
-        from src.events.security_events import PasswordResetExecuteEvent
-        from src.services.password_reset_service import ResetResult
+        from vbwd.events.security_events import PasswordResetExecuteEvent
+        from vbwd.services.password_reset_service import ResetResult
 
         mock_password_reset_service.reset_password.return_value = ResetResult(
             success=True, user_id=str(uuid4()), email="test@example.com"
@@ -214,8 +214,8 @@ class TestPasswordResetHandler:
     ):
         """Confirmation email sent on successful reset."""
         # Arrange
-        from src.events.security_events import PasswordResetExecuteEvent
-        from src.services.password_reset_service import ResetResult
+        from vbwd.events.security_events import PasswordResetExecuteEvent
+        from vbwd.services.password_reset_service import ResetResult
 
         mock_password_reset_service.reset_password.return_value = ResetResult(
             success=True, user_id=str(uuid4()), email="test@example.com"
@@ -239,8 +239,8 @@ class TestPasswordResetHandler:
     ):
         """Activity logged on successful reset."""
         # Arrange
-        from src.events.security_events import PasswordResetExecuteEvent
-        from src.services.password_reset_service import ResetResult
+        from vbwd.events.security_events import PasswordResetExecuteEvent
+        from vbwd.services.password_reset_service import ResetResult
 
         user_id = str(uuid4())
         mock_password_reset_service.reset_password.return_value = ResetResult(
@@ -265,8 +265,8 @@ class TestPasswordResetHandler:
     ):
         """Error returned when reset fails."""
         # Arrange
-        from src.events.security_events import PasswordResetExecuteEvent
-        from src.services.password_reset_service import ResetResult
+        from vbwd.events.security_events import PasswordResetExecuteEvent
+        from vbwd.services.password_reset_service import ResetResult
 
         mock_password_reset_service.reset_password.return_value = ResetResult(
             success=False, error="Token expired", failure_reason="expired"
@@ -289,8 +289,8 @@ class TestPasswordResetHandler:
     ):
         """Failed attempt logged for security monitoring."""
         # Arrange
-        from src.events.security_events import PasswordResetExecuteEvent
-        from src.services.password_reset_service import ResetResult
+        from vbwd.events.security_events import PasswordResetExecuteEvent
+        from vbwd.services.password_reset_service import ResetResult
 
         mock_password_reset_service.reset_password.return_value = ResetResult(
             success=False, error="Invalid token", failure_reason="invalid"
@@ -316,21 +316,21 @@ class TestPasswordResetHandler:
 
     def test_can_handle_reset_request_event(self, handler):
         """Handler can handle PasswordResetRequestEvent."""
-        from src.events.security_events import PasswordResetRequestEvent
+        from vbwd.events.security_events import PasswordResetRequestEvent
 
         event = PasswordResetRequestEvent(email="test@example.com")
         assert handler.can_handle(event) is True
 
     def test_can_handle_reset_execute_event(self, handler):
         """Handler can handle PasswordResetExecuteEvent."""
-        from src.events.security_events import PasswordResetExecuteEvent
+        from vbwd.events.security_events import PasswordResetExecuteEvent
 
         event = PasswordResetExecuteEvent(token="test", new_password="Test123!")
         assert handler.can_handle(event) is True
 
     def test_cannot_handle_other_events(self, handler):
         """Handler cannot handle other event types."""
-        from src.events.domain import DomainEvent
+        from vbwd.events.domain import DomainEvent
 
         event = DomainEvent(name="other.event")
         assert handler.can_handle(event) is False

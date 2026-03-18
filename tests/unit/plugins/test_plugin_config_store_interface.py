@@ -1,6 +1,6 @@
 """Tests for PluginConfigStore abstract interface and PluginConfigEntry DTO."""
 import pytest
-from src.plugins.config_store import PluginConfigStore, PluginConfigEntry
+from vbwd.plugins.config_store import PluginConfigStore, PluginConfigEntry
 
 
 class TestPluginConfigEntry:

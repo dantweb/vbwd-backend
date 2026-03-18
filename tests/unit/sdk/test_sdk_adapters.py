@@ -10,7 +10,7 @@ class TestIdempotencyService:
 
     def test_generate_key_creates_deterministic_key(self):
         """generate_key() creates deterministic key from inputs."""
-        from src.sdk.idempotency_service import IdempotencyService
+        from vbwd.sdk.idempotency_service import IdempotencyService
 
         mock_redis = Mock()
         service = IdempotencyService(mock_redis)
@@ -23,7 +23,7 @@ class TestIdempotencyService:
 
     def test_generate_key_different_inputs_different_keys(self):
         """Different inputs produce different keys."""
-        from src.sdk.idempotency_service import IdempotencyService
+        from vbwd.sdk.idempotency_service import IdempotencyService
 
         mock_redis = Mock()
         service = IdempotencyService(mock_redis)
@@ -35,7 +35,7 @@ class TestIdempotencyService:
 
     def test_check_returns_none_for_new_key(self):
         """New key returns None."""
-        from src.sdk.idempotency_service import IdempotencyService
+        from vbwd.sdk.idempotency_service import IdempotencyService
 
         mock_redis = Mock()
         mock_redis.get.return_value = None
@@ -48,7 +48,7 @@ class TestIdempotencyService:
 
     def test_check_returns_cached_response(self):
         """Existing key returns cached response."""
-        from src.sdk.idempotency_service import IdempotencyService
+        from vbwd.sdk.idempotency_service import IdempotencyService
 
         cached_data = {"success": True, "data": {"payment_id": "pi_123"}}
         mock_redis = Mock()
@@ -61,7 +61,7 @@ class TestIdempotencyService:
 
     def test_store_saves_response_with_default_ttl(self):
         """store() caches response with default TTL."""
-        from src.sdk.idempotency_service import IdempotencyService
+        from vbwd.sdk.idempotency_service import IdempotencyService
 
         mock_redis = Mock()
         service = IdempotencyService(mock_redis)
@@ -77,7 +77,7 @@ class TestIdempotencyService:
 
     def test_store_saves_response_with_custom_ttl(self):
         """store() caches response with custom TTL."""
-        from src.sdk.idempotency_service import IdempotencyService
+        from vbwd.sdk.idempotency_service import IdempotencyService
 
         mock_redis = Mock()
         service = IdempotencyService(mock_redis)
@@ -90,7 +90,7 @@ class TestIdempotencyService:
 
     def test_delete_removes_key(self):
         """delete() removes key from cache."""
-        from src.sdk.idempotency_service import IdempotencyService
+        from vbwd.sdk.idempotency_service import IdempotencyService
 
         mock_redis = Mock()
         service = IdempotencyService(mock_redis)
@@ -105,7 +105,7 @@ class TestSDKConfig:
 
     def test_config_with_required_fields(self):
         """SDKConfig requires api_key."""
-        from src.sdk.interface import SDKConfig
+        from vbwd.sdk.interface import SDKConfig
 
         config = SDKConfig(api_key="sk_test_123")
 
@@ -117,7 +117,7 @@ class TestSDKConfig:
 
     def test_config_with_all_fields(self):
         """SDKConfig accepts all fields."""
-        from src.sdk.interface import SDKConfig
+        from vbwd.sdk.interface import SDKConfig
 
         config = SDKConfig(
             api_key="sk_test_123",
@@ -138,7 +138,7 @@ class TestSDKResponse:
 
     def test_response_success(self):
         """SDKResponse for successful operation."""
-        from src.sdk.interface import SDKResponse
+        from vbwd.sdk.interface import SDKResponse
 
         response = SDKResponse(success=True, data={"payment_id": "pi_123"})
 
@@ -148,7 +148,7 @@ class TestSDKResponse:
 
     def test_response_failure(self):
         """SDKResponse for failed operation."""
-        from src.sdk.interface import SDKResponse
+        from vbwd.sdk.interface import SDKResponse
 
         response = SDKResponse(
             success=False, error="Card declined", error_code="card_declined"
@@ -160,7 +160,7 @@ class TestSDKResponse:
 
     def test_response_to_dict(self):
         """SDKResponse can convert to dict."""
-        from src.sdk.interface import SDKResponse
+        from vbwd.sdk.interface import SDKResponse
 
         response = SDKResponse(success=True, data={"id": "123"})
         result = response.to_dict()
@@ -175,31 +175,31 @@ class TestISDKAdapter:
 
     def test_adapter_has_create_payment_intent(self):
         """Adapter must implement create_payment_intent."""
-        from src.sdk.interface import ISDKAdapter
+        from vbwd.sdk.interface import ISDKAdapter
 
         assert hasattr(ISDKAdapter, "create_payment_intent")
 
     def test_adapter_has_capture_payment(self):
         """Adapter must implement capture_payment."""
-        from src.sdk.interface import ISDKAdapter
+        from vbwd.sdk.interface import ISDKAdapter
 
         assert hasattr(ISDKAdapter, "capture_payment")
 
     def test_adapter_has_refund_payment(self):
         """Adapter must implement refund_payment."""
-        from src.sdk.interface import ISDKAdapter
+        from vbwd.sdk.interface import ISDKAdapter
 
         assert hasattr(ISDKAdapter, "refund_payment")
 
     def test_adapter_has_get_payment_status(self):
         """Adapter must implement get_payment_status."""
-        from src.sdk.interface import ISDKAdapter
+        from vbwd.sdk.interface import ISDKAdapter
 
         assert hasattr(ISDKAdapter, "get_payment_status")
 
     def test_adapter_has_provider_name(self):
         """Adapter must have provider_name property."""
-        from src.sdk.interface import ISDKAdapter
+        from vbwd.sdk.interface import ISDKAdapter
 
         assert hasattr(ISDKAdapter, "provider_name")
 
@@ -209,22 +209,22 @@ class TestMockSDKAdapter:
 
     def test_mock_adapter_implements_interface(self):
         """MockSDKAdapter implements ISDKAdapter."""
-        from src.sdk.interface import ISDKAdapter
-        from src.sdk.mock_adapter import MockSDKAdapter
+        from vbwd.sdk.interface import ISDKAdapter
+        from vbwd.sdk.mock_adapter import MockSDKAdapter
 
         adapter = MockSDKAdapter()
         assert isinstance(adapter, ISDKAdapter)
 
     def test_mock_adapter_provider_name(self):
         """MockSDKAdapter has provider_name 'mock'."""
-        from src.sdk.mock_adapter import MockSDKAdapter
+        from vbwd.sdk.mock_adapter import MockSDKAdapter
 
         adapter = MockSDKAdapter()
         assert adapter.provider_name == "mock"
 
     def test_create_payment_intent_succeeds_by_default(self):
         """create_payment_intent returns success by default."""
-        from src.sdk.mock_adapter import MockSDKAdapter
+        from vbwd.sdk.mock_adapter import MockSDKAdapter
 
         adapter = MockSDKAdapter()
         response = adapter.create_payment_intent(
@@ -237,7 +237,7 @@ class TestMockSDKAdapter:
 
     def test_create_payment_intent_can_fail(self):
         """create_payment_intent can be configured to fail."""
-        from src.sdk.mock_adapter import MockSDKAdapter
+        from vbwd.sdk.mock_adapter import MockSDKAdapter
 
         adapter = MockSDKAdapter(should_fail=True)
         response = adapter.create_payment_intent(
@@ -249,7 +249,7 @@ class TestMockSDKAdapter:
 
     def test_create_payment_intent_with_idempotency_key(self):
         """Same idempotency key returns same payment_intent_id."""
-        from src.sdk.mock_adapter import MockSDKAdapter
+        from vbwd.sdk.mock_adapter import MockSDKAdapter
 
         adapter = MockSDKAdapter()
         response1 = adapter.create_payment_intent(
@@ -271,7 +271,7 @@ class TestMockSDKAdapter:
 
     def test_capture_payment_succeeds(self):
         """capture_payment returns success for valid intent."""
-        from src.sdk.mock_adapter import MockSDKAdapter
+        from vbwd.sdk.mock_adapter import MockSDKAdapter
 
         adapter = MockSDKAdapter()
         # First create a payment intent
@@ -288,7 +288,7 @@ class TestMockSDKAdapter:
 
     def test_capture_payment_fails_for_unknown_intent(self):
         """capture_payment fails for unknown payment_intent_id."""
-        from src.sdk.mock_adapter import MockSDKAdapter
+        from vbwd.sdk.mock_adapter import MockSDKAdapter
 
         adapter = MockSDKAdapter()
         response = adapter.capture_payment("pi_unknown")
@@ -298,7 +298,7 @@ class TestMockSDKAdapter:
 
     def test_refund_payment_full_refund(self):
         """refund_payment performs full refund when amount not specified."""
-        from src.sdk.mock_adapter import MockSDKAdapter
+        from vbwd.sdk.mock_adapter import MockSDKAdapter
 
         adapter = MockSDKAdapter()
         # Create and capture first
@@ -317,7 +317,7 @@ class TestMockSDKAdapter:
 
     def test_refund_payment_partial_refund(self):
         """refund_payment performs partial refund when amount specified."""
-        from src.sdk.mock_adapter import MockSDKAdapter
+        from vbwd.sdk.mock_adapter import MockSDKAdapter
 
         adapter = MockSDKAdapter()
         # Create and capture first
@@ -335,7 +335,7 @@ class TestMockSDKAdapter:
 
     def test_get_payment_status(self):
         """get_payment_status returns current status."""
-        from src.sdk.mock_adapter import MockSDKAdapter
+        from vbwd.sdk.mock_adapter import MockSDKAdapter
 
         adapter = MockSDKAdapter()
         create_response = adapter.create_payment_intent(
@@ -350,7 +350,7 @@ class TestMockSDKAdapter:
 
     def test_get_payment_status_after_capture(self):
         """get_payment_status returns 'captured' after capture."""
-        from src.sdk.mock_adapter import MockSDKAdapter
+        from vbwd.sdk.mock_adapter import MockSDKAdapter
 
         adapter = MockSDKAdapter()
         create_response = adapter.create_payment_intent(
@@ -365,7 +365,7 @@ class TestMockSDKAdapter:
 
     def test_mock_adapter_tracks_calls(self):
         """MockSDKAdapter tracks all method calls."""
-        from src.sdk.mock_adapter import MockSDKAdapter
+        from vbwd.sdk.mock_adapter import MockSDKAdapter
 
         adapter = MockSDKAdapter()
         adapter.create_payment_intent(Decimal("29.99"), "USD", {})
@@ -378,7 +378,7 @@ class TestMockSDKAdapter:
 
     def test_mock_adapter_set_should_fail(self):
         """MockSDKAdapter can toggle failure mode."""
-        from src.sdk.mock_adapter import MockSDKAdapter
+        from vbwd.sdk.mock_adapter import MockSDKAdapter
 
         adapter = MockSDKAdapter()
         assert adapter.create_payment_intent(Decimal("10"), "USD", {}).success is True
@@ -395,8 +395,8 @@ class TestSDKAdapterRegistry:
 
     def test_register_adapter(self):
         """Register adapter by provider name."""
-        from src.sdk.registry import SDKAdapterRegistry
-        from src.sdk.mock_adapter import MockSDKAdapter
+        from vbwd.sdk.registry import SDKAdapterRegistry
+        from vbwd.sdk.mock_adapter import MockSDKAdapter
 
         registry = SDKAdapterRegistry()
         adapter = MockSDKAdapter()
@@ -407,8 +407,8 @@ class TestSDKAdapterRegistry:
 
     def test_get_adapter_returns_registered(self):
         """Get returns registered adapter."""
-        from src.sdk.registry import SDKAdapterRegistry
-        from src.sdk.mock_adapter import MockSDKAdapter
+        from vbwd.sdk.registry import SDKAdapterRegistry
+        from vbwd.sdk.mock_adapter import MockSDKAdapter
 
         registry = SDKAdapterRegistry()
         adapter = MockSDKAdapter()
@@ -420,7 +420,7 @@ class TestSDKAdapterRegistry:
 
     def test_get_adapter_raises_for_unknown(self):
         """Unknown provider raises ValueError."""
-        from src.sdk.registry import SDKAdapterRegistry
+        from vbwd.sdk.registry import SDKAdapterRegistry
 
         registry = SDKAdapterRegistry()
 
@@ -431,8 +431,8 @@ class TestSDKAdapterRegistry:
 
     def test_list_providers(self):
         """list_providers returns all registered names."""
-        from src.sdk.registry import SDKAdapterRegistry
-        from src.sdk.mock_adapter import MockSDKAdapter
+        from vbwd.sdk.registry import SDKAdapterRegistry
+        from vbwd.sdk.mock_adapter import MockSDKAdapter
 
         registry = SDKAdapterRegistry()
         registry.register("mock", MockSDKAdapter())
@@ -446,7 +446,7 @@ class TestSDKAdapterRegistry:
 
     def test_has_returns_false_for_unknown(self):
         """has() returns False for unknown provider."""
-        from src.sdk.registry import SDKAdapterRegistry
+        from vbwd.sdk.registry import SDKAdapterRegistry
 
         registry = SDKAdapterRegistry()
 
@@ -454,8 +454,8 @@ class TestSDKAdapterRegistry:
 
     def test_unregister_adapter(self):
         """unregister() removes adapter."""
-        from src.sdk.registry import SDKAdapterRegistry
-        from src.sdk.mock_adapter import MockSDKAdapter
+        from vbwd.sdk.registry import SDKAdapterRegistry
+        from vbwd.sdk.mock_adapter import MockSDKAdapter
 
         registry = SDKAdapterRegistry()
         registry.register("mock", MockSDKAdapter())
@@ -470,9 +470,9 @@ class TestBaseSDKAdapter:
 
     def test_base_adapter_checks_idempotency_before_operation(self):
         """Base adapter checks idempotency before calling provider."""
-        from src.sdk.base import BaseSDKAdapter
-        from src.sdk.interface import SDKConfig, SDKResponse
-        from src.sdk.idempotency_service import IdempotencyService
+        from vbwd.sdk.base import BaseSDKAdapter
+        from vbwd.sdk.interface import SDKConfig, SDKResponse
+        from vbwd.sdk.idempotency_service import IdempotencyService
 
         mock_redis = Mock()
         cached_response = {"success": True, "data": {"payment_intent_id": "pi_cached"}}
@@ -516,9 +516,9 @@ class TestBaseSDKAdapter:
 
     def test_base_adapter_stores_successful_response(self):
         """Successful responses are cached for idempotency."""
-        from src.sdk.base import BaseSDKAdapter
-        from src.sdk.interface import SDKConfig, SDKResponse
-        from src.sdk.idempotency_service import IdempotencyService
+        from vbwd.sdk.base import BaseSDKAdapter
+        from vbwd.sdk.interface import SDKConfig, SDKResponse
+        from vbwd.sdk.idempotency_service import IdempotencyService
 
         mock_redis = Mock()
         mock_redis.get.return_value = None  # No cached response
@@ -560,9 +560,9 @@ class TestBaseSDKAdapter:
 
     def test_base_adapter_does_not_store_failed_response(self):
         """Failed responses are not cached."""
-        from src.sdk.base import BaseSDKAdapter
-        from src.sdk.interface import SDKConfig, SDKResponse
-        from src.sdk.idempotency_service import IdempotencyService
+        from vbwd.sdk.base import BaseSDKAdapter
+        from vbwd.sdk.interface import SDKConfig, SDKResponse
+        from vbwd.sdk.idempotency_service import IdempotencyService
 
         mock_redis = Mock()
         mock_redis.get.return_value = None
@@ -602,9 +602,9 @@ class TestBaseSDKAdapter:
 
     def test_base_adapter_retries_on_transient_error(self):
         """Base adapter retries transient failures."""
-        from src.sdk.base import BaseSDKAdapter, TransientError
-        from src.sdk.interface import SDKConfig, SDKResponse
-        from src.sdk.idempotency_service import IdempotencyService
+        from vbwd.sdk.base import BaseSDKAdapter, TransientError
+        from vbwd.sdk.interface import SDKConfig, SDKResponse
+        from vbwd.sdk.idempotency_service import IdempotencyService
 
         mock_redis = Mock()
         mock_redis.get.return_value = None
@@ -652,9 +652,9 @@ class TestBaseSDKAdapter:
 
     def test_base_adapter_gives_up_after_max_retries(self):
         """Base adapter gives up after max retries."""
-        from src.sdk.base import BaseSDKAdapter, TransientError
-        from src.sdk.interface import SDKConfig, SDKResponse
-        from src.sdk.idempotency_service import IdempotencyService
+        from vbwd.sdk.base import BaseSDKAdapter, TransientError
+        from vbwd.sdk.interface import SDKConfig, SDKResponse
+        from vbwd.sdk.idempotency_service import IdempotencyService
 
         mock_redis = Mock()
         mock_redis.get.return_value = None
@@ -692,9 +692,9 @@ class TestBaseSDKAdapter:
 
     def test_base_adapter_without_idempotency_key(self):
         """Operations work without idempotency key."""
-        from src.sdk.base import BaseSDKAdapter
-        from src.sdk.interface import SDKConfig, SDKResponse
-        from src.sdk.idempotency_service import IdempotencyService
+        from vbwd.sdk.base import BaseSDKAdapter
+        from vbwd.sdk.interface import SDKConfig, SDKResponse
+        from vbwd.sdk.idempotency_service import IdempotencyService
 
         mock_redis = Mock()
         idempotency = IdempotencyService(mock_redis)

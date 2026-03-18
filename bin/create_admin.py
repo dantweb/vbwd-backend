@@ -6,9 +6,9 @@ import sys
 import argparse
 sys.path.insert(0, '/app')
 
-from src.extensions import Session
-from src.models.user import User
-from src.models.enums import UserStatus, UserRole
+from vbwd.extensions import Session
+from vbwd.models.user import User
+from vbwd.models.enums import UserStatus, UserRole
 import bcrypt
 
 parser = argparse.ArgumentParser()

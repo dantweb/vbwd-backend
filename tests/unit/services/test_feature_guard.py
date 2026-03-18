@@ -3,7 +3,7 @@ import pytest
 from unittest.mock import Mock
 from uuid import uuid4
 from datetime import datetime
-from src.services.feature_guard import FeatureGuard
+from vbwd.services.feature_guard import FeatureGuard
 
 
 class TestFeatureGuard:

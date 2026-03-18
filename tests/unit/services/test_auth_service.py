@@ -3,9 +3,9 @@ import pytest
 from unittest.mock import Mock
 from uuid import uuid4, UUID
 from datetime import datetime, timedelta
-from src.interfaces.auth import AuthResult
-from src.models.user import User
-from src.models.enums import UserStatus
+from vbwd.interfaces.auth import AuthResult
+from vbwd.models.user import User
+from vbwd.models.enums import UserStatus
 
 
 class TestAuthServiceRegister:
@@ -22,7 +22,7 @@ class TestAuthServiceRegister:
     @pytest.fixture
     def auth_service(self, mock_user_repo):
         """Create AuthService with mocked dependencies."""
-        from src.services.auth_service import AuthService
+        from vbwd.services.auth_service import AuthService
 
         return AuthService(user_repository=mock_user_repo)
 
@@ -136,7 +136,7 @@ class TestAuthServiceLogin:
     @pytest.fixture
     def auth_service(self, mock_user_repo):
         """Create AuthService with mocked dependencies."""
-        from src.services.auth_service import AuthService
+        from vbwd.services.auth_service import AuthService
 
         return AuthService(user_repository=mock_user_repo)
 
@@ -275,7 +275,7 @@ class TestAuthServiceToken:
     @pytest.fixture
     def auth_service(self, mock_user_repo):
         """Create AuthService with mocked dependencies."""
-        from src.services.auth_service import AuthService
+        from vbwd.services.auth_service import AuthService
 
         return AuthService(user_repository=mock_user_repo)
 
@@ -287,7 +287,7 @@ class TestAuthServiceToken:
 
         # Generate token (we'll need to implement this)
         import jwt
-        from src.config import get_config
+        from vbwd.config import get_config
 
         config = get_config()
 
@@ -326,7 +326,7 @@ class TestAuthServiceToken:
 
         # Generate expired token
         import jwt
-        from src.config import get_config
+        from vbwd.config import get_config
 
         config = get_config()
 
@@ -355,7 +355,7 @@ class TestAuthServicePassword:
     @pytest.fixture
     def auth_service(self, mock_user_repo):
         """Create AuthService with mocked dependencies."""
-        from src.services.auth_service import AuthService
+        from vbwd.services.auth_service import AuthService
 
         return AuthService(user_repository=mock_user_repo)
 
