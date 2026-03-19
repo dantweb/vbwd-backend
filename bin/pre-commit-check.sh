@@ -45,42 +45,72 @@ INTEGRATION_RESULT=0
 RUN_LINT=true
 RUN_UNIT=true
 RUN_INTEGRATION=true
+PLUGIN_NAME=""
 
-for arg in "$@"; do
-    case $arg in
+while [[ $# -gt 0 ]]; do
+    case $1 in
         --full)
             RUN_LINT=true
             RUN_UNIT=true
             RUN_INTEGRATION=true
+            shift
             ;;
         --quick)
             RUN_INTEGRATION=false
+            shift
             ;;
         --lint)
             RUN_UNIT=false
             RUN_INTEGRATION=false
+            shift
             ;;
         --unit)
             RUN_LINT=false
             RUN_INTEGRATION=false
+            shift
             ;;
         --integration)
             RUN_LINT=false
             RUN_UNIT=false
+            shift
+            ;;
+        --plugin)
+            PLUGIN_NAME="$2"
+            shift 2
             ;;
         --help|-h)
             echo "Usage: $0 [OPTIONS]"
             echo ""
             echo "Options:"
-            echo "  --quick        Skip integration tests"
-            echo "  --lint         Only run static analysis"
-            echo "  --unit         Only run unit tests"
-            echo "  --integration  Only run integration tests"
-            echo "  --help, -h     Show this help message"
+            echo "  --quick              Skip integration tests"
+            echo "  --lint               Only run static analysis"
+            echo "  --unit               Only run unit tests"
+            echo "  --integration        Only run integration tests"
+            echo "  --plugin <name>      Run checks for a single plugin only"
+            echo "  --help, -h           Show this help message"
+            echo ""
+            echo "Examples:"
+            echo "  $0 --quick                    # All: lint + unit (skip integration)"
+            echo "  $0 --plugin booking --quick    # Booking plugin only: lint + unit"
+            echo "  $0 --plugin booking --unit     # Booking plugin only: unit tests"
             exit 0
+            ;;
+        *)
+            shift
             ;;
     esac
 done
+
+# Set paths based on plugin scope
+if [ -n "$PLUGIN_NAME" ]; then
+    LINT_PATHS="plugins/$PLUGIN_NAME/"
+    UNIT_PATHS="plugins/$PLUGIN_NAME/tests/unit/"
+    INTEGRATION_PATHS="plugins/$PLUGIN_NAME/tests/integration/"
+else
+    LINT_PATHS="vbwd/ tests/"
+    UNIT_PATHS="tests/unit/ plugins/*/tests/unit/"
+    INTEGRATION_PATHS="tests/integration/ plugins/*/tests/integration/"
+fi
 
 # Detect environment (Docker or local)
 IN_DOCKER=false
@@ -117,9 +147,9 @@ run_static_analysis() {
     # A.1: Black - Code Formatter (check mode)
     echo -e "${YELLOW}[A.1] Running Black (code formatter check)...${NC}"
     if $IN_DOCKER; then
-        black --check --diff vbwd/ tests/ 2>&1 || failed=1
+        black --check --diff $LINT_PATHS 2>&1 || failed=1
     else
-        docker compose run --rm -T test black --check --diff vbwd/ tests/ 2>&1 || failed=1
+        docker compose run --rm -T test black --check --diff $LINT_PATHS 2>&1 || failed=1
     fi
     print_result "Black formatter check" $failed
 
@@ -132,9 +162,9 @@ run_static_analysis() {
     echo -e "${YELLOW}[A.2] Running Flake8 (code style checker)...${NC}"
     local flake_failed=0
     if $IN_DOCKER; then
-        flake8 vbwd/ tests/ --max-line-length=120 --extend-ignore=E203,W503 2>&1 || flake_failed=1
+        flake8 $LINT_PATHS --max-line-length=120 --extend-ignore=E203,W503 2>&1 || flake_failed=1
     else
-        docker compose run --rm -T test flake8 vbwd/ tests/ --max-line-length=120 --extend-ignore=E203,W503 2>&1 || flake_failed=1
+        docker compose run --rm -T test flake8 $LINT_PATHS --max-line-length=120 --extend-ignore=E203,W503 2>&1 || flake_failed=1
     fi
     print_result "Flake8 style check" $flake_failed
     [ $flake_failed -ne 0 ] && failed=1
@@ -144,9 +174,9 @@ run_static_analysis() {
     echo -e "${YELLOW}[A.3] Running Mypy (static type analyzer)...${NC}"
     local mypy_failed=0
     if $IN_DOCKER; then
-        mypy vbwd/ --ignore-missing-imports --no-error-summary 2>&1 || mypy_failed=1
+        mypy $LINT_PATHS --ignore-missing-imports --no-error-summary 2>&1 || mypy_failed=1
     else
-        docker compose run --rm -T test mypy vbwd/ --ignore-missing-imports --no-error-summary 2>&1 || mypy_failed=1
+        docker compose run --rm -T test mypy $LINT_PATHS --ignore-missing-imports --no-error-summary 2>&1 || mypy_failed=1
     fi
     print_result "Mypy type check" $mypy_failed
     [ $mypy_failed -ne 0 ] && failed=1
@@ -173,9 +203,14 @@ run_unit_tests() {
     echo ""
 
     if $IN_DOCKER; then
-        pytest tests/unit/ plugins/*/tests/unit/ -q --tb=line 2>&1 || failed=1
+        pytest $UNIT_PATHS -q --tb=line 2>&1
+        local exit_code=$?
+        # exit 5 = no tests collected (not a failure)
+        [ $exit_code -ne 0 ] && [ $exit_code -ne 5 ] && failed=1
     else
-        docker compose run --rm test pytest tests/unit/ plugins/*/tests/unit/ -q --tb=line 2>&1 || failed=1
+        docker compose run --rm test bash -c "pytest $UNIT_PATHS -q --tb=line"
+        local exit_code=$?
+        [ $exit_code -ne 0 ] && [ $exit_code -ne 5 ] && failed=1
     fi
 
     echo ""
@@ -208,11 +243,11 @@ run_integration_tests() {
 
     if $IN_DOCKER; then
         # Inside Docker, run directly (core + plugin integration tests)
-        pytest tests/integration/ plugins/*/tests/integration/ -q --tb=line 2>&1 || failed=1
+        pytest $INTEGRATION_PATHS -q --tb=line 2>&1 || failed=1
     else
         # Outside Docker, use the test-integration service
         docker compose --profile test-integration run --rm test-integration \
-            pytest tests/integration/test_api_endpoints.py plugins/*/tests/integration/ -q --tb=line 2>&1 || failed=1
+            bash -c "pytest $INTEGRATION_PATHS -q --tb=line" 2>&1 || failed=1
     fi
 
     echo ""
@@ -228,7 +263,11 @@ main() {
     echo -e "${BLUE}"
     echo "╔══════════════════════════════════════════╗"
     echo "║        PRE-COMMIT CHECK SCRIPT           ║"
+    if [ -n "$PLUGIN_NAME" ]; then
+    echo "║     plugin: $PLUGIN_NAME"
+    else
     echo "║     vbwd-backend quality assurance       ║"
+    fi
     echo "╚══════════════════════════════════════════╝"
     echo -e "${NC}"
 
