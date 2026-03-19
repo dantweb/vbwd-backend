@@ -322,4 +322,4 @@ docker compose exec api flask plugins info my-plugin
 
 ## License
 
-CC0 1.0 Universal (Public Domain)
+BSL 1.1 (Business Source Licence)
