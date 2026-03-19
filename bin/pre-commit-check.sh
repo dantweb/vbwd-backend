@@ -263,11 +263,20 @@ run_integration_tests() {
         fi
     fi
 
-    if $IN_DOCKER; then
-        # Inside Docker, run directly (core + plugin integration tests)
+    # Check if integration test paths exist
+    local has_tests=false
+    for test_path in $INTEGRATION_PATHS; do
+        if [ -d "$test_path" ] && find "$test_path" -name "*.py" -not -name "__init__.py" 2>/dev/null | head -1 | grep -q .; then
+            has_tests=true
+            break
+        fi
+    done
+
+    if [ "$has_tests" = false ]; then
+        echo -e "${YELLOW}No integration tests found — skipping${NC}"
+    elif $IN_DOCKER; then
         pytest $INTEGRATION_PATHS -q --tb=line 2>&1 || failed=1
     else
-        # Outside Docker, use the test-integration service
         docker compose --profile test-integration run --rm test-integration \
             bash -c "pytest $INTEGRATION_PATHS -q --tb=line" 2>&1 || failed=1
     fi
