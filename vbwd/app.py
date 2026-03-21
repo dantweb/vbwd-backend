@@ -206,13 +206,14 @@ def create_app(config: Optional[Dict[str, Any]] = None) -> Flask:
     plugin_manager.discover("plugins")
 
     # Load persisted state from DB; default-enable analytics on first run
-    plugin_manager.load_persisted_state()
-    if not plugin_manager.get_enabled_plugins():
-        try:
-            plugin_manager.enable_plugin("analytics")
-        except ValueError:
-            # Analytics plugin may not exist, skip if unavailable
-            pass
+    with app.app_context():
+        plugin_manager.load_persisted_state()
+        if not plugin_manager.get_enabled_plugins():
+            try:
+                plugin_manager.enable_plugin("analytics")
+            except ValueError:
+                # Analytics plugin may not exist, skip if unavailable
+                pass
 
     # Register ALL plugin blueprints at startup (route handlers check enabled status)
     analytics_plugin = None
