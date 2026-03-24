@@ -178,17 +178,22 @@ class TestAdminTokenBundles:
             timeout=5,
         )
 
-        # List with include_inactive=true
-        response = requests.get(
-            f"{self.BASE_URL}/admin/token-bundles/?include_inactive=true",
-            headers=admin_headers,
-            timeout=5,
-        )
-        assert response.status_code == 200
-        data = response.json()
-        # Should include the inactive bundle
-        bundle_ids = [b["id"] for b in data["items"]]
-        assert created_bundle["id"] in bundle_ids
+        # List with include_inactive=true — fetch all pages
+        all_bundle_ids = []
+        page = 1
+        while True:
+            response = requests.get(
+                f"{self.BASE_URL}/admin/token-bundles/?include_inactive=true&page={page}&per_page=100",
+                headers=admin_headers,
+                timeout=5,
+            )
+            assert response.status_code == 200
+            data = response.json()
+            all_bundle_ids.extend(b["id"] for b in data["items"])
+            if page >= data.get("pages", 1):
+                break
+            page += 1
+        assert created_bundle["id"] in all_bundle_ids
 
     # =========================================
     # Create Token Bundle Tests

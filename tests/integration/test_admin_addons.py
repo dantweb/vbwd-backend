@@ -229,10 +229,14 @@ class TestAdminAddOns:
         Test: POST /api/v1/admin/addons without slug
         Expected: 201 with auto-generated slug
         """
+        import uuid
+
+        unique = uuid.uuid4().hex[:6]
+        name = f"Premium Support {unique}"
         response = requests.post(
             f"{self.BASE_URL}/admin/addons/",
             json={
-                "name": "Premium Support Feature",
+                "name": name,
                 "price": "25.00",
                 "billing_period": "MONTHLY",
             },
@@ -241,8 +245,7 @@ class TestAdminAddOns:
         )
         assert response.status_code == 201
         data = response.json()
-        # Slug should be auto-generated from name
-        assert data["addon"]["slug"] == "premium-support-feature"
+        assert data["addon"]["slug"] == f"premium-support-{unique}"
 
     def test_create_addon_duplicate_slug_fails(self, admin_headers, created_addon):
         """

@@ -143,6 +143,7 @@ class TestDockerInfrastructure:
         try:
             app = create_app(
                 {
+                    "TESTING": True,
                     "SQLALCHEMY_DATABASE_URI": get_database_url(),
                     "SQLALCHEMY_TRACK_MODIFICATIONS": False,
                 }
@@ -296,6 +297,7 @@ class TestDockerInfrastructure:
 
             app = create_app(
                 {
+                    "TESTING": True,
                     "SQLALCHEMY_DATABASE_URI": get_database_url(),
                     "SQLALCHEMY_TRACK_MODIFICATIONS": False,
                 }
