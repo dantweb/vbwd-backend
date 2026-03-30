@@ -1,21 +1,21 @@
 """Refund service — orchestrates full invoice refund."""
-from vbwd.utils.datetime_utils import utcnow
 from typing import Optional, Dict, Any
 from uuid import UUID
 
+from vbwd.events.line_item_registry import (
+    LineItemContext,
+    LineItemHandlerRegistry,
+    line_item_registry,
+)
 from vbwd.models.enums import (
     InvoiceStatus,
     LineItemType,
-    SubscriptionStatus,
     PurchaseStatus,
-    TokenTransactionType,
 )
 from vbwd.repositories.invoice_repository import InvoiceRepository
-from vbwd.repositories.subscription_repository import SubscriptionRepository
 from vbwd.repositories.token_bundle_purchase_repository import (
     TokenBundlePurchaseRepository,
 )
-from vbwd.repositories.addon_subscription_repository import AddOnSubscriptionRepository
 from vbwd.services.token_service import TokenService
 
 
@@ -40,35 +40,27 @@ class RefundService:
 
     Orchestrates the full refund flow:
     1. Validate invoice status
-    2. Mark invoice as REFUNDED
-    3. Reverse all activated line items (subscriptions, tokens, add-ons)
+    2. Pre-check token balance
+    3. Mark invoice as REFUNDED
+    4. Delegate line item reversal to registry
     """
 
     def __init__(
         self,
         invoice_repo: InvoiceRepository,
-        subscription_repo: SubscriptionRepository,
         token_service: TokenService,
         purchase_repo: TokenBundlePurchaseRepository,
-        addon_sub_repo: AddOnSubscriptionRepository,
+        container=None,
+        registry: LineItemHandlerRegistry | None = None,
     ):
         self._invoice_repo = invoice_repo
-        self._subscription_repo = subscription_repo
         self._token_service = token_service
         self._purchase_repo = purchase_repo
-        self._addon_sub_repo = addon_sub_repo
+        self._container = container
+        self._registry = registry or line_item_registry
 
     def process_refund(self, invoice_id: UUID, refund_reference: str) -> RefundResult:
-        """
-        Process a full refund for an invoice.
-
-        Args:
-            invoice_id: UUID of the invoice to refund.
-            refund_reference: External refund reference string.
-
-        Returns:
-            RefundResult with invoice and items_reversed dict.
-        """
+        """Process a full refund for an invoice."""
         # 1. Fetch and validate invoice
         invoice = self._invoice_repo.find_by_id(str(invoice_id))
         if not invoice:
@@ -83,7 +75,7 @@ class RefundService:
                 error=f"Cannot refund: invoice status is {invoice.status.value}",
             )
 
-        # 2. Pre-check: ensure user has enough tokens to cover subscription default_tokens
+        # 2. Pre-check: ensure user has enough tokens
         total_tokens_to_debit = self._calculate_tokens_to_debit(invoice)
         if total_tokens_to_debit > 0:
             current_balance = self._token_service.get_balance(invoice.user_id)
@@ -101,8 +93,13 @@ class RefundService:
         invoice.mark_refunded()
         self._invoice_repo.save(invoice)
 
-        # 4. Reverse line items
-        items_reversed: dict[str, object] = {
+        # 4. Delegate line item reversal to registry
+        context = LineItemContext(
+            invoice=invoice,
+            user_id=invoice.user_id,
+            container=self._container,
+        )
+        items_reversed: Dict[str, Any] = {
             "subscription": None,
             "token_bundles": [],
             "add_ons": [],
@@ -110,12 +107,16 @@ class RefundService:
         }
 
         for line_item in invoice.line_items:  # type: ignore[attr-defined]
-            if line_item.item_type == LineItemType.SUBSCRIPTION:
-                self._reverse_subscription(line_item, invoice.user_id, items_reversed)
-            elif line_item.item_type == LineItemType.TOKEN_BUNDLE:
-                self._reverse_token_bundle(line_item, invoice.user_id, items_reversed)
-            elif line_item.item_type == LineItemType.ADD_ON:
-                self._reverse_addon(line_item, items_reversed)
+            result = self._registry.process_reversal(line_item, context)
+            if result.success and not result.skipped:
+                data = result.data
+                if "subscription_id" in data:
+                    items_reversed["subscription"] = data["subscription_id"]
+                if "purchase_id" in data:
+                    items_reversed["token_bundles"].append(data["purchase_id"])
+                if "addon_subscription_id" in data:
+                    items_reversed["add_ons"].append(data["addon_subscription_id"])
+                items_reversed["tokens_debited"] += data.get("tokens_debited", 0)
 
         return RefundResult(
             success=True,
@@ -124,75 +125,15 @@ class RefundService:
         )
 
     def _calculate_tokens_to_debit(self, invoice) -> int:
-        """Calculate total tokens that need to be deducted for this refund."""
+        """Calculate total tokens that need to be deducted for this refund.
+
+        Only counts TOKEN_BUNDLE items (core). Subscription default_tokens
+        are handled by the subscription plugin's line item handler.
+        """
         total = 0
         for line_item in invoice.line_items:
-            if line_item.item_type == LineItemType.SUBSCRIPTION:
-                subscription = self._subscription_repo.find_by_id(line_item.item_id)
-                if subscription and subscription.status == SubscriptionStatus.ACTIVE:
-                    if subscription.tarif_plan:
-                        features = subscription.tarif_plan.features or {}
-                        default_tokens = (
-                            features.get("default_tokens", 0)
-                            if isinstance(features, dict)
-                            else 0
-                        )
-                        total += default_tokens
-            elif line_item.item_type == LineItemType.TOKEN_BUNDLE:
+            if line_item.item_type == LineItemType.TOKEN_BUNDLE:
                 purchase = self._purchase_repo.find_by_id(line_item.item_id)
                 if purchase and purchase.status == PurchaseStatus.COMPLETED:
                     total += purchase.token_amount
         return total
-
-    def _reverse_subscription(self, line_item, user_id, items_reversed):
-        """Cancel an active subscription and debit default tokens."""
-        subscription = self._subscription_repo.find_by_id(line_item.item_id)
-        if subscription and subscription.status == SubscriptionStatus.ACTIVE:
-            # Debit default_tokens from user balance
-            if subscription.tarif_plan:
-                features = subscription.tarif_plan.features or {}
-                default_tokens = (
-                    features.get("default_tokens", 0)
-                    if isinstance(features, dict)
-                    else 0
-                )
-                if default_tokens > 0:
-                    self._token_service.debit_tokens(
-                        user_id=user_id,
-                        amount=default_tokens,
-                        transaction_type=TokenTransactionType.REFUND,
-                        reference_id=subscription.id,
-                        description=f"Refund plan tokens: {subscription.tarif_plan.name}",
-                    )
-                    items_reversed["tokens_debited"] += default_tokens
-
-            subscription.status = SubscriptionStatus.CANCELLED
-            subscription.cancelled_at = utcnow()
-            self._subscription_repo.save(subscription)
-            items_reversed["subscription"] = str(subscription.id)
-
-    def _reverse_token_bundle(self, line_item, user_id, items_reversed):
-        """Mark purchase as refunded and debit tokens."""
-        purchase = self._purchase_repo.find_by_id(line_item.item_id)
-        if purchase and purchase.status == PurchaseStatus.COMPLETED:
-            purchase.status = PurchaseStatus.REFUNDED
-            self._purchase_repo.save(purchase)
-
-            actual_debited = self._token_service.refund_tokens(
-                user_id=user_id,
-                amount=purchase.token_amount,
-                reference_id=purchase.id,
-                description=f"Refund: {purchase.token_amount} tokens",
-            )
-
-            items_reversed["token_bundles"].append(str(purchase.id))
-            items_reversed["tokens_debited"] += actual_debited
-
-    def _reverse_addon(self, line_item, items_reversed):
-        """Cancel an active add-on subscription."""
-        addon_sub = self._addon_sub_repo.find_by_id(line_item.item_id)
-        if addon_sub and addon_sub.status == SubscriptionStatus.ACTIVE:
-            addon_sub.status = SubscriptionStatus.CANCELLED
-            addon_sub.cancelled_at = utcnow()
-            self._addon_sub_repo.save(addon_sub)
-            items_reversed["add_ons"].append(str(addon_sub.id))

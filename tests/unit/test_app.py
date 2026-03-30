@@ -72,7 +72,6 @@ class TestContainerWiring:
         from vbwd.extensions import db
         from vbwd.services.auth_service import AuthService
         from vbwd.services.user_service import UserService
-        from vbwd.services.subscription_service import SubscriptionService
 
         with app.app_context():
             # Override db_session to simulate request context
@@ -81,11 +80,9 @@ class TestContainerWiring:
             # Get services from container
             auth_service = app.container.auth_service()
             user_service = app.container.user_service()
-            sub_service = app.container.subscription_service()
 
             assert isinstance(auth_service, AuthService)
             assert isinstance(user_service, UserService)
-            assert isinstance(sub_service, SubscriptionService)
 
 
 class TestEventHandlerRegistration:

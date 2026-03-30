@@ -123,6 +123,10 @@ class PluginManager:
             from vbwd.events.bus import event_bus
 
             plugin.register_event_handlers(event_bus)
+
+            from vbwd.events.line_item_registry import line_item_registry
+
+            plugin.register_line_item_handlers(line_item_registry)
         except Exception as e:
             logger.warning(
                 f"Failed to register event handlers for plugin '{name}': {e}"
@@ -309,6 +313,10 @@ class PluginManager:
                         from vbwd.events.bus import event_bus
 
                         plugin.register_event_handlers(event_bus)
+
+                        from vbwd.events.line_item_registry import line_item_registry
+
+                        plugin.register_line_item_handlers(line_item_registry)
                     except Exception as handler_err:
                         logger.warning(
                             "Failed to register event handlers for '%s': %s",

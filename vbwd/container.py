@@ -3,8 +3,6 @@ from dependency_injector import containers, providers
 
 from vbwd.repositories.user_repository import UserRepository
 from vbwd.repositories.user_details_repository import UserDetailsRepository
-from vbwd.repositories.subscription_repository import SubscriptionRepository
-from vbwd.repositories.tarif_plan_repository import TarifPlanRepository
 from vbwd.repositories.invoice_repository import InvoiceRepository
 from vbwd.repositories.invoice_line_item_repository import InvoiceLineItemRepository
 from vbwd.repositories.currency_repository import CurrencyRepository
@@ -14,9 +12,6 @@ from vbwd.repositories.token_bundle_repository import TokenBundleRepository
 from vbwd.repositories.token_bundle_purchase_repository import (
     TokenBundlePurchaseRepository,
 )
-from vbwd.repositories.addon_repository import AddOnRepository
-from vbwd.repositories.tarif_plan_category_repository import TarifPlanCategoryRepository
-from vbwd.repositories.addon_subscription_repository import AddOnSubscriptionRepository
 from vbwd.repositories.token_repository import (
     TokenBalanceRepository,
     TokenTransactionRepository,
@@ -24,8 +19,6 @@ from vbwd.repositories.token_repository import (
 
 from vbwd.services.auth_service import AuthService
 from vbwd.services.user_service import UserService
-from vbwd.services.subscription_service import SubscriptionService
-from vbwd.services.tarif_plan_service import TarifPlanService
 from vbwd.services.currency_service import CurrencyService
 from vbwd.services.tax_service import TaxService
 from vbwd.services.password_reset_service import PasswordResetService
@@ -33,23 +26,14 @@ from vbwd.services.activity_logger import ActivityLogger
 from vbwd.services.token_service import TokenService
 from vbwd.services.invoice_service import InvoiceService
 from vbwd.services.refund_service import RefundService
-from vbwd.services.tarif_plan_category_service import TarifPlanCategoryService
 
 from vbwd.events.domain import DomainEventDispatcher
 
 
 class Container(containers.DeclarativeContainer):
-    """
-    Application dependency injection container.
+    """Application dependency injection container.
 
-    Uses dependency-injector for managing service dependencies
-    and lifecycle.
-
-    Usage:
-        container = Container()
-        container.db_session.override(db.session)
-
-        auth_service = container.auth_service()
+    Core only — subscription/addon/plan DI is in the subscription plugin.
     """
 
     # Configuration
@@ -68,12 +52,6 @@ class Container(containers.DeclarativeContainer):
         UserDetailsRepository, session=db_session
     )
 
-    subscription_repository = providers.Factory(
-        SubscriptionRepository, session=db_session
-    )
-
-    tarif_plan_repository = providers.Factory(TarifPlanRepository, session=db_session)
-
     invoice_repository = providers.Factory(InvoiceRepository, session=db_session)
 
     invoice_line_item_repository = providers.Factory(
@@ -86,16 +64,6 @@ class Container(containers.DeclarativeContainer):
 
     token_bundle_purchase_repository = providers.Factory(
         TokenBundlePurchaseRepository, session=db_session
-    )
-
-    addon_repository = providers.Factory(AddOnRepository, session=db_session)
-
-    tarif_plan_category_repository = providers.Factory(
-        TarifPlanCategoryRepository, session=db_session
-    )
-
-    addon_subscription_repository = providers.Factory(
-        AddOnSubscriptionRepository, session=db_session
     )
 
     token_balance_repository = providers.Factory(
@@ -122,10 +90,6 @@ class Container(containers.DeclarativeContainer):
         user_details_repository=user_details_repository,
     )
 
-    tarif_plan_service = providers.Factory(
-        TarifPlanService, tarif_plan_repository=tarif_plan_repository
-    )
-
     currency_service = providers.Factory(
         CurrencyService, currency_repository=currency_repository
     )
@@ -139,19 +103,6 @@ class Container(containers.DeclarativeContainer):
         purchase_repo=token_bundle_purchase_repository,
     )
 
-    subscription_service = providers.Factory(
-        SubscriptionService,
-        subscription_repo=subscription_repository,
-        tarif_plan_repo=tarif_plan_repository,
-        token_service=token_service,
-    )
-
-    tarif_plan_category_service = providers.Factory(
-        TarifPlanCategoryService,
-        category_repo=tarif_plan_category_repository,
-        tarif_plan_repo=tarif_plan_repository,
-    )
-
     invoice_service = providers.Factory(
         InvoiceService,
         invoice_repository=invoice_repository,
@@ -160,10 +111,8 @@ class Container(containers.DeclarativeContainer):
     refund_service = providers.Factory(
         RefundService,
         invoice_repo=invoice_repository,
-        subscription_repo=subscription_repository,
         token_service=token_service,
         purchase_repo=token_bundle_purchase_repository,
-        addon_sub_repo=addon_subscription_repository,
     )
 
     # ==================
@@ -189,3 +138,4 @@ class Container(containers.DeclarativeContainer):
     event_dispatcher = providers.Singleton(DomainEventDispatcher)
 
     # Note: Handlers are registered in app.py after container is wired
+    # Subscription/addon/plan repos and services are registered by the subscription plugin

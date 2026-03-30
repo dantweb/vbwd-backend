@@ -19,19 +19,6 @@ class TestContainer:
 
         assert isinstance(repo, UserRepository)
 
-    def test_container_provides_subscription_repository(self):
-        """Container provides SubscriptionRepository instance."""
-        from vbwd.container import Container
-        from vbwd.repositories.subscription_repository import SubscriptionRepository
-
-        container = Container()
-        mock_session = MagicMock()
-        container.db_session.override(mock_session)
-
-        repo = container.subscription_repository()
-
-        assert isinstance(repo, SubscriptionRepository)
-
     def test_container_provides_auth_service(self):
         """Container provides AuthService with injected dependencies."""
         from vbwd.container import Container
@@ -57,19 +44,6 @@ class TestContainer:
         service = container.user_service()
 
         assert isinstance(service, UserService)
-
-    def test_container_provides_subscription_service(self):
-        """Container provides SubscriptionService with injected dependencies."""
-        from vbwd.container import Container
-        from vbwd.services.subscription_service import SubscriptionService
-
-        container = Container()
-        mock_session = MagicMock()
-        container.db_session.override(mock_session)
-
-        service = container.subscription_service()
-
-        assert isinstance(service, SubscriptionService)
 
     def test_container_services_use_same_session(self):
         """Services from same container use same db session."""

@@ -16,11 +16,9 @@ def _register_event_handlers(app: Flask, container) -> None:
         container: DI container
     """
     from vbwd.handlers.password_reset_handler import PasswordResetHandler
-    from vbwd.handlers.checkout_handler import CheckoutHandler
     from vbwd.handlers.payment_handler import PaymentCapturedHandler
     from vbwd.handlers.refund_handler import PaymentRefundedHandler
     from vbwd.handlers.restore_handler import RefundReversedHandler
-    from vbwd.handlers.subscription_cancel_handler import SubscriptionCancelledHandler
     from vbwd.handlers.payment_failed_handler import PaymentFailedHandler
     from vbwd.handlers.payment_authorized_handler import PaymentAuthorizedHandler
 
@@ -50,11 +48,13 @@ def _register_event_handlers(app: Flask, container) -> None:
         dispatcher.register("security.password_reset.request", password_reset_handler)
         dispatcher.register("security.password_reset.execute", password_reset_handler)
 
-        # Create checkout handler with container for request-scoped repos
-        checkout_handler = CheckoutHandler(container)
+        # Register core line item handler (TOKEN_BUNDLE only)
+        # Must be registered BEFORE plugins so core handlers have priority
+        from vbwd.events.line_item_registry import line_item_registry
+        from vbwd.handlers.core_line_item_handler import CoreLineItemHandler
 
-        # Register checkout handler
-        dispatcher.register("checkout.requested", checkout_handler)
+        core_line_item_handler = CoreLineItemHandler(container)
+        line_item_registry.register(core_line_item_handler)
 
         # Create payment handler with container for request-scoped repos
         payment_handler = PaymentCapturedHandler(container)
@@ -69,10 +69,6 @@ def _register_event_handlers(app: Flask, container) -> None:
         # Create and register refund reversal handler
         restore_handler = RefundReversedHandler(container)
         dispatcher.register("refund.reversed", restore_handler)
-
-        # Create and register subscription cancel handler
-        cancel_handler = SubscriptionCancelledHandler(container)
-        dispatcher.register("subscription.cancelled", cancel_handler)
 
         # Create and register payment failed handler
         payment_failed_handler = PaymentFailedHandler(container)
@@ -123,49 +119,35 @@ def create_app(config: Optional[Dict[str, Any]] = None) -> Flask:
     # CSRF is only needed for browser form submissions, not API calls
     from vbwd.routes.auth import auth_bp
     from vbwd.routes.user import user_bp
-    from vbwd.routes.tarif_plans import tarif_plans_bp
-    from vbwd.routes.subscriptions import subscriptions_bp
     from vbwd.routes.invoices import invoices_bp
     from vbwd.routes.events import events_bp
     from vbwd.routes.admin import (
         admin_users_bp,
-        admin_subs_bp,
         admin_invoices_bp,
-        admin_plans_bp,
         admin_profile_bp,
         admin_token_bundles_bp,
-        admin_addons_bp,
         admin_settings_bp,
         admin_payment_methods_bp,
         admin_countries_bp,
         admin_plugins_bp,
-        admin_categories_bp,
     )
     from vbwd.routes.config import config_bp
-    from vbwd.routes.addons import addons_bp
     from vbwd.routes.settings import settings_bp
     from vbwd.routes.token_bundles import token_bundles_bp
     from vbwd.routes.webhooks import webhooks_bp
 
     csrf.exempt(auth_bp)
     csrf.exempt(user_bp)
-    csrf.exempt(tarif_plans_bp)
-    csrf.exempt(subscriptions_bp)
     csrf.exempt(invoices_bp)
     csrf.exempt(events_bp)
     csrf.exempt(admin_users_bp)
-    csrf.exempt(admin_subs_bp)
     csrf.exempt(admin_invoices_bp)
-    csrf.exempt(admin_plans_bp)
     csrf.exempt(admin_profile_bp)
     csrf.exempt(admin_token_bundles_bp)
-    csrf.exempt(admin_addons_bp)
     csrf.exempt(admin_settings_bp)
     csrf.exempt(admin_payment_methods_bp)
     csrf.exempt(admin_countries_bp)
     csrf.exempt(admin_plugins_bp)
-    csrf.exempt(admin_categories_bp)
-    csrf.exempt(addons_bp)
     csrf.exempt(token_bundles_bp)
     csrf.exempt(config_bp)
     csrf.exempt(settings_bp)
@@ -240,23 +222,16 @@ def create_app(config: Optional[Dict[str, Any]] = None) -> Flask:
     # Register blueprints (already imported above for CSRF exemption)
     app.register_blueprint(auth_bp)
     app.register_blueprint(user_bp)
-    app.register_blueprint(tarif_plans_bp, url_prefix="/api/v1/tarif-plans")
-    app.register_blueprint(subscriptions_bp, url_prefix="/api/v1/user/subscriptions")
     app.register_blueprint(invoices_bp)
     app.register_blueprint(events_bp)
     app.register_blueprint(admin_users_bp)
-    app.register_blueprint(admin_subs_bp)
     app.register_blueprint(admin_invoices_bp)
-    app.register_blueprint(admin_plans_bp)
     app.register_blueprint(admin_profile_bp)
     app.register_blueprint(admin_token_bundles_bp)
-    app.register_blueprint(admin_addons_bp)
     app.register_blueprint(admin_settings_bp)
     app.register_blueprint(admin_payment_methods_bp)
     app.register_blueprint(admin_countries_bp)
     app.register_blueprint(admin_plugins_bp)
-    app.register_blueprint(admin_categories_bp)
-    app.register_blueprint(addons_bp)
     app.register_blueprint(token_bundles_bp)
     app.register_blueprint(config_bp)
     app.register_blueprint(settings_bp)
@@ -331,8 +306,8 @@ def create_app(config: Optional[Dict[str, Any]] = None) -> Flask:
     app.cli.add_command(plugins_cli)
 
     if not app.config.get("TESTING"):
-        from vbwd.scheduler import start_subscription_scheduler
+        from vbwd.scheduler import start_booking_scheduler
 
-        start_subscription_scheduler(app)
+        start_booking_scheduler(app)
 
     return app

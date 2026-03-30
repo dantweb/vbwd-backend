@@ -114,6 +114,29 @@ class BasePlugin(ABC):
         """
         pass
 
+    def register_line_item_handlers(self, registry: Any) -> None:
+        """Register handlers for processing invoice line items.
+
+        Called by ``PluginManager.enable_plugin()`` after ``register_event_handlers()``.
+        Override this method to register ``ILineItemHandler`` implementations
+        for the plugin's line item types.
+
+        Args:
+            registry: The ``LineItemHandlerRegistry`` singleton.
+        """
+        pass
+
+    def register_shipping_providers(self, registry: Any) -> None:
+        """Register shipping providers.
+
+        Called by ``PluginManager.enable_plugin()`` after line item handlers.
+        Override in shipping plugins to register ``IShippingProvider`` implementations.
+
+        Args:
+            registry: A list or registry that accepts shipping providers.
+        """
+        pass
+
     def register_categories(self) -> List[Dict[str, Any]]:
         """
         Return category definitions to register on plugin enable.

@@ -29,18 +29,32 @@ import vbwd.models  # noqa: F401  — side-effect: registers all core model clas
 # No plugin names are hard-coded here; new plugins are picked up automatically.
 _plugins_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "plugins"))
 for _plugin in sorted(os.listdir(_plugins_dir)):
-    _models_dir = os.path.join(_plugins_dir, _plugin, "src", "models")
-    if not os.path.isdir(_models_dir):
+    _plugin_dir = os.path.join(_plugins_dir, _plugin)
+    if not os.path.isdir(_plugin_dir) or _plugin.startswith((".", "_")):
         continue
-    for _, _module_name, _is_pkg in pkgutil.iter_modules([_models_dir]):
-        if not _is_pkg:
-            importlib.import_module(f"plugins.{_plugin}.src.models.{_module_name}")
+    # Scan both conventions: src/models/ (old) and plugin_id/models/ (new)
+    for _subdir in ["src/models", f"{_plugin}/models"]:
+        _models_dir = os.path.join(_plugin_dir, _subdir)
+        if not os.path.isdir(_models_dir):
+            continue
+        _import_prefix = _subdir.replace("/", ".")
+        for _, _module_name, _is_pkg in pkgutil.iter_modules([_models_dir]):
+            if not _is_pkg:
+                importlib.import_module(f"plugins.{_plugin}.{_import_prefix}.{_module_name}")
 
 # Alembic config object
 config = context.config
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
+
+# Dynamically discover plugin migration directories (agnostic — no hardcoded plugins)
+_version_locations = [os.path.join(os.path.dirname(__file__), "versions")]
+for _plugin in sorted(os.listdir(_plugins_dir)):
+    _migrations_dir = os.path.join(_plugins_dir, _plugin, "migrations", "versions")
+    if os.path.isdir(_migrations_dir):
+        _version_locations.append(_migrations_dir)
+config.set_main_option("version_locations", ":".join(_version_locations))
 
 # Inject the runtime database URL
 config.set_main_option("sqlalchemy.url", get_database_url())

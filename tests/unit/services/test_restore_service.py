@@ -3,6 +3,11 @@ from datetime import datetime
 from unittest.mock import MagicMock
 from uuid import uuid4
 
+from vbwd.events.line_item_registry import LineItemHandlerRegistry
+from vbwd.handlers.core_line_item_handler import CoreLineItemHandler
+from plugins.subscription.subscription.handlers.line_item_handler import (
+    SubscriptionLineItemHandler,
+)
 from vbwd.models.enums import (
     InvoiceStatus,
     LineItemType,
@@ -13,20 +18,20 @@ from vbwd.models.enums import (
 
 def _make_line_item(item_type, item_id=None):
     """Create a mock line item."""
-    li = MagicMock()
-    li.item_type = item_type
-    li.item_id = item_id or uuid4()
-    return li
+    line_item = MagicMock()
+    line_item.item_type = item_type
+    line_item.item_id = item_id or uuid4()
+    return line_item
 
 
 def _make_invoice(status=InvoiceStatus.REFUNDED, line_items=None, user_id=None):
     """Create a mock invoice."""
-    inv = MagicMock()
-    inv.id = uuid4()
-    inv.user_id = user_id or uuid4()
-    inv.status = status
-    inv.line_items = line_items or []
-    return inv
+    invoice = MagicMock()
+    invoice.id = uuid4()
+    invoice.user_id = user_id or uuid4()
+    invoice.status = status
+    invoice.line_items = line_items or []
+    return invoice
 
 
 def _make_container(**overrides):
@@ -47,19 +52,27 @@ def _make_container(**overrides):
     return container
 
 
+def _make_service(container):
+    """Create RestoreService with a registry backed by the container."""
+    from vbwd.services.restore_service import RestoreService
+
+    registry = LineItemHandlerRegistry()
+    registry.register(CoreLineItemHandler(container))
+    registry.register(SubscriptionLineItemHandler(container))
+    return RestoreService(container, registry=registry)
+
+
 class TestRestoreServiceProcessRestore:
     """Tests for RestoreService.process_restore()."""
 
     def test_restore_refunded_invoice(self):
         """Restore a refunded invoice marks it as PAID."""
-        from vbwd.services.restore_service import RestoreService
-
         invoice = _make_invoice(InvoiceStatus.REFUNDED)
         invoice_repo = MagicMock()
         invoice_repo.find_by_id.return_value = invoice
 
         container = _make_container(invoice_repository=invoice_repo)
-        service = RestoreService(container)
+        service = _make_service(container)
 
         result = service.process_restore(
             invoice_id=invoice.id, reason="refund_canceled"
@@ -72,8 +85,6 @@ class TestRestoreServiceProcessRestore:
 
     def test_restore_reactivates_cancelled_subscription(self):
         """Restore re-activates a cancelled subscription."""
-        from vbwd.services.restore_service import RestoreService
-
         sub_id = uuid4()
         line_item = _make_line_item(LineItemType.SUBSCRIPTION, sub_id)
         invoice = _make_invoice(InvoiceStatus.REFUNDED, [line_item])
@@ -83,7 +94,7 @@ class TestRestoreServiceProcessRestore:
         subscription.status = SubscriptionStatus.CANCELLED
         subscription.cancelled_at = datetime(2026, 2, 10)
         plan = MagicMock()
-        plan.billing_period = MagicMock()  # BillingPeriod enum
+        plan.billing_period = MagicMock()
         subscription.tarif_plan = plan
 
         invoice_repo = MagicMock()
@@ -96,7 +107,7 @@ class TestRestoreServiceProcessRestore:
             invoice_repository=invoice_repo,
             subscription_repository=sub_repo,
         )
-        service = RestoreService(container)
+        service = _make_service(container)
 
         result = service.process_restore(
             invoice_id=invoice.id, reason="refund_canceled"
@@ -112,8 +123,6 @@ class TestRestoreServiceProcessRestore:
 
     def test_restore_recredits_tokens(self):
         """Restore re-credits tokens for a refunded purchase."""
-        from vbwd.services.restore_service import RestoreService
-
         purchase_id = uuid4()
         user_id = uuid4()
         line_item = _make_line_item(LineItemType.TOKEN_BUNDLE, purchase_id)
@@ -144,7 +153,7 @@ class TestRestoreServiceProcessRestore:
             token_balance_repository=token_balance_repo,
             token_transaction_repository=token_tx_repo,
         )
-        service = RestoreService(container)
+        service = _make_service(container)
 
         result = service.process_restore(
             invoice_id=invoice.id, reason="refund_canceled"
@@ -154,7 +163,7 @@ class TestRestoreServiceProcessRestore:
         assert purchase.status == PurchaseStatus.COMPLETED
         assert purchase.tokens_credited is True
         purchase_repo.save.assert_called_with(purchase)
-        assert balance.balance == 600  # 100 + 500
+        assert balance.balance == 600
         token_balance_repo.save.assert_called()
         token_tx_repo.save.assert_called_once()
         assert str(purchase_id) in result.items_restored["token_bundles"]
@@ -162,8 +171,6 @@ class TestRestoreServiceProcessRestore:
 
     def test_restore_creates_balance_if_none(self):
         """If user has no token balance, one should be created on restore."""
-        from vbwd.services.restore_service import RestoreService
-
         purchase_id = uuid4()
         user_id = uuid4()
         line_item = _make_line_item(LineItemType.TOKEN_BUNDLE, purchase_id)
@@ -189,7 +196,7 @@ class TestRestoreServiceProcessRestore:
             token_balance_repository=token_balance_repo,
             token_transaction_repository=MagicMock(),
         )
-        service = RestoreService(container)
+        service = _make_service(container)
 
         result = service.process_restore(
             invoice_id=invoice.id, reason="refund_canceled"
@@ -201,8 +208,6 @@ class TestRestoreServiceProcessRestore:
 
     def test_restore_reactivates_addon(self):
         """Restore re-activates a cancelled add-on subscription."""
-        from vbwd.services.restore_service import RestoreService
-
         addon_id = uuid4()
         line_item = _make_line_item(LineItemType.ADD_ON, addon_id)
         invoice = _make_invoice(InvoiceStatus.REFUNDED, [line_item])
@@ -222,7 +227,7 @@ class TestRestoreServiceProcessRestore:
             invoice_repository=invoice_repo,
             addon_subscription_repository=addon_repo,
         )
-        service = RestoreService(container)
+        service = _make_service(container)
 
         result = service.process_restore(
             invoice_id=invoice.id, reason="refund_canceled"
@@ -237,14 +242,12 @@ class TestRestoreServiceProcessRestore:
 
     def test_restore_rejects_non_refunded_invoice(self):
         """Restore rejects invoice that is not REFUNDED."""
-        from vbwd.services.restore_service import RestoreService
-
         invoice = _make_invoice(InvoiceStatus.PAID)
         invoice_repo = MagicMock()
         invoice_repo.find_by_id.return_value = invoice
 
         container = _make_container(invoice_repository=invoice_repo)
-        service = RestoreService(container)
+        service = _make_service(container)
 
         result = service.process_restore(invoice_id=invoice.id, reason="test")
 
@@ -253,13 +256,11 @@ class TestRestoreServiceProcessRestore:
 
     def test_restore_rejects_missing_invoice(self):
         """Restore rejects when invoice not found."""
-        from vbwd.services.restore_service import RestoreService
-
         invoice_repo = MagicMock()
         invoice_repo.find_by_id.return_value = None
 
         container = _make_container(invoice_repository=invoice_repo)
-        service = RestoreService(container)
+        service = _make_service(container)
 
         result = service.process_restore(invoice_id=uuid4(), reason="test")
 
@@ -268,8 +269,6 @@ class TestRestoreServiceProcessRestore:
 
     def test_restore_handles_mixed_items(self):
         """Restore handles invoice with subscription + tokens + add-on."""
-        from vbwd.services.restore_service import RestoreService
-
         sub_id = uuid4()
         purchase_id = uuid4()
         addon_id = uuid4()
@@ -313,7 +312,7 @@ class TestRestoreServiceProcessRestore:
             token_balance_repository=token_balance_repo,
             token_transaction_repository=MagicMock(),
         )
-        service = RestoreService(container)
+        service = _make_service(container)
 
         result = service.process_restore(
             invoice_id=invoice.id, reason="refund_canceled"
@@ -328,4 +327,4 @@ class TestRestoreServiceProcessRestore:
         assert subscription.status == SubscriptionStatus.ACTIVE
         assert purchase.status == PurchaseStatus.COMPLETED
         assert addon_sub.status == SubscriptionStatus.ACTIVE
-        assert balance.balance == 250  # 50 + 200
+        assert balance.balance == 250
