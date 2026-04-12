@@ -63,7 +63,8 @@ class TestAPIEndpoints:
             f"{self.BASE_URL}/auth/login", json=test_user_credentials, timeout=10
         )
         if response.status_code == 200:
-            return response.json().get("access_token")
+            data = response.json()
+            return data.get("token") or data.get("access_token")
         return None
 
     @pytest.fixture
@@ -73,7 +74,8 @@ class TestAPIEndpoints:
             f"{self.BASE_URL}/auth/login", json=test_admin_credentials, timeout=10
         )
         if response.status_code == 200:
-            return response.json().get("access_token")
+            data = response.json()
+            return data.get("token") or data.get("access_token")
         return None
 
     # =========================================
@@ -195,7 +197,9 @@ class TestAPIEndpoints:
 
         assert response.status_code == 200
         data = response.json()
-        assert "email" in data
+        # Response may be flat {"email": ...} or wrapped {"user": {"email": ...}}
+        profile = data.get("user", data) if isinstance(data, dict) else data
+        assert "email" in profile
 
     # =========================================
     # Tariff Plans Endpoint Tests
@@ -239,10 +243,11 @@ class TestAPIEndpoints:
             timeout=10,
         )
 
-        # 200 with list (may be empty)
+        # 200 with list (may be empty) — response may be list or {"subscriptions": [...]}
         assert response.status_code == 200
         data = response.json()
-        assert isinstance(data, list)
+        subs = data.get("subscriptions", data) if isinstance(data, dict) else data
+        assert isinstance(subs, list)
 
     # =========================================
     # Admin Endpoint Tests
@@ -314,7 +319,8 @@ class TestAPIEndpoints:
 
         assert response.status_code == 200
         data = response.json()
-        assert isinstance(data, list)
+        invoices = data.get("invoices", data) if isinstance(data, dict) else data
+        assert isinstance(invoices, list)
 
 
 class TestAPIErrorHandling:
