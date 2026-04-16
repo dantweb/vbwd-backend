@@ -1,13 +1,18 @@
 """Tests for RestoreService."""
+import pytest
 from datetime import datetime
 from unittest.mock import MagicMock
 from uuid import uuid4
 
 from vbwd.events.line_item_registry import LineItemHandlerRegistry
 from vbwd.handlers.core_line_item_handler import CoreLineItemHandler
-from plugins.subscription.subscription.handlers.line_item_handler import (
-    SubscriptionLineItemHandler,
-)
+
+try:
+    from plugins.subscription.subscription.handlers.line_item_handler import (
+        SubscriptionLineItemHandler,
+    )
+except ImportError:
+    pytest.skip("Subscription plugin not installed", allow_module_level=True)
 from vbwd.models.enums import (
     InvoiceStatus,
     LineItemType,
