@@ -61,6 +61,18 @@ jobs:
           for plugin in analytics booking chat cms email ghrm mailchimp paypal stripe taro yookassa; do
             git clone --depth=1 -q https://github.com/VBWD-platform/vbwd-plugin-${plugin}.git plugins/${plugin} 2>/dev/null || true
           done
+      - name: Create plugins.json (enable all plugins)
+        run: |
+          python3 -c "
+          import json, os
+          plugins = {}
+          for d in os.listdir('plugins'):
+              init = os.path.join('plugins', d, '__init__.py')
+              if os.path.isfile(init):
+                  plugins[d] = {'enabled': True, 'version': '1.0.0', 'source': 'local'}
+          json.dump({'plugins': plugins}, open('plugins/plugins.json', 'w'))
+          print(f'Created plugins.json with {len(plugins)} plugins: {sorted(plugins.keys())}')
+          "
       - name: Start full stack
         run: docker compose up -d --build
       - name: Wait for API
