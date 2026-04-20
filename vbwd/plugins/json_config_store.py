@@ -34,21 +34,18 @@ class JsonFilePluginConfigStore(PluginConfigStore):
             return {}
 
     def _write_plugins(self, plugins: dict) -> None:
-        """Atomically write plugins.json."""
+        """Write plugins.json in place.
+
+        We deliberately write directly rather than via tempfile + os.replace
+        because plugins.json is typically a single-file bind mount in prod
+        docker setups, and rename/replace fails on bind-mounted inodes with
+        "Device or resource busy". Admin plugin toggles are infrequent, so
+        losing the cross-process atomicity of os.replace is acceptable.
+        """
         os.makedirs(self._plugins_dir, exist_ok=True)
         data = {"plugins": plugins}
-        fd, tmp_path = tempfile.mkstemp(dir=self._plugins_dir, suffix=".tmp")
-        try:
-            with os.fdopen(fd, "w") as f:
-                json.dump(data, f, indent=2)
-            os.chmod(tmp_path, 0o666)
-            os.replace(tmp_path, self._plugins_path)
-        except Exception:
-            try:
-                os.unlink(tmp_path)
-            except OSError:
-                pass
-            raise
+        with open(self._plugins_path, "w") as f:
+            json.dump(data, f, indent=2)
 
     def _read_config(self) -> dict:
         """Read config.json."""
@@ -59,20 +56,10 @@ class JsonFilePluginConfigStore(PluginConfigStore):
             return {}
 
     def _write_config(self, config: dict) -> None:
-        """Atomically write config.json."""
+        """Write config.json in place (same bind-mount constraints as _write_plugins)."""
         os.makedirs(self._plugins_dir, exist_ok=True)
-        fd, tmp_path = tempfile.mkstemp(dir=self._plugins_dir, suffix=".tmp")
-        try:
-            with os.fdopen(fd, "w") as f:
-                json.dump(config, f, indent=2)
-            os.chmod(tmp_path, 0o666)
-            os.replace(tmp_path, self._config_path)
-        except Exception:
-            try:
-                os.unlink(tmp_path)
-            except OSError:
-                pass
-            raise
+        with open(self._config_path, "w") as f:
+            json.dump(config, f, indent=2)
 
     def get_enabled(self) -> List[PluginConfigEntry]:
         """Get all enabled plugin config entries."""
