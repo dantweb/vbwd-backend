@@ -462,27 +462,36 @@ def delete_invoice(invoice_id):
 @require_permission("invoices.view")
 def download_pdf(invoice_id):
     """
-    Download invoice PDF.
-
-    Args:
-        invoice_id: UUID of the invoice
+    Download invoice PDF (admin view — any invoice).
 
     Returns:
-        200: PDF file
+        200: application/pdf stream
         404: Invoice not found
     """
+    from flask import Response, current_app
+
+    from vbwd.repositories.user_repository import UserRepository
+    from vbwd.routes.invoices import _build_invoice_pdf_context
+
     invoice_repo = InvoiceRepository(db.session)
     invoice = invoice_repo.find_by_id(invoice_id)
 
     if not invoice:
         return jsonify({"error": "Invoice not found"}), 404
 
-    # For now, return invoice data as JSON (PDF generation would be a separate service)
-    return (
-        jsonify(
-            {"invoice": invoice.to_dict(), "message": "PDF generation not implemented"}
-        ),
-        200,
+    user = UserRepository(db.session).find_by_id(str(invoice.user_id))
+    pdf_service = current_app.container.pdf_service()  # type: ignore[attr-defined]
+    context = _build_invoice_pdf_context(invoice, user)
+    pdf_bytes = pdf_service.render("invoice.html", context)
+
+    filename = f"invoice-{invoice.invoice_number or invoice.id}.pdf"
+    return Response(
+        pdf_bytes,
+        mimetype="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Cache-Control": "no-store",
+        },
     )
 
 

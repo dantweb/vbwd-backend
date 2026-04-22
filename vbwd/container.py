@@ -34,6 +34,7 @@ from vbwd.services.password_reset_service import PasswordResetService
 from vbwd.services.activity_logger import ActivityLogger
 from vbwd.services.token_service import TokenService
 from vbwd.services.invoice_service import InvoiceService
+from vbwd.services.pdf_service import PdfService, build_default_template_env
 from vbwd.services.refund_service import RefundService
 
 from vbwd.events.domain import DomainEventDispatcher
@@ -149,6 +150,15 @@ class Container(containers.DeclarativeContainer):
     )
 
     activity_logger = providers.Singleton(ActivityLogger)
+
+    # PDF renderer — shared by invoice, booking, and any plugin PDFs.
+    # Jinja env points at vbwd/templates/pdf/ for core templates; plugins
+    # call pdf_service.register_plugin_template_path(...) during init to
+    # contribute their own template dirs.
+    pdf_service = providers.Singleton(
+        PdfService,
+        template_env=providers.Callable(build_default_template_env),
+    )
 
     password_reset_service = providers.Factory(
         PasswordResetService,

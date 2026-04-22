@@ -2,7 +2,6 @@
 import json
 import logging
 import os
-import tempfile
 from typing import List, Optional
 
 from vbwd.plugins.config_store import PluginConfigStore, PluginConfigEntry

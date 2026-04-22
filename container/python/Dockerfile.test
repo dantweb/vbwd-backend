@@ -7,6 +7,12 @@ RUN apt-get update && apt-get install -y \
     gcc \
     default-libmysqlclient-dev \
     pkg-config \
+    libpango-1.0-0 \
+    libpangoft2-1.0-0 \
+    libharfbuzz0b \
+    libffi-dev \
+    shared-mime-info \
+    fonts-dejavu \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
